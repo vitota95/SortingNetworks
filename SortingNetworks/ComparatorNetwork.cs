@@ -8,7 +8,7 @@ namespace SortingNetworks
 {
     public class ComparatorNetwork : IComparatorNetwork
     {
-        public ComparatorNetwork(short size, Tuple<short,short>[] comparators) 
+        public ComparatorNetwork(short size, Comparator[] comparators) 
         {
             this.Comparators = comparators;
             this.Size = size;
@@ -19,11 +19,25 @@ namespace SortingNetworks
 
         public short Size { get; private set; }
 
-        public Tuple<short, short>[] Comparators { get;  set; }
+        public Comparator[] Comparators { get;  set; }
 
         public bool IsEquivalent(IComparatorNetwork n)
         {
             return OutputsAreEqual(this.Outputs, n.Outputs);
+        }
+
+        public bool IsSortingNetwork()
+        {
+            return this.Outputs.Count == this.Size + 1;
+        }
+
+        public IComparatorNetwork CloneWithNewComparator(Comparator comparator)
+        {
+            var newComparators = new Comparator[this.Size + 1];
+            Array.Copy(this.Comparators, newComparators, this.Size);
+            newComparators[this.Size] = comparator;
+
+            return new ComparatorNetwork((short)(this.Size + 1), newComparators);
         }
 
         private static bool OutputsAreEqual(HashSet<short> ba1, HashSet<short> ba2)
@@ -47,16 +61,16 @@ namespace SortingNetworks
         private short ComputeOutput(short value) 
         {
             var arr = new BitArray(new int[] { value });
-            for (var i = 0; i < Comparators.Length; i++) 
+            for (var i = 0; i < this.Comparators.Length; i++) 
             {
-                var b1 = arr.Get(Comparators[i].Item1);
-                var b2 = arr.Get(Comparators[i].Item2);
+                var b1 = arr.Get(this.Comparators[i].x);
+                var b2 = arr.Get(this.Comparators[i].y);
 
                 if (!b1 && b2) 
                 {
                     var temp = b1;
-                    arr.Set(Comparators[i].Item1, b2);
-                    arr.Set(Comparators[i].Item2, temp);
+                    arr.Set(this.Comparators[i].x, b2);
+                    arr.Set(this.Comparators[i].y, temp);
                 }
             }
 
@@ -64,11 +78,6 @@ namespace SortingNetworks
             arr.CopyTo(newValue, 0);
 
             return (short)newValue[0];
-        }
-
-        public bool IsSortingNetwork()
-        {
-            return this.Outputs.Count == this.Size + 1;
         }
     }
 }

@@ -12,7 +12,7 @@ namespace SortingNetworksTests
         {
             // Arrange, Act
             short size = 2;
-            var comparators = new Tuple<short, short>[1] { new Tuple<short, short>(0, 1) };
+            var comparators = new Comparator[1] { new Comparator(0, 1) };
             var s1 = new ComparatorNetwork(size,  comparators);
 
             // Assert
@@ -24,7 +24,7 @@ namespace SortingNetworksTests
         {
             // Arrange, Act
             short size = 3;
-            var comparators = new Tuple<short, short>[3] { new Tuple<short, short>(0, 2), new Tuple<short, short>(0, 1), new Tuple<short, short>(1, 2) };
+            var comparators = new Comparator[3] { new Comparator(0, 2), new Comparator(0, 1), new Comparator(1, 2) };
             var s1 = new ComparatorNetwork(size, comparators);
 
             // Assert
@@ -36,7 +36,7 @@ namespace SortingNetworksTests
         {
             // Arrange, Act
             short size = 3;
-            var comparators = new Tuple<short, short>[3] { new Tuple<short, short>(1, 2), new Tuple<short, short>(0, 1), new Tuple<short, short>(0, 2) };
+            var comparators = new Comparator[3] { new Comparator(1, 2), new Comparator(0, 1), new Comparator(0, 2) };
             var s1 = new ComparatorNetwork(size, comparators);
 
             // Assert
@@ -48,7 +48,7 @@ namespace SortingNetworksTests
         {
             // Arrange, Act
             short size = 3;
-            var comparators = new Tuple<short, short>[2] { new Tuple<short, short>(0, 2), new Tuple<short, short>(0, 1) };
+            var comparators = new Comparator[2] { new Comparator(0, 2), new Comparator(0, 1) };
             var s1 = new ComparatorNetwork(size, comparators);
 
             // Assert
@@ -60,7 +60,7 @@ namespace SortingNetworksTests
         {
             // Arrange, Act
             short size = 3;
-            var comparators = new Tuple<short, short>[1] { new Tuple<short, short>(0, 1) };
+            var comparators = new Comparator[1] { new Comparator(0, 1) };
             var s1 = new ComparatorNetwork(size, comparators);
 
             // Assert
