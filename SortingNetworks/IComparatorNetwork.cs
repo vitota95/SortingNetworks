@@ -9,10 +9,11 @@ namespace SortingNetworks
     {
         short Size { get; }
         Tuple<short, short>[] Comparators { get; set; }
-        HashSet<short> Output
+        HashSet<short> Outputs
         {
             get;
         }
         bool IsEquivalent(IComparatorNetwork n);
+        bool IsSortingNetwork();
     }
 }

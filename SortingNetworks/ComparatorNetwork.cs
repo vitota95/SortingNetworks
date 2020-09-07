@@ -12,10 +12,10 @@ namespace SortingNetworks
         {
             this.Comparators = comparators;
             this.Size = size;
-            this.Output = CalculateOutput();       
+            this.Outputs = CalculateOutput();       
         }
 
-        public HashSet<short> Output { get; private set; }
+        public HashSet<short> Outputs { get; private set; }
 
         public short Size { get; private set; }
 
@@ -23,7 +23,7 @@ namespace SortingNetworks
 
         public bool IsEquivalent(IComparatorNetwork n)
         {
-            return OutputsAreEqual(this.Output, n.Output);
+            return OutputsAreEqual(this.Outputs, n.Outputs);
         }
 
         private static bool OutputsAreEqual(HashSet<short> ba1, HashSet<short> ba2)
@@ -64,6 +64,11 @@ namespace SortingNetworks
             arr.CopyTo(newValue, 0);
 
             return (short)newValue[0];
-        }  
+        }
+
+        public bool IsSortingNetwork()
+        {
+            return this.Outputs.Count == this.Size + 1;
+        }
     }
 }
