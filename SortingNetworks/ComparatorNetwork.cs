@@ -33,11 +33,12 @@ namespace SortingNetworks
 
         public IComparatorNetwork CloneWithNewComparator(Comparator comparator)
         {
-            var newComparators = new Comparator[this.Size + 1];
-            Array.Copy(this.Comparators, newComparators, this.Size);
-            newComparators[this.Size] = comparator;
+            var comparatorsSize = this.Comparators.Length + 1;
+            var newComparators = new Comparator[comparatorsSize];
+            Array.Copy(this.Comparators, newComparators, this.Comparators.Length);
+            newComparators[comparatorsSize-1] = comparator;
 
-            return new ComparatorNetwork((short)(this.Size + 1), newComparators);
+            return new ComparatorNetwork(this.Size, newComparators);
         }
 
         private static bool OutputsAreEqual(HashSet<short> ba1, HashSet<short> ba2)

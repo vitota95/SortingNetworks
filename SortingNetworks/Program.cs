@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace SortingNetworks
 {
@@ -8,63 +11,67 @@ namespace SortingNetworks
     {
         static void Main(string[] args)
         {
-            var n = 4;
-            var k = 2;
-            var range = Enumerable.Range(0, n).ToList();
+            short size = 4;
+            var k = 5;
+            var range = Enumerable.Range(0, size).ToList();
             var combinations = GenerateCombinations(range, 2);
-            var tupleCombinations = new List<Tuple<int, int>>();
+            var comparators = new List<Comparator>();
+
+            InitiateTracer();
 
             foreach (var comp in combinations)
             {
                 if (comp[0] != comp[1])
                 {
-                    tupleCombinations.Add(Tuple.Create(comp[0], comp[1]));
+                    comparators.Add(new Comparator((short)comp[0], (short)comp[1]));
                 }
             }
 
-            var comparatorNets = new List<IEnumerable<Tuple<int, int>>>();
+            var comparatorNets = CreateFirstLevelComparatorNetworks(size, comparators.ToArray());
 
-            foreach (var t in tupleCombinations) 
+            for (var i = 0; i < k - 1; i++)
             {
-                comparatorNets.Add(new List<Tuple<int, int>>() { t });
-            }
-
-            for (var i=0; i < k - 1; i++)
-            {
-                comparatorNets = (List<IEnumerable<Tuple<int, int>>>)Generate(comparatorNets, tupleCombinations);
+                comparatorNets = Generate(comparatorNets, comparators);
                 //comparatorNets = (List<List<Tuple<int, int>>>)Prune(comparatorNets);
 
             }
 
-            PrintAllNets(comparatorNets);
-            Console.ReadKey();
-            //GenerateComparatorNets(4, 8);
+            PrintComparatorNetworks(comparatorNets);
         }
 
-        private static IEnumerable<IEnumerable<Tuple<int, int>>> Generate(IEnumerable<IEnumerable<Tuple<int, int>>> set, IEnumerable<Tuple<int,int>> combinations)
+        private static IComparatorNetwork[] Generate(IComparatorNetwork[] nets, IList<Comparator> comparators)
         {
-            var newSet = new List<IEnumerable<Tuple<int, int>>>();
-
-            foreach (var x in set) 
+            var newSet = new IComparatorNetwork[nets.Length*comparators.Count];
+            var index = 0;
+            for (var i = 0; i < nets.Length; i++)
             {
-                foreach (var c in combinations) 
+                for (var j = 0; j < comparators.Count; j++)
                 {
-                    var x2 = new List<Tuple<int, int>>(x);
-                    x2.Add(c);
-                    newSet.Add(x2);
+                    newSet[index] = nets[i].CloneWithNewComparator(comparators[j]);
+                    index++;
                 }
             }
 
             return newSet;
         }
 
-        private static IEnumerable<IEnumerable<Tuple<int, int>>> Prune(IEnumerable<IEnumerable<Tuple<int, int>>> set)
+        private static IComparatorNetwork[] Prune(IComparatorNetwork[] nets)
         {
-
-            return set;
+            return nets;
         }
 
-        private static void PrintAllNets(IEnumerable<IEnumerable<Tuple<int, int>>> nets) 
+        private static IComparatorNetwork[] CreateFirstLevelComparatorNetworks(short size, Comparator[] comparators) 
+        {
+            var comparatorNets = new ComparatorNetwork[comparators.Length];
+            for (var i = 0; i< comparators.Length; i++)
+            {
+                comparatorNets[i] = new ComparatorNetwork(size, new Comparator[] { new Comparator(comparators[i].x, comparators[i].y) });
+            }
+
+            return comparatorNets;
+        }
+
+        private static void PrintComparatorNetworks(IComparatorNetwork[] nets) 
         {
             foreach (var n in nets) 
             {
@@ -72,38 +79,29 @@ namespace SortingNetworks
             }
         }
 
-        private static void PrintComparatorNet(IEnumerable<Tuple<int,int>> net) 
+        private static void PrintComparatorNet(IComparatorNetwork net) 
         {
-            foreach (var p in net)
+            foreach (var c in net.Comparators)
             {
-                Console.Write($"({p.Item1},{p.Item2})");
+                Trace.Write($"({c.x},{c.y}) ");
             }
-            Console.WriteLine();
+            Trace.WriteLine($"Is Sorting Network {net.IsSortingNetwork()}");
         }
 
-        //private static void GenerateComparatorNets(int s, int c)
-        //{
-        //    var comparatorsMatrix = GenerateCombinations(Enumerable.Range(0,s).ToList(), 2);
-        //    var comparators = new List<Tuple<int, int>>();
-
-        //    foreach (var comp in comparatorsMatrix) {
-        //        if (comp[0] != comp[1]) {
-        //            comparators.Add(Tuple.Create(comp[0], comp[1]));
-        //        }
-        //    }
-
-        //    var comparatorsCombi = GenerateCombinations(comparators, c);
-
-        //    foreach (var perm in comparatorsCombi)
-        //    {
-        //        foreach (var p in perm)
-        //        {
-        //            Console.Write($"({p.Item1},{p.Item2})");
-        //        }
-        //        Console.WriteLine();
-        //    }
-        //    Console.ReadKey();
-        //}
+        private static void InitiateTracer()
+        {
+            Trace.Listeners.Clear();
+            File.Delete("log.txt");
+            var twtl = new TextWriterTraceListener("log.txt")
+            {
+                Name = "TextLogger",
+                TraceOutputOptions = TraceOptions.ThreadId | TraceOptions.DateTime
+            };
+            var ctl = new ConsoleTraceListener(false) { TraceOutputOptions = TraceOptions.DateTime };
+            Trace.Listeners.Add(twtl);
+            Trace.Listeners.Add(ctl);
+            Trace.AutoFlush = true;
+        }
 
         private static List<List<T>> GenerateCombinations<T>(List<T> combinationList, int k)
         {
