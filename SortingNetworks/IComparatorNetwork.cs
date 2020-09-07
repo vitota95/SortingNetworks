@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 
 namespace SortingNetworks
 {
@@ -8,7 +9,7 @@ namespace SortingNetworks
     {
         short Size { get; }
         Tuple<short, short>[] Comparators { get; set; }
-        HashSet<BitArray> Output
+        HashSet<short> Output
         {
             get;
         }

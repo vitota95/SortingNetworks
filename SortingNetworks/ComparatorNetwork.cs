@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Text;
 
 namespace SortingNetworks
 {
     public class ComparatorNetwork : IComparatorNetwork
     {
-        public ComparatorNetwork(short size) 
+        public ComparatorNetwork(short size, Tuple<short,short>[] comparators) 
         {
-            this.Output = CalculateOutput();
+            this.Comparators = comparators;
+            this.Size = size;
+            this.Output = CalculateOutput();       
         }
 
-        public HashSet<BitArray> Output { get; private set; }
+        public HashSet<short> Output { get; private set; }
 
         public short Size { get; private set; }
 
@@ -23,17 +26,17 @@ namespace SortingNetworks
             return OutputsAreEqual(this.Output, n.Output);
         }
 
-        private static bool OutputsAreEqual(HashSet<BitArray> ba1, HashSet<BitArray> ba2)
+        private static bool OutputsAreEqual(HashSet<short> ba1, HashSet<short> ba2)
         {
             return ba1.Equals(ba2);
         }
 
-        private HashSet<BitArray> CalculateOutput() 
+        private HashSet<short> CalculateOutput() 
         {
             var total = Math.Pow(2, this.Size);
-            var output = new HashSet<BitArray>();
+            var output = new HashSet<short>();
             
-            for (var i = 0; i < total; i++) 
+            for (short i = 0; i < total; i++) 
             {
                 output.Add(ComputeOutput(i));
             }
@@ -41,11 +44,26 @@ namespace SortingNetworks
             return output;
         }
 
-        private BitArray ComputeOutput(int value) 
+        private short ComputeOutput(short value) 
         {
             var arr = new BitArray(new int[] { value });
-            // TODO: compute the output based on comparators
-            return arr;
-        }
+            for (var i = 0; i < Comparators.Length; i++) 
+            {
+                var b1 = arr.Get(Comparators[i].Item1);
+                var b2 = arr.Get(Comparators[i].Item2);
+
+                if (!b1 && b2) 
+                {
+                    var temp = b1;
+                    arr.Set(Comparators[i].Item1, b2);
+                    arr.Set(Comparators[i].Item2, temp);
+                }
+            }
+
+            var newValue = new int[1];
+            arr.CopyTo(newValue, 0);
+
+            return (short)newValue[0];
+        }  
     }
 }
