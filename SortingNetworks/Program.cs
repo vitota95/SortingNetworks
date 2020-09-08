@@ -14,7 +14,8 @@ namespace SortingNetworks
             short size = 4;
             var k = 5;
             var range = Enumerable.Range(0, size).ToList();
-            var combinations = GenerateCombinations(range, 2);
+            var combinationsGenerator = new CombinationsGenerator();
+            var combinations = combinationsGenerator.GenerateCombinations(range, 2);
             var comparators = new List<Comparator>();
 
             InitiateTracer();
@@ -33,7 +34,6 @@ namespace SortingNetworks
             {
                 comparatorNets = Generate(comparatorNets, comparators);
                 //comparatorNets = (List<List<Tuple<int, int>>>)Prune(comparatorNets);
-
             }
 
             PrintComparatorNetworks(comparatorNets);
@@ -101,40 +101,6 @@ namespace SortingNetworks
             Trace.Listeners.Add(twtl);
             Trace.Listeners.Add(ctl);
             Trace.AutoFlush = true;
-        }
-
-        private static List<List<T>> GenerateCombinations<T>(List<T> combinationList, int k)
-        {
-            var combinations = new List<List<T>>();
-
-            if (k == 0)
-            {
-                var emptyCombination = new List<T>();
-                combinations.Add(emptyCombination);
-
-                return combinations;
-            }
-
-            if (combinationList.Count == 0)
-            {
-                return combinations;
-            }
-
-            T head = combinationList[0];
-            var copiedCombinationList = new List<T>(combinationList);
-
-            List<List<T>> subcombinations = GenerateCombinations(copiedCombinationList, k - 1);
-
-            foreach (var subcombination in subcombinations)
-            {
-                subcombination.Insert(0, head);
-                combinations.Add(subcombination);
-            }
-
-            combinationList.RemoveAt(0);
-            combinations.AddRange(GenerateCombinations(combinationList, k));
-
-            return combinations;
         }
     }
 }
