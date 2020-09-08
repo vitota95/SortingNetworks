@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Text;
 
 namespace SortingNetworks
@@ -28,6 +29,11 @@ namespace SortingNetworks
             return this.Outputs.Count == this.Size + 1;
         }
 
+        public void MarkIfRedundant(IComparatorNetwork n)
+        {
+            this.IsMarked = this.Outputs.SetEquals(n.Outputs);
+        }
+
         public IComparatorNetwork CloneWithNewComparator(Comparator comparator)
         {
             var comparatorsSize = this.Comparators.Length + 1;
@@ -38,9 +44,9 @@ namespace SortingNetworks
             return new ComparatorNetwork(this.Size, newComparators);
         }
 
-        public void MarkIfEquivalent(IComparatorNetwork n)
+        public void MarkIfSubsumed(IComparatorNetwork n)
         {
-            this.IsMarked = this.Outputs.SetEquals(n.Outputs);
+            throw new NotImplementedException();
         }
 
         private HashSet<short> CalculateOutput() 
@@ -76,6 +82,6 @@ namespace SortingNetworks
             arr.CopyTo(newValue, 0);
 
             return (short)newValue[0];
-        }
+        }     
     }
 }

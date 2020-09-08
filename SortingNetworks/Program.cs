@@ -11,8 +11,8 @@ namespace SortingNetworks
     {
         static void Main(string[] args)
         {
-            short size = 6;
-            var k = 12;
+            short size = 5;
+            var k = 9;
             var range = Enumerable.Range(0, size).ToList();
             var combinationsGenerator = new CombinationsGenerator();
             var combinations = combinationsGenerator.GenerateCombinations(range, 2);
@@ -32,15 +32,17 @@ namespace SortingNetworks
             Trace.WriteLine($"Generate first level--------------");
             var comparatorNets = CreateFirstLevelComparatorNetworks(size, comparators.ToArray());
             Trace.WriteLine($"Length after Generate: {comparatorNets.Length} ");
+            //comparatorNets = Prune(comparatorNets);
+            //Trace.WriteLine($"Length after Prune: {comparatorNets.Length} ");
 
             for (var i = 0; i < k - 1; i++)
             {
                 Trace.WriteLine($"Generate--------------");
                 comparatorNets = Generate(comparatorNets, comparators);
                 Trace.WriteLine($"Length after Generate: {comparatorNets.Length} ");
-                Trace.WriteLine($"Prune--------------");
-                comparatorNets = Prune(comparatorNets);
-                Trace.WriteLine($"Length after Prune: {comparatorNets.Length} ");
+                //Trace.WriteLine($"Prune--------------");
+                //comparatorNets = Prune(comparatorNets);
+                //Trace.WriteLine($"Length after Prune: {comparatorNets.Length} ");
                 Trace.WriteLine("");
             }
 
@@ -51,33 +53,25 @@ namespace SortingNetworks
 
         private static IComparatorNetwork[] Generate(IComparatorNetwork[] nets, IList<Comparator> comparators)
         {
-            var newSet = new IComparatorNetwork[nets.Length*comparators.Count];
+            var newSet = new IComparatorNetwork[nets.Length * comparators.Count];
             var index = 0;
             for (var i = 0; i < nets.Length; i++)
             {
+                var net = nets[i];
                 for (var j = 0; j < comparators.Count; j++)
                 {
-                    newSet[index] = nets[i].CloneWithNewComparator(comparators[j]);
+                    var newNet = net.CloneWithNewComparator(comparators[j]);
+                    newSet[index] = newNet;
                     index++;
                 }
             }
 
-            return newSet;
+            return RemoveRedundantNetworks(newSet.ToArray());
         }
 
         private static IComparatorNetwork[] Prune(IComparatorNetwork[] nets)
         {
-            for (var i = 0; i < nets.Length; i++) 
-            {
-                if (nets[i].IsMarked) continue;
-                for (var j = i+1; j<nets.Length-1; j++)
-                {
-                    if (nets[j].IsMarked) continue;
-                    nets[j].MarkIfEquivalent(nets[i]);
-                }
-            }
-
-            return nets.Where(x => !x.IsMarked).ToArray();
+            throw new NotImplementedException();
         }
 
         private static IComparatorNetwork[] CreateFirstLevelComparatorNetworks(short size, Comparator[] comparators) 
@@ -88,7 +82,22 @@ namespace SortingNetworks
                 comparatorNets[i] = new ComparatorNetwork(size, new Comparator[] { new Comparator(comparators[i].x, comparators[i].y) });
             }
 
-            return comparatorNets;
+            return RemoveRedundantNetworks(comparatorNets);
+        }
+
+        private static IComparatorNetwork[] RemoveRedundantNetworks(IComparatorNetwork[] nets) 
+        {
+            for (var i = 0; i < nets.Length; i++) 
+            {
+                if (nets[i].IsMarked) continue;
+                for (var j = i + 1; j < nets.Length - 1; j++)
+                {
+                    if (nets[j].IsMarked) continue;
+                    nets[j].MarkIfRedundant(nets[i]);
+                }
+            }
+
+            return nets.Where(x => !x.IsMarked).ToArray();
         }
 
         private static void PrintSortingNetworks(IComparatorNetwork[] nets, int size, int k) 

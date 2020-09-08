@@ -87,7 +87,7 @@ namespace SortingNetworksTests
         }
         
         [TestMethod]
-        public void MarkIfEquivalentTo_WhenAreEquivalent_IsMarkedIsTrue()
+        public void MarkIfRedundant_WhenAreRedundant_IsMarkedIsTrue()
         {
             // Arrange
             short size = 2;
@@ -97,14 +97,14 @@ namespace SortingNetworksTests
             var s2 = new ComparatorNetwork(size, c2);
 
             // Act
-            s2.MarkIfEquivalent(s1);
+            s2.MarkIfRedundant(s1);
 
             // Assert
             Assert.IsTrue(s2.IsMarked);          
         }
         
         [TestMethod]
-        public void MarkIfEquivalentTo_WhenAreDifferent_IsMarkedIsFalse()
+        public void MarkIfRedundant_WhenAreNotRedundant_IsMarkedIsFalse()
         {
             // Arrange
             short size = 2;
@@ -114,7 +114,7 @@ namespace SortingNetworksTests
             var s2 = new ComparatorNetwork(size, c2);
 
             // Act
-            s2.MarkIfEquivalent(s1);
+            s2.MarkIfRedundant(s1);
 
             // Assert
             Assert.IsFalse(s2.IsMarked);          

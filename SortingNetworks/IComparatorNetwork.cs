@@ -24,7 +24,8 @@ namespace SortingNetworks
         bool IsMarked { get; }
         Comparator[] Comparators { get; set; }
         HashSet<short> Outputs{ get; }
-        void MarkIfEquivalent(IComparatorNetwork n);       
+        void MarkIfSubsumed(IComparatorNetwork n);       
+        void MarkIfRedundant(IComparatorNetwork n);       
         bool IsSortingNetwork();
         IComparatorNetwork CloneWithNewComparator(Comparator comparator);
     }
