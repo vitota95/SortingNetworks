@@ -11,8 +11,8 @@ namespace SortingNetworks
     {
         static void Main(string[] args)
         {
-            short size = 4;
-            var k = 5;
+            short size = 6;
+            var k = 12;
             var range = Enumerable.Range(0, size).ToList();
             var combinationsGenerator = new CombinationsGenerator();
             var combinations = combinationsGenerator.GenerateCombinations(range, 2);
@@ -28,15 +28,25 @@ namespace SortingNetworks
                 }
             }
 
+            var stopWatch = Stopwatch.StartNew();
+            Trace.WriteLine($"Generate first level--------------");
             var comparatorNets = CreateFirstLevelComparatorNetworks(size, comparators.ToArray());
+            Trace.WriteLine($"Length after Generate: {comparatorNets.Length} ");
 
             for (var i = 0; i < k - 1; i++)
             {
+                Trace.WriteLine($"Generate--------------");
                 comparatorNets = Generate(comparatorNets, comparators);
-                //comparatorNets = (List<List<Tuple<int, int>>>)Prune(comparatorNets);
+                Trace.WriteLine($"Length after Generate: {comparatorNets.Length} ");
+                Trace.WriteLine($"Prune--------------");
+                comparatorNets = Prune(comparatorNets);
+                Trace.WriteLine($"Length after Prune: {comparatorNets.Length} ");
+                Trace.WriteLine("");
             }
 
-            PrintComparatorNetworks(comparatorNets);
+            Trace.WriteLine($"Elapsed Time: {stopWatch.Elapsed} ");
+
+            PrintSortingNetworks(comparatorNets, size, k);
         }
 
         private static IComparatorNetwork[] Generate(IComparatorNetwork[] nets, IList<Comparator> comparators)
@@ -57,7 +67,17 @@ namespace SortingNetworks
 
         private static IComparatorNetwork[] Prune(IComparatorNetwork[] nets)
         {
-            return nets;
+            for (var i = 0; i < nets.Length; i++) 
+            {
+                if (nets[i].IsMarked) continue;
+                for (var j = i+1; j<nets.Length-1; j++)
+                {
+                    if (nets[j].IsMarked) continue;
+                    nets[j].MarkIfEquivalent(nets[i]);
+                }
+            }
+
+            return nets.Where(x => !x.IsMarked).ToArray();
         }
 
         private static IComparatorNetwork[] CreateFirstLevelComparatorNetworks(short size, Comparator[] comparators) 
@@ -71,9 +91,11 @@ namespace SortingNetworks
             return comparatorNets;
         }
 
-        private static void PrintComparatorNetworks(IComparatorNetwork[] nets) 
+        private static void PrintSortingNetworks(IComparatorNetwork[] nets, int size, int k) 
         {
-            foreach (var n in nets) 
+            var sortingNets = nets.Where(x => x.IsSortingNetwork()).ToList();
+            Trace.WriteLine($"{sortingNets.Count} Sorting Networks found with size {size} and {k} comparators");
+            foreach (var n in sortingNets) 
             {
                 PrintComparatorNet(n);
             }
@@ -85,7 +107,7 @@ namespace SortingNetworks
             {
                 Trace.Write($"({c.x},{c.y}) ");
             }
-            Trace.WriteLine($"Is Sorting Network {net.IsSortingNetwork()}");
+            Trace.WriteLine("");
         }
 
         private static void InitiateTracer()

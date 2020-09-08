@@ -21,12 +21,10 @@ namespace SortingNetworks
     public interface IComparatorNetwork
     {
         short Size { get; }
+        bool IsMarked { get; }
         Comparator[] Comparators { get; set; }
-        HashSet<short> Outputs
-        {
-            get;
-        }
-        bool IsEquivalent(IComparatorNetwork n);
+        HashSet<short> Outputs{ get; }
+        void MarkIfEquivalent(IComparatorNetwork n);       
         bool IsSortingNetwork();
         IComparatorNetwork CloneWithNewComparator(Comparator comparator);
     }

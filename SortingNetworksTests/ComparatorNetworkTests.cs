@@ -70,10 +70,12 @@ namespace SortingNetworksTests
         [TestMethod]
         public void CloneWithNewComparator_When1Comparator_Contains2Comparators()
         {
-            // Arrange, Act
+            // Arrange
             short size = 3;
             var comparators = new Comparator[1] { new Comparator(0, 1) };
             var s1 = new ComparatorNetwork(size, comparators);
+
+            // Act
             var s2 = s1.CloneWithNewComparator(new Comparator(1, 2));
 
             // Assert
@@ -82,6 +84,40 @@ namespace SortingNetworksTests
             Assert.AreEqual(1, s2.Comparators[0].y); 
             Assert.AreEqual(1, s2.Comparators[1].x);
             Assert.AreEqual(2, s2.Comparators[1].y);
+        }
+        
+        [TestMethod]
+        public void MarkIfEquivalentTo_WhenAreEquivalent_IsMarkedIsTrue()
+        {
+            // Arrange
+            short size = 2;
+            var c1 = new Comparator[1] { new Comparator(0, 1) };
+            var c2 = new Comparator[1] { new Comparator(0, 1) };
+            var s1 = new ComparatorNetwork(size, c1);
+            var s2 = new ComparatorNetwork(size, c2);
+
+            // Act
+            s2.MarkIfEquivalent(s1);
+
+            // Assert
+            Assert.IsTrue(s2.IsMarked);          
+        }
+        
+        [TestMethod]
+        public void MarkIfEquivalentTo_WhenAreDifferent_IsMarkedIsFalse()
+        {
+            // Arrange
+            short size = 2;
+            var c1 = new Comparator[1] { new Comparator(0, 1) };
+            var c2 = new Comparator[1] { new Comparator(0, 2) };
+            var s1 = new ComparatorNetwork(size, c1);
+            var s2 = new ComparatorNetwork(size, c2);
+
+            // Act
+            s2.MarkIfEquivalent(s1);
+
+            // Assert
+            Assert.IsFalse(s2.IsMarked);          
         }
     }
 }

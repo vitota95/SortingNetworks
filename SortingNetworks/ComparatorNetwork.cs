@@ -21,10 +21,7 @@ namespace SortingNetworks
 
         public Comparator[] Comparators { get;  set; }
 
-        public bool IsEquivalent(IComparatorNetwork n)
-        {
-            return OutputsAreEqual(this.Outputs, n.Outputs);
-        }
+        public bool IsMarked { get; private set; }      
 
         public bool IsSortingNetwork()
         {
@@ -41,9 +38,9 @@ namespace SortingNetworks
             return new ComparatorNetwork(this.Size, newComparators);
         }
 
-        private static bool OutputsAreEqual(HashSet<short> ba1, HashSet<short> ba2)
+        public void MarkIfEquivalent(IComparatorNetwork n)
         {
-            return ba1.Equals(ba2);
+            this.IsMarked = this.Outputs.SetEquals(n.Outputs);
         }
 
         private HashSet<short> CalculateOutput() 
