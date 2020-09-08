@@ -65,8 +65,25 @@ namespace SortingNetworksTests
 
             // Assert
             Assert.IsFalse(s1.IsSortingNetwork());
-        }
+        }      
         
+        [TestMethod]
+        public void CloneWithNewComparator_When0Comparator_Contains1Comparator()
+        {
+            // Arrange
+            short size = 3;
+            var comparators = new Comparator[0];
+            var s1 = new ComparatorNetwork(size, comparators);
+
+            // Act
+            var s2 = s1.CloneWithNewComparator(new Comparator(1, 2));
+
+            // Assert
+            Assert.AreEqual(1, s2.Comparators.Length);
+            Assert.AreEqual(1, s2.Comparators[0].x);
+            Assert.AreEqual(2, s2.Comparators[0].y); 
+        }
+
         [TestMethod]
         public void CloneWithNewComparator_When1Comparator_Contains2Comparators()
         {
@@ -81,11 +98,11 @@ namespace SortingNetworksTests
             // Assert
             Assert.AreEqual(2, s2.Comparators.Length);
             Assert.AreEqual(0, s2.Comparators[0].x);
-            Assert.AreEqual(1, s2.Comparators[0].y); 
+            Assert.AreEqual(1, s2.Comparators[0].y);
             Assert.AreEqual(1, s2.Comparators[1].x);
             Assert.AreEqual(2, s2.Comparators[1].y);
         }
-        
+
         [TestMethod]
         public void MarkIfRedundant_WhenAreRedundant_IsMarkedIsTrue()
         {

@@ -29,13 +29,9 @@ namespace SortingNetworks
             }
 
             var stopWatch = Stopwatch.StartNew();
-            Trace.WriteLine($"Generate first level--------------");
-            var comparatorNets = CreateFirstLevelComparatorNetworks(size, comparators.ToArray());
-            Trace.WriteLine($"Length after Generate: {comparatorNets.Length} ");
-            //comparatorNets = Prune(comparatorNets);
-            //Trace.WriteLine($"Length after Prune: {comparatorNets.Length} ");
+            var comparatorNets = new IComparatorNetwork[] { new ComparatorNetwork(size, new Comparator[0]) };
 
-            for (var i = 0; i < k - 1; i++)
+            for (var i = 0; i < k; i++)
             {
                 Trace.WriteLine($"Generate--------------");
                 comparatorNets = Generate(comparatorNets, comparators);
@@ -72,17 +68,6 @@ namespace SortingNetworks
         private static IComparatorNetwork[] Prune(IComparatorNetwork[] nets)
         {
             throw new NotImplementedException();
-        }
-
-        private static IComparatorNetwork[] CreateFirstLevelComparatorNetworks(short size, Comparator[] comparators) 
-        {
-            var comparatorNets = new ComparatorNetwork[comparators.Length];
-            for (var i = 0; i< comparators.Length; i++)
-            {
-                comparatorNets[i] = new ComparatorNetwork(size, new Comparator[] { new Comparator(comparators[i].x, comparators[i].y) });
-            }
-
-            return RemoveRedundantNetworks(comparatorNets);
         }
 
         private static IComparatorNetwork[] RemoveRedundantNetworks(IComparatorNetwork[] nets) 
@@ -122,7 +107,6 @@ namespace SortingNetworks
         private static void InitiateTracer()
         {
             Trace.Listeners.Clear();
-            File.Delete("log.txt");
             var twtl = new TextWriterTraceListener("log.txt")
             {
                 Name = "TextLogger",
