@@ -14,7 +14,9 @@ namespace SortingNetworks
             short size = 5;
             var k = 9;
             var range = Enumerable.Range(0, size).ToList();
+
             var combinationsGenerator = new CombinationsGenerator();
+            var sortingNetworksGenerator = new SortingNetworksGenerator();
             var combinations = combinationsGenerator.GenerateCombinations(range, 2);
             var comparators = new List<Comparator>();
 
@@ -34,7 +36,7 @@ namespace SortingNetworks
             for (var i = 0; i < k; i++)
             {
                 Trace.WriteLine($"Generate--------------");
-                comparatorNets = Generate(comparatorNets, comparators);
+                comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
                 Trace.WriteLine($"Length after Generate: {comparatorNets.Length} ");
                 //Trace.WriteLine($"Prune--------------");
                 //comparatorNets = Prune(comparatorNets);
@@ -46,43 +48,10 @@ namespace SortingNetworks
 
             PrintSortingNetworks(comparatorNets, size, k);
         }
-
-        private static IComparatorNetwork[] Generate(IComparatorNetwork[] nets, IList<Comparator> comparators)
-        {
-            var newSet = new IComparatorNetwork[nets.Length * comparators.Count];
-            var index = 0;
-            for (var i = 0; i < nets.Length; i++)
-            {
-                var net = nets[i];
-                for (var j = 0; j < comparators.Count; j++)
-                {
-                    var newNet = net.CloneWithNewComparator(comparators[j]);
-                    newSet[index] = newNet;
-                    index++;
-                }
-            }
-
-            return RemoveRedundantNetworks(newSet.ToArray());
-        }
-
+    
         private static IComparatorNetwork[] Prune(IComparatorNetwork[] nets)
         {
             throw new NotImplementedException();
-        }
-
-        private static IComparatorNetwork[] RemoveRedundantNetworks(IComparatorNetwork[] nets) 
-        {
-            for (var i = 0; i < nets.Length; i++) 
-            {
-                if (nets[i].IsMarked) continue;
-                for (var j = i + 1; j < nets.Length - 1; j++)
-                {
-                    if (nets[j].IsMarked) continue;
-                    nets[j].MarkIfRedundant(nets[i]);
-                }
-            }
-
-            return nets.Where(x => !x.IsMarked).ToArray();
         }
 
         private static void PrintSortingNetworks(IComparatorNetwork[] nets, int size, int k) 

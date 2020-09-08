@@ -29,9 +29,10 @@ namespace SortingNetworks
             return this.Outputs.Count == this.Size + 1;
         }
 
-        public void MarkIfRedundant(IComparatorNetwork n)
+        public bool IsRedundant(IComparatorNetwork n)
         {
             this.IsMarked = this.Outputs.SetEquals(n.Outputs);
+            return this.IsMarked;
         }
 
         public IComparatorNetwork CloneWithNewComparator(Comparator comparator)

@@ -104,7 +104,7 @@ namespace SortingNetworksTests
         }
 
         [TestMethod]
-        public void MarkIfRedundant_WhenAreRedundant_IsMarkedIsTrue()
+        public void IsRedundant_WhenAreRedundant_IsMarkedIsTrue()
         {
             // Arrange
             short size = 2;
@@ -114,10 +114,10 @@ namespace SortingNetworksTests
             var s2 = new ComparatorNetwork(size, c2);
 
             // Act
-            s2.MarkIfRedundant(s1);
+            var result = s2.IsRedundant(s1);
 
             // Assert
-            Assert.IsTrue(s2.IsMarked);          
+            Assert.IsTrue(result);          
         }
         
         [TestMethod]
@@ -131,10 +131,10 @@ namespace SortingNetworksTests
             var s2 = new ComparatorNetwork(size, c2);
 
             // Act
-            s2.MarkIfRedundant(s1);
+            var result = s2.IsRedundant(s1);
 
             // Assert
-            Assert.IsFalse(s2.IsMarked);          
+            Assert.IsFalse(result);          
         }
     }
 }
