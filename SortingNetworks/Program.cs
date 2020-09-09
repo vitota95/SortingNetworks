@@ -11,9 +11,9 @@ namespace SortingNetworks
     {
         static void Main(string[] args)
         {
-            short size = 5;
+            short inputs = 5;
             var k = 9;
-            var range = Enumerable.Range(0, size).ToList();
+            var range = Enumerable.Range(0, inputs).ToList();
 
             var combinationsGenerator = new CombinationsGenerator();
             var sortingNetworksGenerator = new SortingNetworksGenerator();
@@ -31,7 +31,7 @@ namespace SortingNetworks
             }
 
             var stopWatch = Stopwatch.StartNew();
-            var comparatorNets = new IComparatorNetwork[] { new ComparatorNetwork(size, new Comparator[0]) };
+            var comparatorNets = new IComparatorNetwork[] { new ComparatorNetwork(inputs, new Comparator[0]) };
 
             for (var i = 0; i < k; i++)
             {
@@ -46,7 +46,7 @@ namespace SortingNetworks
 
             Trace.WriteLine($"Elapsed Time: {stopWatch.Elapsed} ");
 
-            PrintSortingNetworks(comparatorNets, size, k);
+            PrintSortingNetworks(comparatorNets, inputs, k);
         }
     
         private static IComparatorNetwork[] Prune(IComparatorNetwork[] nets)
@@ -54,10 +54,10 @@ namespace SortingNetworks
             throw new NotImplementedException();
         }
 
-        private static void PrintSortingNetworks(IComparatorNetwork[] nets, int size, int k) 
+        private static void PrintSortingNetworks(IComparatorNetwork[] nets, int inputs, int k) 
         {
             var sortingNets = nets.Where(x => x.IsSortingNetwork()).ToList();
-            Trace.WriteLine($"{sortingNets.Count} Sorting Networks found with size {size} and {k} comparators");
+            Trace.WriteLine($"{sortingNets.Count} Sorting Networks found with {inputs} inputs and {k} comparators");
             foreach (var n in sortingNets) 
             {
                 PrintComparatorNet(n);

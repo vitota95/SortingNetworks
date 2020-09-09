@@ -9,16 +9,16 @@ namespace SortingNetworks
 {
     public class ComparatorNetwork : IComparatorNetwork
     {
-        public ComparatorNetwork(short size, Comparator[] comparators) 
+        public ComparatorNetwork(short inputs, Comparator[] comparators) 
         {
             this.Comparators = comparators;
-            this.Size = size;
+            this.Inputs = inputs;
             this.Outputs = CalculateOutput();       
         }
 
         public HashSet<short> Outputs { get; private set; }
 
-        public short Size { get; private set; }
+        public short Inputs { get; private set; }
 
         public Comparator[] Comparators { get;  set; }
 
@@ -26,7 +26,7 @@ namespace SortingNetworks
 
         public bool IsSortingNetwork()
         {
-            return this.Outputs.Count == this.Size + 1;
+            return this.Outputs.Count == this.Inputs + 1;
         }
 
         public bool IsRedundant(IComparatorNetwork n)
@@ -42,7 +42,7 @@ namespace SortingNetworks
             Array.Copy(this.Comparators, newComparators, this.Comparators.Length);
             newComparators[comparatorsSize-1] = comparator;
 
-            return new ComparatorNetwork(this.Size, newComparators);
+            return new ComparatorNetwork(this.Inputs, newComparators);
         }
 
         public void MarkIfSubsumed(IComparatorNetwork n)
@@ -52,7 +52,7 @@ namespace SortingNetworks
 
         private HashSet<short> CalculateOutput() 
         {
-            var total = Math.Pow(2, this.Size);
+            var total = Math.Pow(2, this.Inputs);
             var output = new HashSet<short>();
             
             for (short i = 0; i < total; i++) 

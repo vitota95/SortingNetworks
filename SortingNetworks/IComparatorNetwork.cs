@@ -20,7 +20,7 @@ namespace SortingNetworks
 
     public interface IComparatorNetwork
     {
-        short Size { get; }
+        short Inputs { get; }
         bool IsMarked { get; }
         Comparator[] Comparators { get; set; }
         HashSet<short> Outputs{ get; }
