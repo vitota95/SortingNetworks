@@ -13,19 +13,14 @@ namespace SortingNetworks
                 for (var j = 0; j < comparators.Count; j++)
                 {
                     var newNet = net.CloneWithNewComparator(comparators[j]);
-
-                    foreach(var n in newSet) 
-                    {
-                        if (newNet.IsRedundant(n)) break;                       
-                    }
-
-                    if (!newNet.IsMarked) 
+                    var isRedundant = newNet.IsRedundant(net);
+                    
+                    if (!isRedundant)
                     {
                         newSet.Add(newNet);
                     }
                 }
             }
-
             return newSet.ToArray();
         }    
     }
