@@ -12,7 +12,7 @@
         {
             this.Comparators = comparators;
             this.Inputs = inputs;
-            this.Outputs = CalculateOutput();       
+            this.Outputs = this.CalculateOutput();       
         }
 
         /// <inheritdoc/>
@@ -50,26 +50,41 @@
         /// <inheritdoc/>
         public bool IsSubsumed(IComparatorNetwork n)
         {
-            var isSubsumed = false;
             if (!ShouldCheckSubsumption(n, this)) return false;
 
             var permutations = Enumerable.Range(0, this.Inputs).GetPermutations().ToArray();
+
             for (var i = 0; i < permutations.Length; i++)
             {
-                var p = permutations[i];
-                var clone = CreateCloneWithPermutation(
-                    (ComparatorNetwork)n,
-                    (short)p.ElementAt(0),
-                    (short)p.ElementAt(1));
+                var permutation = permutations[i].ToArray();
+                var permutedSubset = new HashSet<short>();
 
-                if (OutputIsSubset(clone, this))
+                using (var enumerator = this.Outputs.GetEnumerator())
                 {
-                    isSubsumed = true;
-                    break;
+                    do
+                    {
+                        var outputBits = new BitArray(new int[] { enumerator.Current }) { Length = this.Inputs };
+                        var permutedOutputBits = new BitArray(this.Inputs);
+
+                        for (var j = 0; j < permutation.Length; j++)
+                        {
+                            permutedOutputBits[j] = outputBits[permutation[j]];
+                        }
+
+                        var permutedOutput = new int[1];
+                        permutedOutputBits.CopyTo(permutedOutput, 0);
+                        permutedSubset.Add((short)permutedOutput[0]);
+                    }
+                    while (enumerator.MoveNext());
+                }
+
+                if (permutedSubset.IsSubsetOf(this.Outputs))
+                {
+                    return true;
                 }
             }
 
-            return isSubsumed;
+            return false;
         }
 
         private static bool ShouldCheckSubsumption(IComparatorNetwork n1, IComparatorNetwork n2 )
@@ -121,45 +136,6 @@
             }
         }
 
-        private static bool OutputIsSubset(IComparatorNetwork c1, IComparatorNetwork c2) 
-        {
-            return c1.Outputs.IsSubsetOf(c2.Outputs);
-        }
-           
-        private static IComparatorNetwork CreateCloneWithPermutation(ComparatorNetwork n, short x1, short x2) 
-        {
-            var comparators = new Comparator[n.Comparators.Length];
-
-            for (var i = 0; i < n.Comparators.Length; i++) 
-            {
-                var x = n.Comparators[i].X;
-                var y = n.Comparators[i].Y;
-                var comparator = new Comparator(x, y);
-
-                if (x == x1) 
-                {
-                    comparator.X = x2;
-                }
-                else if (x == x2) 
-                {
-                    comparator.X = x1;
-                }
-
-                if (y == x1)
-                {
-                    comparator.Y = x2;
-                }
-                else if (y == x2)
-                {
-                    comparator.Y = x1;
-                }
-
-                comparators[i] = comparator;
-            }
-
-            return new ComparatorNetwork(n.Inputs, comparators);
-        }
-
         private HashSet<short> CalculateOutput() 
         {
             var total = Math.Pow(2, this.Inputs);
@@ -167,7 +143,7 @@
             
             for (short i = 0; i < total; i++) 
             {
-                output.Add(ComputeOutput(i));
+                output.Add(this.ComputeOutput(i));
             }
 
             return output;
