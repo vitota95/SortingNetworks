@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SortingNetworks
+﻿namespace SortingNetworks
 {
+    using System.Collections.Generic;
+
     public interface IComparatorsGenerator
     {
         IList<Comparator> GenerateComparators(int[] range);

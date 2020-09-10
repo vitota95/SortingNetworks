@@ -16,7 +16,7 @@ namespace SortingNetworks
             var range = Enumerable.Range(0, inputs).ToList();
 
             var combinationsGenerator = new ComparatorsGenerator();
-            var sortingNetworksGenerator = new SortingNetworksGenerator();
+            var sortingNetworksGenerator = new ComparatorNetworksGenerator();
             var pruner = new Pruner();
             var comparators = combinationsGenerator.GenerateComparators(Enumerable.Range(0, inputs).ToArray());
 
