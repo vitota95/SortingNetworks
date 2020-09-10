@@ -11,25 +11,17 @@ namespace SortingNetworks
     {
         static void Main(string[] args)
         {
-            short inputs = 4;
-            var k = 5;
+            short inputs = 5;
+            var k = 9;
             var range = Enumerable.Range(0, inputs).ToList();
 
-            var combinationsGenerator = new CombinationsGenerator();
+            var combinationsGenerator = new ComparatorsGenerator();
             var sortingNetworksGenerator = new SortingNetworksGenerator();
             var pruner = new Pruner();
-            var combinations = combinationsGenerator.GenerateCombinations(range, 2);
-            var comparators = new List<Comparator>();
+            var comparators = combinationsGenerator.GenerateComparators(Enumerable.Range(0, inputs).ToArray());
 
             InitiateTracer();
 
-            foreach (var comp in combinations)
-            {
-                if (comp[0] != comp[1])
-                {
-                    comparators.Add(new Comparator((short)comp[0], (short)comp[1]));
-                }
-            }
 
             var stopWatch = Stopwatch.StartNew();
             var comparatorNets = new IComparatorNetwork[] { new ComparatorNetwork(inputs, new Comparator[0]) };
@@ -41,10 +33,10 @@ namespace SortingNetworks
                 Trace.WriteLine($"Generate--------------");
                 comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
                 Trace.WriteLine($"Length after Generate: {comparatorNets.Length} ");
-              
+
                 Trace.WriteLine($"Prune--------------");
                 comparatorNets = pruner.Prune(comparatorNets);
-                Trace.WriteLine($"Length after Prune: {comparatorNets.Length} ");               
+                Trace.WriteLine($"Length after Prune: {comparatorNets.Length} ");
                 Trace.WriteLine("");
             }
 
@@ -67,7 +59,7 @@ namespace SortingNetworks
         {
             foreach (var c in net.Comparators)
             {
-                Trace.Write($"({c.x},{c.y}) ");
+                Trace.Write($"({c.X},{c.Y}) ");
             }
             Trace.WriteLine("");
         }

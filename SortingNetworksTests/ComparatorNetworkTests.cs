@@ -81,8 +81,8 @@ namespace SortingNetworksTests
 
             // Assert
             Assert.AreEqual(1, s2.Comparators.Length);
-            Assert.AreEqual(1, s2.Comparators[0].x);
-            Assert.AreEqual(2, s2.Comparators[0].y); 
+            Assert.AreEqual(1, s2.Comparators[0].X);
+            Assert.AreEqual(2, s2.Comparators[0].Y); 
         }
 
         [TestMethod]
@@ -98,10 +98,10 @@ namespace SortingNetworksTests
 
             // Assert
             Assert.AreEqual(2, s2.Comparators.Length);
-            Assert.AreEqual(0, s2.Comparators[0].x);
-            Assert.AreEqual(1, s2.Comparators[0].y);
-            Assert.AreEqual(1, s2.Comparators[1].x);
-            Assert.AreEqual(2, s2.Comparators[1].y);
+            Assert.AreEqual(0, s2.Comparators[0].X);
+            Assert.AreEqual(1, s2.Comparators[0].Y);
+            Assert.AreEqual(1, s2.Comparators[1].X);
+            Assert.AreEqual(2, s2.Comparators[1].Y);
         }
 
         [TestMethod]
@@ -122,7 +122,7 @@ namespace SortingNetworksTests
         }
         
         [TestMethod]
-        public void MarkIfRedundant_WhenAreNotRedundant_IsMarkedIsFalse()
+        public void IsRedundant_WhenAreNotRedundant_IsMarkedIsFalse()
         {
             // Arrange
             short size = 3;

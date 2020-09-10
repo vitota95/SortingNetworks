@@ -1,32 +1,33 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Security.Cryptography.X509Certificates;
-
-namespace SortingNetworks
+﻿namespace SortingNetworks
 {
-    public struct Comparator
-    {
-        public short x;
-        public short y;
-
-        public Comparator(short x, short y) 
-        {
-            this.x = x;
-            this.y = y;
-        }
-    }
+    using System.Collections.Generic;
 
     public interface IComparatorNetwork
     {
         short Inputs { get; }
-        bool IsMarked { get; }
+
         Comparator[] Comparators { get; set; }
-        HashSet<short> Outputs{ get; }
-        void MarkIfSubsumed(IComparatorNetwork n);       
-        bool IsRedundant(IComparatorNetwork n);       
+
+        HashSet<short> Outputs { get; }
+
+        bool IsSubsumed(IComparatorNetwork n);
+
+        bool IsRedundant(IComparatorNetwork n);
+
         bool IsSortingNetwork();
+
         IComparatorNetwork CloneWithNewComparator(Comparator comparator);
+    }
+
+    public struct Comparator
+    {
+        public short X;
+        public short Y;
+
+        public Comparator(short x, short y) 
+        {
+            this.X = x;
+            this.Y = y;
+        }
     }
 }
