@@ -11,12 +11,13 @@ namespace SortingNetworks
     {
         static void Main(string[] args)
         {
-            short inputs = 5;
-            var k = 9;
+            short inputs = 4;
+            var k = 5;
             var range = Enumerable.Range(0, inputs).ToList();
 
             var combinationsGenerator = new CombinationsGenerator();
             var sortingNetworksGenerator = new SortingNetworksGenerator();
+            var pruner = new Pruner();
             var combinations = combinationsGenerator.GenerateCombinations(range, 2);
             var comparators = new List<Comparator>();
 
@@ -35,24 +36,22 @@ namespace SortingNetworks
 
             for (var i = 0; i < k; i++)
             {
+                Trace.WriteLine($"Adding Comparator {i+1}");
+
                 Trace.WriteLine($"Generate--------------");
                 comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
                 Trace.WriteLine($"Length after Generate: {comparatorNets.Length} ");
-                //Trace.WriteLine($"Prune--------------");
-                //comparatorNets = Prune(comparatorNets);
-                //Trace.WriteLine($"Length after Prune: {comparatorNets.Length} ");
+              
+                Trace.WriteLine($"Prune--------------");
+                comparatorNets = pruner.Prune(comparatorNets);
+                Trace.WriteLine($"Length after Prune: {comparatorNets.Length} ");               
                 Trace.WriteLine("");
             }
 
             Trace.WriteLine($"Elapsed Time: {stopWatch.Elapsed} ");
 
             PrintSortingNetworks(comparatorNets, inputs, k);
-        }
-    
-        private static IComparatorNetwork[] Prune(IComparatorNetwork[] nets)
-        {
-            throw new NotImplementedException();
-        }
+        }   
 
         private static void PrintSortingNetworks(IComparatorNetwork[] nets, int inputs, int k) 
         {

@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SortingNetworks;
 using System;
+using System.Collections.Generic;
 
 namespace SortingNetworksTests
 {
@@ -124,7 +125,7 @@ namespace SortingNetworksTests
         public void MarkIfRedundant_WhenAreNotRedundant_IsMarkedIsFalse()
         {
             // Arrange
-            short size = 2;
+            short size = 3;
             var c1 = new Comparator[1] { new Comparator(0, 1) };
             var c2 = new Comparator[1] { new Comparator(0, 2) };
             var s1 = new ComparatorNetwork(size, c1);
@@ -135,6 +136,19 @@ namespace SortingNetworksTests
 
             // Assert
             Assert.IsFalse(result);          
+        }
+
+        [TestMethod]
+        public void Output_When3Inputs1Comparator_HasExpectedResult()
+        {
+            // Arrange, Act
+            short size = 3;
+            var c1 = new Comparator[1] { new Comparator(0, 1) };
+            var n = new ComparatorNetwork(size, c1);
+
+            // Assert
+            Assert.AreEqual(6, n.Outputs.Count);
+            Assert.IsTrue(n.Outputs.SetEquals(new HashSet<short> { 0, 1, 4, 5, 6, 7}));
         }
     }
 }
