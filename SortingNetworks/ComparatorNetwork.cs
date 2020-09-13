@@ -27,7 +27,7 @@
         /// <inheritdoc/>
         public bool IsSortingNetwork()
         {
-            return this.Outputs.Count == this.Inputs + 1;
+            return this.Outputs.Count == this.Inputs - 1;
         }
 
         /// <inheritdoc/>
@@ -61,6 +61,7 @@
 
                 using (var enumerator = this.Outputs.GetEnumerator())
                 {
+                    enumerator.MoveNext();
                     do
                     {
                         var outputBits = new BitArray(new int[] { enumerator.Current }) { Length = this.Inputs };
@@ -138,10 +139,10 @@
 
         private HashSet<short> CalculateOutput() 
         {
-            var total = Math.Pow(2, this.Inputs);
+            var total = Math.Pow(2, this.Inputs) - 1;
             var output = new HashSet<short>();
             
-            for (short i = 0; i < total; i++) 
+            for (short i = 1; i < total; i++) 
             {
                 output.Add(this.ComputeOutput(i));
             }

@@ -1,27 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-
-namespace SortingNetworks
+﻿namespace SortingNetworks
 {
+    using System.Diagnostics;
+    using System.Linq;
+
     class Program
     {
         static void Main(string[] args)
         {
-            short inputs = 5;
-            var k = 9;
-            var range = Enumerable.Range(0, inputs).ToList();
+            short inputs = 6;
+            var k = 12;
 
-            var combinationsGenerator = new ComparatorsGenerator();
+            var comparatorsGenerator = new ComparatorsGenerator();
             var sortingNetworksGenerator = new ComparatorNetworksGenerator();
             var pruner = new Pruner();
-            var comparators = combinationsGenerator.GenerateComparators(Enumerable.Range(0, inputs).ToArray());
+            var comparators = comparatorsGenerator.GenerateComparators(Enumerable.Range(0, inputs).ToArray());
 
             InitiateTracer();
-
 
             var stopWatch = Stopwatch.StartNew();
             var comparatorNets = new IComparatorNetwork[] { new ComparatorNetwork(inputs, new Comparator[0]) };
@@ -41,6 +35,7 @@ namespace SortingNetworks
             }
 
             Trace.WriteLine($"Elapsed Time: {stopWatch.Elapsed} ");
+            Trace.WriteLine("");
 
             PrintSortingNetworks(comparatorNets, inputs, k);
         }   
