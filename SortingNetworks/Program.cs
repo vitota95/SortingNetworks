@@ -3,12 +3,12 @@
     using System.Diagnostics;
     using System.Linq;
 
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            short inputs = 6;
-            var k = 12;
+            short inputs = 7;
+            var k = 16;
 
             var comparatorsGenerator = new ComparatorsGenerator();
             var sortingNetworksGenerator = new ComparatorNetworksGenerator();

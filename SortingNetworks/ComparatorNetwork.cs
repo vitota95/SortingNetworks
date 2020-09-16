@@ -52,20 +52,26 @@
         {
             if (!ShouldCheckSubsumption(n, this)) return false;
 
-            var permutations = Enumerable.Range(0, this.Inputs).GetPermutations().ToArray();
+            var permutations = Enumerable.Range(0, n.Inputs).GetPermutations().ToArray();
 
-            for (var i = 0; i < permutations.Length; i++)
+            if (n.Outputs.IsSubsetOf(this.Outputs))
+            {
+                return true;
+            }
+
+            // Skip first permutation, as it is already check
+            for (var i = 1; i < permutations.Length; i++)
             {
                 var permutation = permutations[i].ToArray();
                 var permutedSubset = new HashSet<short>();
 
-                using (var enumerator = this.Outputs.GetEnumerator())
+                using (var enumerator = n.Outputs.GetEnumerator())
                 {
                     enumerator.MoveNext();
                     do
                     {
-                        var outputBits = new BitArray(new int[] { enumerator.Current }) { Length = this.Inputs };
-                        var permutedOutputBits = new BitArray(this.Inputs);
+                        var outputBits = new BitArray(new int[] { enumerator.Current }) { Length = n.Inputs };
+                        var permutedOutputBits = new BitArray(n.Inputs);
 
                         for (var j = 0; j < permutation.Length; j++)
                         {
@@ -88,7 +94,14 @@
             return false;
         }
 
-        private static bool ShouldCheckSubsumption(IComparatorNetwork n1, IComparatorNetwork n2 )
+        /// <summary>
+        /// Counts the number of bits set for each output of both input comparator networks
+        /// if the number of set bits is different the n1 cannot be subsumed by n2 and vice versa.
+        /// </summary>
+        /// <param name="n1">The comparator network 1.</param>
+        /// <param name="n2">The comparator network 2.</param>
+        /// <returns>True if subsume test should be done, False otherwise.</returns>
+        private static bool ShouldCheckSubsumption(IComparatorNetwork n1, IComparatorNetwork n2)
         {
             var d1 = new Dictionary<uint, int>();
             var d2 = new Dictionary<uint, int>();
@@ -96,37 +109,39 @@
             using (var e1 = n1.Outputs.GetEnumerator())
             using (var e2 = n2.Outputs.GetEnumerator())
             {
-                for (var i = 0; i < n1.Outputs.Count; i++)
+                while (e1.MoveNext())
                 {
                     var setBits1 = System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)e1.Current);
-                    var setBits2 = System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)e2.Current);
-                
                     IncrementInDictionary(setBits1, ref d1);
-                    IncrementInDictionary(setBits2, ref d2);
-
-                    e1.MoveNext();
-                    e2.MoveNext();
                 }
-            }
 
-            foreach (var x in d1)
-            {
-                if (d2.TryGetValue(x.Key, out var y))
+                while (e2.MoveNext())
                 {
-                    if (x.Value > y) return false;
+                    var setBits2 = System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)e2.Current);
+                    IncrementInDictionary(setBits2, ref d2);
                 }
             }
 
+            foreach (var (key, value) in d1)
+            {
+                if (d2.TryGetValue(key, out var y))
+                {
+                    if (value > y)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            } 
+            
             return true;
         }
 
-        private static void IncrementInDictionary(uint key, ref Dictionary<uint,int> dict)
+        private static void IncrementInDictionary(uint key, ref Dictionary<uint, int> dict)
         {
-            if (key == 0)
-            {
-                return;
-            }
-
             if (dict.ContainsKey(key))
             {
                 dict[key]++;
