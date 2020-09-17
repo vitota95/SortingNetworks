@@ -4,14 +4,19 @@
 
     public interface IComparatorNetwork
     {
-        Dictionary<uint, bool[]> DifferentZeroPositions { get; }
-        Dictionary<uint, int> SequencecesWithKOnes { get; }
-
         short Inputs { get; }
 
         Comparator[] Comparators { get; set; }
 
         HashSet<short> Outputs { get; }
+
+        Dictionary<uint, int> DifferentZeroPositions { get; }
+
+        Dictionary<uint, int> SequencesWithKOnes { get; }
+
+        int[] ZeroPositions { get; }
+
+        int[] OnePositions { get; }
 
         bool IsSubsumed(IComparatorNetwork n, IEnumerable<int> [] permutations);
 

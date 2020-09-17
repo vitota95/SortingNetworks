@@ -10,19 +10,25 @@
     {
         public ComparatorNetwork(short inputs, Comparator[] comparators) 
         {
-            this.DifferentZeroPositions = new Dictionary<uint, bool[]>();
+            this.DifferentZeroPositions = new Dictionary<uint, int>();
             this.Comparators = comparators;
             this.Inputs = inputs;
             this.Outputs = this.CalculateOutput();
-            this.SequencecesWithKOnes = this.CalculateSequencesWithKOnes();
+            this.SequencesWithKOnes = this.CalculateSequencesWithKOnes();
+            this.ZeroPositions = new int[this.Inputs];
+            this.OnePositions = new int[this.Inputs];
         }
 
         /// <inheritdoc/>
         public HashSet<short> Outputs { get; private set; }
 
-        public Dictionary<uint, bool[]> DifferentZeroPositions { get; private set; }
+        public Dictionary<uint, int> DifferentZeroPositions { get; private set; }
 
-        public Dictionary<uint, int> SequencecesWithKOnes { get; }
+        public Dictionary<uint, int> SequencesWithKOnes { get; }
+
+        public int[] ZeroPositions { get; }
+
+        public int[] OnePositions { get; }
 
         /// <inheritdoc/>
         public short Inputs { get; private set; }
@@ -107,7 +113,7 @@
         /// <returns>True if subsume test should be done, False otherwise.</returns>
         private static bool ShouldCheckSubsumption(IComparatorNetwork n1, IComparatorNetwork n2)
         {
-            if (CheckSequencesWithOnes(n1.SequencecesWithKOnes, n2.SequencecesWithKOnes))
+            if (CheckSequencesWithOnes(n1.SequencesWithKOnes, n2.SequencesWithKOnes))
             {
                 return false;
             }
@@ -140,24 +146,32 @@
             return false;
         }
 
-        private static bool CheckZeroPositions(Dictionary<uint, bool[]> d1, Dictionary<uint, bool[]> d2)
+        private static bool CheckZeroPositions(Dictionary<uint, int> d1, Dictionary<uint, int> d2)
         {
             foreach (var (key, value1) in d1)
             {
                 if (d2.TryGetValue(key, out var value2))
                 {
-                    if (value1.Count(c => c) > value2.Count(c => c))
+                    if (value1 > value2)
                     {
                         return true;
                     }
                 }
-                else // not sure about this else
-                {
-                    return true;
-                }
             }
 
             return false;
+        }
+
+        private static void IncrementInDictionary(uint key, ref Dictionary<uint, int> dict, int value = 1)
+        {
+            if (dict.ContainsKey(key))
+            {
+                dict[key] += value;
+            }
+            else
+            {
+                dict.Add(key, value);
+            }
         }
 
         private Dictionary<uint, int> CalculateSequencesWithKOnes()
@@ -176,32 +190,26 @@
             return d;
         }
 
-        private static void IncrementInDictionary(uint key, ref Dictionary<uint, int> dict, int value = 1)
-        {
-            if (dict.ContainsKey(key))
-            {
-                dict[key] += value;
-            }
-            else
-            {
-                dict.Add(key, value);
-            }
-        }
-
         private HashSet<short> CalculateOutput() 
         {
             var total = Math.Pow(2, this.Inputs) - 1;
             var output = new HashSet<short>();
-            
+            var differentZeroPositions = new Dictionary<uint, bool[]>();
+
             for (short i = 1; i < total; i++) 
             {
-                output.Add(this.ComputeOutput(i));
+                output.Add(this.ComputeOutput(i, ref differentZeroPositions));
+            }
+
+            foreach (var (key, value) in differentZeroPositions)
+            {
+                this.DifferentZeroPositions.Add(key, value.Count(c => c));
             }
 
             return output;
         }
 
-        private short ComputeOutput(short value) 
+        private short ComputeOutput(short value, ref Dictionary<uint, bool[]> differentZeroPositions) 
         {
             var arr = new BitArray(new int[] { value }) { Length = this.Inputs };
             var length = arr.Length - 1;
@@ -223,6 +231,13 @@
             arr.CopyTo(newValue, 0);
             var setBits = System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)newValue[0]);
 
+            this.CalculateDifferentZeroPositions(ref differentZeroPositions, arr, setBits);
+
+            return (short)newValue[0];
+        }
+
+        private void CalculateDifferentZeroPositions(ref Dictionary<uint, bool[]> differentZeroPositions, BitArray arr, uint setBits)
+        {
             var zeroPositions = new bool[this.Inputs];
             for (var i = 0; i < arr.Length; i++)
             {
@@ -232,13 +247,13 @@
                 }
             }
 
-            if (!this.DifferentZeroPositions.ContainsKey(setBits))
+            if (!differentZeroPositions.ContainsKey(setBits))
             {
-                this.DifferentZeroPositions[setBits] = zeroPositions;
+                differentZeroPositions[setBits] = zeroPositions;
             }
             else
             {
-                var temp = this.DifferentZeroPositions[setBits];
+                var temp = differentZeroPositions[setBits];
 
                 for (var i = 0; i < temp.Length; i++)
                 {
@@ -248,10 +263,8 @@
                     }
                 }
 
-                this.DifferentZeroPositions[setBits] = temp;
+                differentZeroPositions[setBits] = temp;
             }
-
-            return (short)newValue[0];
         }
     }
 }

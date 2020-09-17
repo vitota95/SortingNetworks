@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SortingNetworks": {
+      "commandName": "Project",
+      "commandLineArgs": "6 12 log.txt "
+    }
+  }
+}

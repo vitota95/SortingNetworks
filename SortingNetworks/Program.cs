@@ -1,5 +1,6 @@
 ﻿namespace SortingNetworks
 {
+    using System;
     using System.Diagnostics;
     using System.Linq;
 
@@ -7,15 +8,19 @@
     {
         public static void Main(string[] args)
         {
-            short inputs = 7;
-            var k = 16;
+            var inputs = Convert.ToInt16(args[0]);
+            var k = Convert.ToInt16(args[1]);
+            var traceFile = args[2];
 
             var comparatorsGenerator = new ComparatorsGenerator();
             var sortingNetworksGenerator = new ComparatorNetworksGenerator();
             var pruner = new Pruner();
             var comparators = comparatorsGenerator.GenerateComparators(Enumerable.Range(0, inputs).ToArray());
 
-            InitiateTracer();
+            if (args.Length < 4)
+            {
+                InitiateTracer(CreateDefaultListeners(traceFile));
+            }
 
             var stopWatch = Stopwatch.StartNew();
             var comparatorNets = new IComparatorNetwork[] { new ComparatorNetwork(inputs, new Comparator[0]) };
@@ -26,19 +31,43 @@
 
                 Trace.WriteLine($"Generate--------------");
                 comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
-                Trace.WriteLine($"Length after Generate: {comparatorNets.Length} ");
+                Trace.WriteLine($"Length after Generate: {comparatorNets.Length}");
 
                 Trace.WriteLine($"Prune--------------");
                 comparatorNets = pruner.Prune(comparatorNets);
-                Trace.WriteLine($"Length after Prune: {comparatorNets.Length} ");
-                Trace.WriteLine("");
+                Trace.WriteLine($"Length after Prune: {comparatorNets.Length}");
+                Trace.WriteLine(string.Empty);
             }
 
             Trace.WriteLine($"Elapsed Time: {stopWatch.Elapsed} ");
-            Trace.WriteLine("");
+            Trace.WriteLine(string.Empty);
 
             PrintSortingNetworks(comparatorNets, inputs, k);
-        }   
+        }
+
+        public static void InitiateTracer(TraceListener[] listeners)
+        {
+            Trace.Listeners.Clear();
+
+            foreach (var traceListener in listeners)
+            {
+                Trace.Listeners.Add(traceListener);
+            }
+            
+            Trace.AutoFlush = true;
+        }
+
+        private static TraceListener[] CreateDefaultListeners(string traceFile)
+        {
+            var twtl = new TextWriterTraceListener(traceFile)
+                           {
+                               Name = "TextLogger",
+                               TraceOutputOptions = TraceOptions.ThreadId | TraceOptions.DateTime
+                           };
+            var ctl = new ConsoleTraceListener(false) { TraceOutputOptions = TraceOptions.DateTime };
+
+            return new TraceListener[] { twtl, ctl };
+        }
 
         private static void PrintSortingNetworks(IComparatorNetwork[] nets, int inputs, int k) 
         {
@@ -56,21 +85,7 @@
             {
                 Trace.Write($"({c.X},{c.Y}) ");
             }
-            Trace.WriteLine("");
-        }
-
-        private static void InitiateTracer()
-        {
-            Trace.Listeners.Clear();
-            var twtl = new TextWriterTraceListener("log.txt")
-            {
-                Name = "TextLogger",
-                TraceOutputOptions = TraceOptions.ThreadId | TraceOptions.DateTime
-            };
-            var ctl = new ConsoleTraceListener(false) { TraceOutputOptions = TraceOptions.DateTime };
-            Trace.Listeners.Add(twtl);
-            Trace.Listeners.Add(ctl);
-            Trace.AutoFlush = true;
+            Trace.WriteLine(string.Empty);
         }
     }
 }
