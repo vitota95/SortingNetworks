@@ -1,5 +1,6 @@
 ﻿namespace SortingNetworksTests
 {
+    using System.Collections.Generic;
     using System.Linq;
     using System.Net.Sockets;
 
@@ -37,7 +38,7 @@
             var fixture = new Fixture().Customize(new AutoMoqCustomization());
             var netMocks = fixture.CreateMany<Mock<IComparatorNetwork>>(3).ToArray();
             var pruner = new Pruner();
-            netMocks[0].Setup(x => x.IsSubsumed(netMocks[1].Object)).Returns(true);
+            netMocks[0].Setup(x => x.IsSubsumed(netMocks[1].Object, It.IsAny<IEnumerable<int>[]>())).Returns(true);
 
             var nets = netMocks.Select(x => x.Object).ToArray();
 
@@ -55,7 +56,7 @@
             var fixture = new Fixture().Customize(new AutoMoqCustomization());
             var netMocks = fixture.CreateMany<Mock<IComparatorNetwork>>(3).ToArray();
             var pruner = new Pruner();
-            netMocks[1].Setup(x => x.IsSubsumed(netMocks[0].Object)).Returns(true);
+            netMocks[1].Setup(x => x.IsSubsumed(netMocks[0].Object, It.IsAny<IEnumerable<int>[]>())).Returns(true);
 
             var nets = netMocks.Select(x => x.Object).ToArray();
 
@@ -73,12 +74,12 @@
             var fixture = new Fixture().Customize(new AutoMoqCustomization());
             var netMocks = fixture.CreateMany<Mock<IComparatorNetwork>>(3).ToArray();
             var pruner = new Pruner();
-            netMocks[0].Setup(x => x.IsSubsumed(netMocks[1].Object)).Returns(true);
-            netMocks[0].Setup(x => x.IsSubsumed(netMocks[2].Object)).Returns(true);
-            netMocks[1].Setup(x => x.IsSubsumed(netMocks[0].Object)).Returns(true);
-            netMocks[1].Setup(x => x.IsSubsumed(netMocks[2].Object)).Returns(true);
-            netMocks[2].Setup(x => x.IsSubsumed(netMocks[0].Object)).Returns(true);
-            netMocks[2].Setup(x => x.IsSubsumed(netMocks[1].Object)).Returns(true);
+            netMocks[0].Setup(x => x.IsSubsumed(netMocks[1].Object, It.IsAny<IEnumerable<int>[]>())).Returns(true);
+            netMocks[0].Setup(x => x.IsSubsumed(netMocks[2].Object, It.IsAny<IEnumerable<int>[]>())).Returns(true);
+            netMocks[1].Setup(x => x.IsSubsumed(netMocks[0].Object, It.IsAny<IEnumerable<int>[]>())).Returns(true);
+            netMocks[1].Setup(x => x.IsSubsumed(netMocks[2].Object, It.IsAny<IEnumerable<int>[]>())).Returns(true);
+            netMocks[2].Setup(x => x.IsSubsumed(netMocks[0].Object, It.IsAny<IEnumerable<int>[]>())).Returns(true);
+            netMocks[2].Setup(x => x.IsSubsumed(netMocks[1].Object, It.IsAny<IEnumerable<int>[]>())).Returns(true);
 
             var nets = netMocks.Select(x => x.Object).ToArray();
 

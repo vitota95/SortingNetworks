@@ -10,13 +10,19 @@
     {
         public ComparatorNetwork(short inputs, Comparator[] comparators) 
         {
+            this.DifferentZeroPositions = new Dictionary<uint, bool[]>();
             this.Comparators = comparators;
             this.Inputs = inputs;
-            this.Outputs = this.CalculateOutput();       
+            this.Outputs = this.CalculateOutput();
+            this.SequencecesWithKOnes = this.CalculateSequencesWithKOnes();
         }
 
         /// <inheritdoc/>
         public HashSet<short> Outputs { get; private set; }
+
+        public Dictionary<uint, bool[]> DifferentZeroPositions { get; private set; }
+
+        public Dictionary<uint, int> SequencecesWithKOnes { get; }
 
         /// <inheritdoc/>
         public short Inputs { get; private set; }
@@ -48,11 +54,9 @@
         }
 
         /// <inheritdoc/>
-        public bool IsSubsumed(IComparatorNetwork n)
+        public bool IsSubsumed(IComparatorNetwork n, IEnumerable<int>[] permutations)
         {
             if (!ShouldCheckSubsumption(n, this)) return false;
-
-            var permutations = Enumerable.Range(0, n.Inputs).GetPermutations().ToArray();
 
             if (n.Outputs.IsSubsetOf(this.Outputs))
             {
@@ -103,52 +107,84 @@
         /// <returns>True if subsume test should be done, False otherwise.</returns>
         private static bool ShouldCheckSubsumption(IComparatorNetwork n1, IComparatorNetwork n2)
         {
-            var d1 = new Dictionary<uint, int>();
-            var d2 = new Dictionary<uint, int>();
-
-            using (var e1 = n1.Outputs.GetEnumerator())
-            using (var e2 = n2.Outputs.GetEnumerator())
+            if (CheckSequencesWithOnes(n1.SequencecesWithKOnes, n2.SequencecesWithKOnes))
             {
-                while (e1.MoveNext())
-                {
-                    var setBits1 = System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)e1.Current);
-                    IncrementInDictionary(setBits1, ref d1);
-                }
-
-                while (e2.MoveNext())
-                {
-                    var setBits2 = System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)e2.Current);
-                    IncrementInDictionary(setBits2, ref d2);
-                }
+                return false;
             }
 
+            if (CheckZeroPositions(n1.DifferentZeroPositions, n2.DifferentZeroPositions))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool CheckSequencesWithOnes(Dictionary<uint, int> d1, Dictionary<uint, int> d2)
+        {
             foreach (var (key, value) in d1)
             {
                 if (d2.TryGetValue(key, out var y))
                 {
                     if (value > y)
                     {
-                        return false;
+                        return true;
                     }
                 }
                 else
                 {
-                    return false;
+                    return true;
                 }
-            } 
-            
-            return true;
+            }
+
+            return false;
         }
 
-        private static void IncrementInDictionary(uint key, ref Dictionary<uint, int> dict)
+        private static bool CheckZeroPositions(Dictionary<uint, bool[]> d1, Dictionary<uint, bool[]> d2)
+        {
+            foreach (var (key, value1) in d1)
+            {
+                if (d2.TryGetValue(key, out var value2))
+                {
+                    if (value1.Count(c => c) > value2.Count(c => c))
+                    {
+                        return true;
+                    }
+                }
+                else // not sure about this else
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private Dictionary<uint, int> CalculateSequencesWithKOnes()
+        {
+            var d = new Dictionary<uint, int>();
+
+            using (var e = this.Outputs.GetEnumerator())
+            {
+                while (e.MoveNext())
+                {
+                    var setBits = System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)e.Current);
+                    IncrementInDictionary(setBits, ref d);
+                }
+            }
+
+            return d;
+        }
+
+        private static void IncrementInDictionary(uint key, ref Dictionary<uint, int> dict, int value = 1)
         {
             if (dict.ContainsKey(key))
             {
-                dict[key]++;
+                dict[key] += value;
             }
             else
             {
-                dict.Add(key, 1);
+                dict.Add(key, value);
             }
         }
 
@@ -185,6 +221,35 @@
 
             var newValue = new int[1];
             arr.CopyTo(newValue, 0);
+            var setBits = System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)newValue[0]);
+
+            var zeroPositions = new bool[this.Inputs];
+            for (var i = 0; i < arr.Length; i++)
+            {
+                if (!arr.Get(i))
+                {
+                    zeroPositions[i] = true;
+                }
+            }
+
+            if (!this.DifferentZeroPositions.ContainsKey(setBits))
+            {
+                this.DifferentZeroPositions[setBits] = zeroPositions;
+            }
+            else
+            {
+                var temp = this.DifferentZeroPositions[setBits];
+
+                for (var i = 0; i < temp.Length; i++)
+                {
+                    if (!temp[i] && zeroPositions[i])
+                    {
+                        temp[i] = true;
+                    }
+                }
+
+                this.DifferentZeroPositions[setBits] = temp;
+            }
 
             return (short)newValue[0];
         }

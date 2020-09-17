@@ -4,13 +4,16 @@
 
     public interface IComparatorNetwork
     {
+        Dictionary<uint, bool[]> DifferentZeroPositions { get; }
+        Dictionary<uint, int> SequencecesWithKOnes { get; }
+
         short Inputs { get; }
 
         Comparator[] Comparators { get; set; }
 
         HashSet<short> Outputs { get; }
 
-        bool IsSubsumed(IComparatorNetwork n);
+        bool IsSubsumed(IComparatorNetwork n, IEnumerable<int> [] permutations);
 
         bool IsRedundant(IComparatorNetwork n);
 

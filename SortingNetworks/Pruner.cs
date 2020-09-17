@@ -1,6 +1,7 @@
 ﻿namespace SortingNetworks
 {
     using System.Collections.Generic;
+    using System.Linq;
 
     /// <inheritdoc cref="IPruner"/>
     public class Pruner : IPruner
@@ -9,6 +10,8 @@
         public IComparatorNetwork[] Prune(IComparatorNetwork[] nets)
         {
             var result = new List<IComparatorNetwork>();
+            var permutations = Enumerable.Range(0, nets[0].Inputs).GetPermutations().ToArray();
+
             for (var i = 0; i < nets.Length; i++) 
             {
                 var isSubsumed = false;
@@ -17,13 +20,13 @@
                 {
                     var n = result[index];
 
-                    if (nets[i].IsSubsumed(n))
+                    if (nets[i].IsSubsumed(n, permutations))
                     {
                         isSubsumed = true;
                         break;
                     }
 
-                    if (n.IsSubsumed(nets[i]))
+                    if (n.IsSubsumed(nets[i], permutations))
                     {
                         result.Remove(n);
                     }
