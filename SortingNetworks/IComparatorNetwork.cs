@@ -14,9 +14,9 @@
 
         Dictionary<uint, int> SequencesWithKOnes { get; }
 
-        int[] ZeroPositions { get; }
+        Dictionary<uint, HashSet<short>> OutputsDictionary { get; }
 
-        int[] OnePositions { get; }
+        Dictionary<uint, bool[]>[] W { get; }
 
         bool IsSubsumed(IComparatorNetwork n, IEnumerable<int> [] permutations);
 

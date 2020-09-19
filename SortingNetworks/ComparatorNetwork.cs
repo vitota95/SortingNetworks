@@ -11,12 +11,12 @@
         public ComparatorNetwork(short inputs, Comparator[] comparators) 
         {
             this.DifferentZeroPositions = new Dictionary<uint, int>();
+            this.OutputsDictionary = new Dictionary<uint, HashSet<short>>();
             this.Comparators = comparators;
             this.Inputs = inputs;
             this.Outputs = this.CalculateOutput();
             this.SequencesWithKOnes = this.CalculateSequencesWithKOnes();
-            this.ZeroPositions = new int[this.Inputs];
-            this.OnePositions = new int[this.Inputs];
+            this.W = CalculateW(this.OutputsDictionary, inputs);
         }
 
         /// <inheritdoc/>
@@ -26,9 +26,9 @@
 
         public Dictionary<uint, int> SequencesWithKOnes { get; }
 
-        public int[] ZeroPositions { get; }
+        public Dictionary<uint, HashSet<short>> OutputsDictionary { get; }
 
-        public int[] OnePositions { get; }
+        public Dictionary<uint, bool[]>[] W { get; }
 
         /// <inheritdoc/>
         public short Inputs { get; private set; }
@@ -174,6 +174,41 @@
             }
         }
 
+        private static Dictionary<uint, bool[]>[] CalculateW(Dictionary<uint, HashSet<short>> net1Outputs, short length)
+        {
+            var w0 = new Dictionary<uint, bool[]>();
+            var w1 = new Dictionary<uint, bool[]>();
+
+            foreach ((var key, var value) in net1Outputs)
+            {
+                var positions0 = new bool[length];
+                var positions1 = new bool[length];
+                using (var enumerator = value.GetEnumerator())
+                {
+                    while (enumerator.MoveNext())
+                    {
+                        var arr = new BitArray(new int[] { enumerator.Current }) { Length = length };
+                        for (var i = 0; i < arr.Count; i++)
+                        {
+                            if (arr.Get(i))
+                            {
+                                positions1[i] = true;
+                            }
+                            else
+                            {
+                                positions0[i] = true;
+                            }
+                        }
+                    }
+                }
+
+                w0.Add(key, positions0);
+                w1.Add(key, positions1);
+            }
+
+            return new[] { w0, w1 };
+        }
+
         private Dictionary<uint, int> CalculateSequencesWithKOnes()
         {
             var d = new Dictionary<uint, int>();
@@ -230,6 +265,15 @@
             var newValue = new int[1];
             arr.CopyTo(newValue, 0);
             var setBits = System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)newValue[0]);
+
+            if (this.OutputsDictionary.ContainsKey(setBits))
+            {
+                this.OutputsDictionary[setBits].Add((short)newValue[0]);
+            }
+            else
+            {
+                this.OutputsDictionary[setBits] = new HashSet<short>();
+            }
 
             this.CalculateDifferentZeroPositions(ref differentZeroPositions, arr, setBits);
 
