@@ -12,7 +12,7 @@
 
         bool[][] DifferentZeroPositions { get; }
 
-        Dictionary<uint, int> SequencesWithKOnes { get; }
+        bool[][] DifferentOnePositions { get; }
 
         Dictionary<uint, HashSet<short>> OutputsDictionary { get; }
 

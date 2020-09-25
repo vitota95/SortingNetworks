@@ -14,11 +14,11 @@
         public ComparatorNetwork(short inputs, Comparator[] comparators) 
         {
             this.DifferentZeroPositions = new bool[inputs][];
+            this.DifferentOnePositions = new bool[inputs][];
             this.OutputsDictionary = new Dictionary<uint, HashSet<short>>();
             this.Comparators = comparators;
             this.Inputs = inputs;
             this.Outputs = this.CalculateOutput();
-            this.SequencesWithKOnes = this.CalculateSequencesWithKOnes();
             this.W = CalculateW(this.OutputsDictionary, inputs);
         }
 
@@ -27,7 +27,7 @@
 
         public bool[][] DifferentZeroPositions { get; private set; }
 
-        public Dictionary<uint, int> SequencesWithKOnes { get; }
+        public bool[][] DifferentOnePositions { get; private set; }
 
         public Dictionary<uint, HashSet<short>> OutputsDictionary { get; }
 
@@ -118,12 +118,12 @@
         /// <returns>True if subsume test should be done, False otherwise.</returns>
         private static bool ShouldCheckSubsumption(IComparatorNetwork n1, IComparatorNetwork n2)
         {
-            if (CheckSequencesWithOnes(n1.SequencesWithKOnes, n2.SequencesWithKOnes))
+            if (OutputPositionsAreCompatible(n1.DifferentOnePositions, n2.DifferentOnePositions))
             {
                 return false;
             }
 
-            if (CheckZeroPositions(n1.DifferentZeroPositions, n2.DifferentZeroPositions))
+            if (OutputPositionsAreCompatible(n1.DifferentZeroPositions, n2.DifferentZeroPositions))
             {
                 return false;
             }
@@ -131,33 +131,13 @@
             return true;
         }
 
-        private static bool CheckSequencesWithOnes(Dictionary<uint, int> d1, Dictionary<uint, int> d2)
+        private static bool OutputPositionsAreCompatible(bool[][] s1, bool[][] s2)
         {
-            foreach (var (key, value) in d1)
+            for (var i = 0; i < s1.GetLength(0); i++)
             {
-                if (d2.TryGetValue(key, out var y))
+                if (s1[i] != null && s2[i] != null)
                 {
-                    if (value > y)
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static bool CheckZeroPositions(bool[][] m1, bool[][] m2)
-        {
-            for (var i = 0; i < m1.GetLength(0); i++)
-            {
-                if (m1[i] != null && m2[i] != null)
-                {
-                    if (m1[i].Length > m2[i].Length)
+                    if (s1[i].Length > s2[i].Length)
                     {
                         return true;
                     }
@@ -361,32 +341,45 @@
         private void CalculateDifferentZeroPositions(BitArray arr, uint setBits)
         {
             var zeroPositions = new bool[this.Inputs];
+            var onePositions = new bool[this.Inputs];
             for (var i = 0; i < arr.Length; i++)
             {
-                if (!arr.Get(i))
+                if (arr.Get(i))
+                {
+                    onePositions[i] = true;
+                }
+                else
                 {
                     zeroPositions[i] = true;
                 }
             }
 
-            if (this.DifferentZeroPositions[setBits] == null)
+            this.DifferentZeroPositions = this.AddToPositionsMatrix(setBits, zeroPositions, this.DifferentZeroPositions);
+            this.DifferentOnePositions = this.AddToPositionsMatrix(setBits, onePositions, this.DifferentOnePositions);
+        }
+
+        private bool[][] AddToPositionsMatrix(uint setBits, bool[] positions, bool[][] matrix)
+        {
+            if (matrix[setBits] == null)
             {
-                this.DifferentZeroPositions[setBits] = zeroPositions;
+                matrix[setBits] = positions;
             }
             else
             {
-                var temp = this.DifferentZeroPositions[setBits];
+                var temp = matrix[setBits];
 
                 for (var i = 0; i < temp.Length; i++)
                 {
-                    if (!temp[i] && zeroPositions[i])
+                    if (!temp[i] && positions[i])
                     {
                         temp[i] = true;
                     }
                 }
 
-                this.DifferentZeroPositions[setBits] = temp;
+                matrix[setBits] = temp;
             }
+
+            return matrix;
         }
     }
 }
