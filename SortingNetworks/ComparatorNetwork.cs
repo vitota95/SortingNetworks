@@ -12,8 +12,8 @@
     {
         public ComparatorNetwork(ushort inputs, Comparator[] comparators) 
         {
-            this.DifferentZeroPositions = new Dictionary<uint, int>();
-            this.SequencesWithKOnes = new Dictionary<uint, int>();
+            this.DifferentZeroPositions = new Dictionary<ushort, ushort>();
+            this.SequencesWithKOnes = new Dictionary<ushort, ushort>();
 
             this.Comparators = comparators;
             this.Inputs = inputs;
@@ -23,9 +23,9 @@
         /// <inheritdoc/>
         public HashSet<ushort> Outputs { get; private set; }
 
-        public Dictionary<uint, int> DifferentZeroPositions { get; private set; }
+        public Dictionary<ushort, ushort> DifferentZeroPositions { get; private set; }
 
-        public Dictionary<uint, int> SequencesWithKOnes { get; private set; }
+        public Dictionary<ushort, ushort> SequencesWithKOnes { get; private set; }
 
         /// <inheritdoc/>
         public ushort Inputs { get; private set; }
@@ -110,40 +110,12 @@
         /// <returns>True if subsume test should be done, False otherwise.</returns>
         private static bool ShouldCheckSubsumption(IComparatorNetwork n1, IComparatorNetwork n2)
         {
-            if (CheckSequencesWithOnes(n1.SequencesWithKOnes, n2.SequencesWithKOnes))
-            {
-                return false;
-            }
 
-            if (CheckZeroPositions(n1.DifferentZeroPositions, n2.DifferentZeroPositions))
-            {
-                return false;
-            }
-
-            return true;
+            return SequencesAreCompatible(n1.SequencesWithKOnes, n2.SequencesWithKOnes) &&
+                   SequencesAreCompatible(n1.DifferentZeroPositions, n2.DifferentZeroPositions);
         }
 
-        private static bool CheckSequencesWithOnes(Dictionary<uint, int> d1, Dictionary<uint, int> d2)
-        {
-            foreach (var (key, value) in d1)
-            {
-                if (d2.TryGetValue(key, out var y))
-                {
-                    if (value > y)
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static bool CheckZeroPositions(Dictionary<uint, int> d1, Dictionary<uint, int> d2)
+        private static bool SequencesAreCompatible(Dictionary<ushort, ushort> d1, Dictionary<ushort, ushort> d2)
         {
             foreach (var (key, value1) in d1)
             {
@@ -151,15 +123,19 @@
                 {
                     if (value1 > value2)
                     {
-                        return true;
+                        return false;
                     }
+                }
+                else
+                {
+                    return false;
                 }
             }
 
-            return false;
+            return true;
         }
 
-        private static Dictionary<uint, int> IncrementInDictionary(uint key, Dictionary<uint, int> dict, int value = 1)
+        private static Dictionary<ushort, ushort> IncrementInDictionary(ushort key, Dictionary<ushort, ushort> dict, ushort value = 1)
         {
             if (dict.ContainsKey(key))
             {
@@ -177,7 +153,7 @@
         {
             var total = Math.Pow(2, this.Inputs) - 1;
             var output = new HashSet<ushort>();
-            var differentZeroPositions = new Dictionary<uint, BitArray>();
+            var differentZeroPositions = new Dictionary<ushort, BitArray>();
             ushort setBits;
 
             for (ushort i = 1; i < total; i++) 
@@ -196,7 +172,7 @@
             return output;
         }
 
-        private ushort ComputeOutput(ushort value, ref Dictionary<uint, BitArray> differentZeroPositions, out ushort setBits) 
+        private ushort ComputeOutput(ushort value, ref Dictionary<ushort, BitArray> differentZeroPositions, out ushort setBits) 
         {
             var arr = new BitArray(new int[] { value }) { Length = this.Inputs };
             var length = arr.Length - 1;
@@ -222,7 +198,7 @@
             return (ushort)outputValue[0];
         }
 
-        private void CalculateDifferentZeroPositions(ref Dictionary<uint, BitArray> differentZeroPositions, BitArray arr, ushort setBits)
+        private void CalculateDifferentZeroPositions(ref Dictionary<ushort, BitArray> differentZeroPositions, BitArray arr, ushort setBits)
         {
             if (differentZeroPositions.ContainsKey(setBits))
             {
