@@ -8,9 +8,9 @@
         {
             var comparators = new List<Comparator>();
 
-            for (short i = 0; i < range.Length; i++)
+            for (ushort i = 0; i < range.Length; i++)
             {
-                for (var j = (short)(1 + i); j < range.Length; j++)
+                for (var j = (ushort)(1 + i); j < range.Length; j++)
                 {
                     comparators.Add(new Comparator(i, j));
                 }

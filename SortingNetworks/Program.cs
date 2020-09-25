@@ -8,7 +8,7 @@
     {
         public static void Main(string[] args)
         {
-            var inputs = Convert.ToInt16(args[0]);
+            var inputs = Convert.ToUInt16(args[0]);
             var k = Convert.ToInt16(args[1]);
             var traceFile = args[2];
 

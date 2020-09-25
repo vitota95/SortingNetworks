@@ -16,7 +16,7 @@
         public void Generate_WithRedundantComparator_NotAddNewNet()
         {
             // Arrange
-            const short Size = 2;
+            const ushort Size = 2;
             var comparators = new Comparator[] { new Comparator(0, 1), new Comparator(0, 1) };
             var generator = new ComparatorNetworksGenerator();
             IComparatorNetwork[] nets = { new ComparatorNetwork(Size, comparators) };
@@ -32,7 +32,7 @@
         public void Generate_WithNonRedundantComparator_AddsNewNets()
         {
             // Arrange
-            const short Size = 3;
+            const ushort Size = 3;
             var c1 = new Comparator[1] { new Comparator(0, 1) };
             var c2 = new Comparator[2] { new Comparator(0, 2), new Comparator(1, 2) };
             var generator = new ComparatorNetworksGenerator();

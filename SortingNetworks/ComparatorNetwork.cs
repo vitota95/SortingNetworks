@@ -5,33 +5,30 @@
     using System.Collections.Generic;
     using System.Linq;
 
+    using SortingNetworks.Extensions;
+
     /// <inheritdoc cref="IComparatorNetwork"/>
     public class ComparatorNetwork : IComparatorNetwork
     {
-        public ComparatorNetwork(short inputs, Comparator[] comparators) 
+        public ComparatorNetwork(ushort inputs, Comparator[] comparators) 
         {
             this.DifferentZeroPositions = new Dictionary<uint, int>();
-            this.OutputsDictionary = new Dictionary<uint, HashSet<short>>();
+            this.SequencesWithKOnes = new Dictionary<uint, int>();
+
             this.Comparators = comparators;
             this.Inputs = inputs;
             this.Outputs = this.CalculateOutput();
-            this.SequencesWithKOnes = this.CalculateSequencesWithKOnes();
-            this.W = CalculateW(this.OutputsDictionary, inputs);
         }
 
         /// <inheritdoc/>
-        public HashSet<short> Outputs { get; private set; }
+        public HashSet<ushort> Outputs { get; private set; }
 
         public Dictionary<uint, int> DifferentZeroPositions { get; private set; }
 
-        public Dictionary<uint, int> SequencesWithKOnes { get; }
-
-        public Dictionary<uint, HashSet<short>> OutputsDictionary { get; }
-
-        public Dictionary<uint, bool[]>[] W { get; }
+        public Dictionary<uint, int> SequencesWithKOnes { get; private set; }
 
         /// <inheritdoc/>
-        public short Inputs { get; private set; }
+        public ushort Inputs { get; private set; }
 
         /// <inheritdoc/>
         public Comparator[] Comparators { get;  set; }
@@ -73,7 +70,7 @@
             for (var i = 1; i < permutations.Length; i++)
             {
                 var permutation = permutations[i].ToArray();
-                var permutedSubset = new HashSet<short>();
+                var permutedSubset = new HashSet<ushort>();
 
                 using (var enumerator = n.Outputs.GetEnumerator())
                 {
@@ -90,7 +87,7 @@
 
                         var permutedOutput = new int[1];
                         permutedOutputBits.CopyTo(permutedOutput, 0);
-                        permutedSubset.Add((short)permutedOutput[0]);
+                        permutedSubset.Add((ushort)permutedOutput[0]);
                     }
                     while (enumerator.MoveNext());
                 }
@@ -162,7 +159,7 @@
             return false;
         }
 
-        private static void IncrementInDictionary(uint key, ref Dictionary<uint, int> dict, int value = 1)
+        private static Dictionary<uint, int> IncrementInDictionary(uint key, Dictionary<uint, int> dict, int value = 1)
         {
             if (dict.ContainsKey(key))
             {
@@ -172,79 +169,34 @@
             {
                 dict.Add(key, value);
             }
+
+            return dict;
         }
 
-        private static Dictionary<uint, bool[]>[] CalculateW(Dictionary<uint, HashSet<short>> net1Outputs, short length)
-        {
-            var w0 = new Dictionary<uint, bool[]>();
-            var w1 = new Dictionary<uint, bool[]>();
-
-            foreach ((var key, var value) in net1Outputs)
-            {
-                var positions0 = new bool[length];
-                var positions1 = new bool[length];
-                using (var enumerator = value.GetEnumerator())
-                {
-                    while (enumerator.MoveNext())
-                    {
-                        var arr = new BitArray(new int[] { enumerator.Current }) { Length = length };
-                        for (var i = 0; i < arr.Count; i++)
-                        {
-                            if (arr.Get(i))
-                            {
-                                positions1[i] = true;
-                            }
-                            else
-                            {
-                                positions0[i] = true;
-                            }
-                        }
-                    }
-                }
-
-                w0.Add(key, positions0);
-                w1.Add(key, positions1);
-            }
-
-            return new[] { w0, w1 };
-        }
-
-        private Dictionary<uint, int> CalculateSequencesWithKOnes()
-        {
-            var d = new Dictionary<uint, int>();
-
-            using (var e = this.Outputs.GetEnumerator())
-            {
-                while (e.MoveNext())
-                {
-                    var setBits = System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)e.Current);
-                    IncrementInDictionary(setBits, ref d);
-                }
-            }
-
-            return d;
-        }
-
-        private HashSet<short> CalculateOutput() 
+        private HashSet<ushort> CalculateOutput() 
         {
             var total = Math.Pow(2, this.Inputs) - 1;
-            var output = new HashSet<short>();
-            var differentZeroPositions = new Dictionary<uint, bool[]>();
+            var output = new HashSet<ushort>();
+            var differentZeroPositions = new Dictionary<uint, BitArray>();
+            ushort setBits;
 
-            for (short i = 1; i < total; i++) 
+            for (ushort i = 1; i < total; i++) 
             {
-                output.Add(this.ComputeOutput(i, ref differentZeroPositions));
+                if (output.Add(this.ComputeOutput(i, ref differentZeroPositions, out setBits)))
+                {
+                    this.SequencesWithKOnes = IncrementInDictionary(setBits, this.SequencesWithKOnes);
+                }
             }
 
             foreach (var (key, value) in differentZeroPositions)
             {
-                this.DifferentZeroPositions.Add(key, value.Count(c => c));
+                this.DifferentZeroPositions.Add(key, value.SetCount());
             }
 
             return output;
         }
 
-        private short ComputeOutput(short value, ref Dictionary<uint, bool[]> differentZeroPositions) 
+        private ushort ComputeOutput(ushort value, ref Dictionary<uint, BitArray> differentZeroPositions, out ushort setBits) 
         {
             var arr = new BitArray(new int[] { value }) { Length = this.Inputs };
             var length = arr.Length - 1;
@@ -262,52 +214,23 @@
                 }
             }
 
-            var newValue = new int[1];
-            arr.CopyTo(newValue, 0);
-            var setBits = System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)newValue[0]);
-
-            if (this.OutputsDictionary.ContainsKey(setBits))
-            {
-                this.OutputsDictionary[setBits].Add((short)newValue[0]);
-            }
-            else
-            {
-                this.OutputsDictionary[setBits] = new HashSet<short>();
-            }
-
+            var outputValue = new uint[1];
+            arr.CopyTo(outputValue, 0);
+            setBits = (ushort)System.Runtime.Intrinsics.X86.Popcnt.PopCount(outputValue[0]);
             this.CalculateDifferentZeroPositions(ref differentZeroPositions, arr, setBits);
 
-            return (short)newValue[0];
+            return (ushort)outputValue[0];
         }
 
-        private void CalculateDifferentZeroPositions(ref Dictionary<uint, bool[]> differentZeroPositions, BitArray arr, uint setBits)
+        private void CalculateDifferentZeroPositions(ref Dictionary<uint, BitArray> differentZeroPositions, BitArray arr, ushort setBits)
         {
-            var zeroPositions = new bool[this.Inputs];
-            for (var i = 0; i < arr.Length; i++)
+            if (differentZeroPositions.ContainsKey(setBits))
             {
-                if (!arr.Get(i))
-                {
-                    zeroPositions[i] = true;
-                }
-            }
-
-            if (!differentZeroPositions.ContainsKey(setBits))
-            {
-                differentZeroPositions[setBits] = zeroPositions;
+                differentZeroPositions[setBits] = differentZeroPositions[setBits].Or(arr);
             }
             else
             {
-                var temp = differentZeroPositions[setBits];
-
-                for (var i = 0; i < temp.Length; i++)
-                {
-                    if (!temp[i] && zeroPositions[i])
-                    {
-                        temp[i] = true;
-                    }
-                }
-
-                differentZeroPositions[setBits] = temp;
+                differentZeroPositions[setBits] = arr;
             }
         }
     }

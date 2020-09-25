@@ -4,19 +4,15 @@
 
     public interface IComparatorNetwork
     {
-        short Inputs { get; }
+        ushort Inputs { get; }
 
         Comparator[] Comparators { get; set; }
 
-        HashSet<short> Outputs { get; }
+        HashSet<ushort> Outputs { get; }
 
         Dictionary<uint, int> DifferentZeroPositions { get; }
 
         Dictionary<uint, int> SequencesWithKOnes { get; }
-
-        Dictionary<uint, HashSet<short>> OutputsDictionary { get; }
-
-        Dictionary<uint, bool[]>[] W { get; }
 
         bool IsSubsumed(IComparatorNetwork n, IEnumerable<int> [] permutations);
 
@@ -29,10 +25,10 @@
 
     public struct Comparator
     {
-        public short X;
-        public short Y;
+        public ushort X;
+        public ushort Y;
 
-        public Comparator(short x, short y) 
+        public Comparator(ushort x, ushort y) 
         {
             this.X = x;
             this.Y = y;
