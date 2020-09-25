@@ -10,8 +10,7 @@
         public IComparatorNetwork[] Prune(IComparatorNetwork[] nets)
         {
             var result = new List<IComparatorNetwork>();
-            var range = Enumerable.Range(0, nets[0].Inputs);
-            var permutations = range.GetPermutations().ToArray();
+            var permutations = Enumerable.Range(0, nets[0].Inputs).GetPermutations().ToArray();
 
             for (var i = 0; i < nets.Length; i++) 
             {
@@ -21,13 +20,13 @@
                 {
                     var n = result[index];
 
-                    if (nets[i].IsSubsumedBy(n, permutations))
+                    if (nets[i].IsSubsumed(n, permutations))
                     {
                         isSubsumed = true;
                         break;
                     }
 
-                    if (n.IsSubsumedBy(nets[i], permutations))
+                    if (n.IsSubsumed(nets[i], permutations))
                     {
                         result.Remove(n);
                     }

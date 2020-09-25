@@ -10,7 +10,7 @@
 
         HashSet<short> Outputs { get; }
 
-        bool[][] DifferentZeroPositions { get; }
+        Dictionary<uint, int> DifferentZeroPositions { get; }
 
         Dictionary<uint, int> SequencesWithKOnes { get; }
 
@@ -18,7 +18,7 @@
 
         Dictionary<uint, bool[]>[] W { get; }
 
-        bool IsSubsumedBy(IComparatorNetwork n, IEnumerable<int>[] permutations);
+        bool IsSubsumed(IComparatorNetwork n, IEnumerable<int> [] permutations);
 
         bool IsRedundant(IComparatorNetwork n);
 
