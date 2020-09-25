@@ -3,14 +3,17 @@
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.ComponentModel.DataAnnotations;
+    using System.Diagnostics;
     using System.Linq;
+    using System.Net.Http.Headers;
 
     /// <inheritdoc cref="IComparatorNetwork"/>
     public class ComparatorNetwork : IComparatorNetwork
     {
         public ComparatorNetwork(short inputs, Comparator[] comparators) 
         {
-            this.DifferentZeroPositions = new Dictionary<uint, int>();
+            this.DifferentZeroPositions = new bool[inputs][];
             this.OutputsDictionary = new Dictionary<uint, HashSet<short>>();
             this.Comparators = comparators;
             this.Inputs = inputs;
@@ -22,7 +25,7 @@
         /// <inheritdoc/>
         public HashSet<short> Outputs { get; private set; }
 
-        public Dictionary<uint, int> DifferentZeroPositions { get; private set; }
+        public bool[][] DifferentZeroPositions { get; private set; }
 
         public Dictionary<uint, int> SequencesWithKOnes { get; }
 
@@ -60,25 +63,28 @@
         }
 
         /// <inheritdoc/>
-        public bool IsSubsumed(IComparatorNetwork n, IEnumerable<int>[] permutations)
+        public bool IsSubsumedBy(IComparatorNetwork n, IEnumerable<int>[] permutations)
         {
             if (!ShouldCheckSubsumption(n, this)) return false;
 
-            if (n.Outputs.IsSubsetOf(this.Outputs))
-            {
-                return true;
-            }
+            if (n.Outputs.IsSubsetOf(this.Outputs)) return true;
+
+            //foreach (var (key, value) in this.OutputsDictionary)
+            //{
+            //    permutations = this.GetUsefulPermutations(this.W[0][key], n.W[0][key], permutations);
+            //    permutations = this.GetUsefulPermutations(this.W[1][key], n.W[1][key], permutations);
+            //}
 
             // Skip first permutation, as it is already check
             for (var i = 1; i < permutations.Length; i++)
             {
-                var permutation = permutations[i].ToArray();
                 var permutedSubset = new HashSet<short>();
-
+                
+                var permutation = permutations[i].ToArray();
+                
                 using (var enumerator = n.Outputs.GetEnumerator())
                 {
-                    enumerator.MoveNext();
-                    do
+                    while (enumerator.MoveNext())
                     {
                         var outputBits = new BitArray(new int[] { enumerator.Current }) { Length = n.Inputs };
                         var permutedOutputBits = new BitArray(n.Inputs);
@@ -92,7 +98,6 @@
                         permutedOutputBits.CopyTo(permutedOutput, 0);
                         permutedSubset.Add((short)permutedOutput[0]);
                     }
-                    while (enumerator.MoveNext());
                 }
 
                 if (permutedSubset.IsSubsetOf(this.Outputs))
@@ -146,13 +151,13 @@
             return false;
         }
 
-        private static bool CheckZeroPositions(Dictionary<uint, int> d1, Dictionary<uint, int> d2)
+        private static bool CheckZeroPositions(bool[][] m1, bool[][] m2)
         {
-            foreach (var (key, value1) in d1)
+            for (var i = 0; i < m1.GetLength(0); i++)
             {
-                if (d2.TryGetValue(key, out var value2))
+                if (m1[i] != null && m2[i] != null)
                 {
-                    if (value1 > value2)
+                    if (m1[i].Length > m2[i].Length)
                     {
                         return true;
                     }
@@ -179,7 +184,7 @@
             var w0 = new Dictionary<uint, bool[]>();
             var w1 = new Dictionary<uint, bool[]>();
 
-            foreach ((var key, var value) in net1Outputs)
+            foreach (var (key, value) in net1Outputs)
             {
                 var positions0 = new bool[length];
                 var positions1 = new bool[length];
@@ -209,6 +214,85 @@
             return new[] { w0, w1 };
         }
 
+        private static bool[,] ComputeWMatrix(bool[] w1, bool[] w2)
+        {
+            var matrix = new bool[w1.Length, w2.Length];
+
+            for (var i = 0; i < w1.Length; i++)
+            {
+                var marked = 0;
+                for (var j = 0; j < w2.Length; j++)
+                {
+                    if (w1[i]  && !w2[j])
+                    {
+                        matrix[i, j] = true;
+                        marked++;
+                    }
+                }
+
+                if (marked == w1.Length)
+                {
+                    return null;
+                }
+            }
+
+            //PrintMatrix(matrix);
+
+            return matrix;
+        }
+
+        private static void PrintMatrix(bool[,] matrix)
+        {
+            Trace.WriteLine("------------------------------------");
+            for (int i = 0; i < matrix.GetLength(0); i++)
+            {
+                for (int j = 0; j < matrix.GetLength(1); j++)
+                {
+                    Trace.Write($"{matrix[i, j]}\t");
+                }
+                Trace.WriteLine(string.Empty);
+            }
+            Trace.WriteLine("------------------------------------");
+            Trace.WriteLine(string.Empty);
+        }
+
+        /// <summary>
+        /// Discards permutations to apply in subsumption test in application of lemma 6.
+        /// </summary>
+        /// <param name="arr1">The positions vector of net 1.</param>
+        /// <param name="arr2">The positions vector of net 2.</param>
+        /// <param name="permutations">The all permutations array.</param>
+        /// <returns>Returns a dictionary with key number of set bits in Outputs and value permutations to discard</returns>
+        private IEnumerable<int>[] GetUsefulPermutations(bool[] arr1, bool[] arr2, IEnumerable<int>[] permutations)
+        {
+            var matrix = ComputeWMatrix(arr1, arr2);
+
+            if (matrix != null)
+            {
+                for (var i = 0; i < arr1.Length; i++)
+                {
+                    for (var j = 0; j < arr1.Length; j++)
+                    {
+                        if (matrix[i, j])
+                        {
+                            permutations = permutations.Where(
+                                x =>
+                                    {
+                                        var temp = x.ToArray();
+                                        return temp[i] != j;
+                                    }).ToArray();
+                        }
+                    }
+                }
+            }
+            //else
+            //{
+            //    return null;
+            //}
+            
+            return permutations;
+        }
+
         private Dictionary<uint, int> CalculateSequencesWithKOnes()
         {
             var d = new Dictionary<uint, int>();
@@ -229,22 +313,16 @@
         {
             var total = Math.Pow(2, this.Inputs) - 1;
             var output = new HashSet<short>();
-            var differentZeroPositions = new Dictionary<uint, bool[]>();
 
             for (short i = 1; i < total; i++) 
             {
-                output.Add(this.ComputeOutput(i, ref differentZeroPositions));
-            }
-
-            foreach (var (key, value) in differentZeroPositions)
-            {
-                this.DifferentZeroPositions.Add(key, value.Count(c => c));
+                output.Add(this.ComputeOutput(i));
             }
 
             return output;
         }
 
-        private short ComputeOutput(short value, ref Dictionary<uint, bool[]> differentZeroPositions) 
+        private short ComputeOutput(short value) 
         {
             var arr = new BitArray(new int[] { value }) { Length = this.Inputs };
             var length = arr.Length - 1;
@@ -275,12 +353,12 @@
                 this.OutputsDictionary[setBits] = new HashSet<short>();
             }
 
-            this.CalculateDifferentZeroPositions(ref differentZeroPositions, arr, setBits);
+            this.CalculateDifferentZeroPositions(arr, setBits);
 
             return (short)newValue[0];
         }
 
-        private void CalculateDifferentZeroPositions(ref Dictionary<uint, bool[]> differentZeroPositions, BitArray arr, uint setBits)
+        private void CalculateDifferentZeroPositions(BitArray arr, uint setBits)
         {
             var zeroPositions = new bool[this.Inputs];
             for (var i = 0; i < arr.Length; i++)
@@ -291,13 +369,13 @@
                 }
             }
 
-            if (!differentZeroPositions.ContainsKey(setBits))
+            if (this.DifferentZeroPositions[setBits] == null)
             {
-                differentZeroPositions[setBits] = zeroPositions;
+                this.DifferentZeroPositions[setBits] = zeroPositions;
             }
             else
             {
-                var temp = differentZeroPositions[setBits];
+                var temp = this.DifferentZeroPositions[setBits];
 
                 for (var i = 0; i < temp.Length; i++)
                 {
@@ -307,7 +385,7 @@
                     }
                 }
 
-                differentZeroPositions[setBits] = temp;
+                this.DifferentZeroPositions[setBits] = temp;
             }
         }
     }
