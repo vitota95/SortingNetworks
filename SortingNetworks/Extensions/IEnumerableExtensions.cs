@@ -7,7 +7,15 @@ namespace SortingNetworks
 {
     public static class IEnumerableExtensions
     {
-        public static IEnumerable<IEnumerable<T>> GetPermutations<T>(this IEnumerable<T> enumerable)
+        public static void Populate<T>(this T[] arr, T value)
+        {
+            for (int i = 0; i < arr.Length; ++i)
+            {
+                arr[i] = value;
+            }
+        }
+
+        public static IEnumerable<IEnumerable<T>> GetPermutations<T>(this IEnumerable<T> enumerable, int[] positions)
         {
             var array = enumerable as T[] ?? enumerable.ToArray();
 
@@ -18,7 +26,6 @@ namespace SortingNetworks
             for (var i = 0L; i < factorials[array.Length]; i++)
             {
                 var sequence = GenerateSequence(i, array.Length - 1, factorials);
-
                 yield return GeneratePermutation(array, sequence);
             }
         }

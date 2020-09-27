@@ -10,9 +10,11 @@
 
         HashSet<ushort> Outputs { get; }
 
-        Dictionary<ushort, ushort> DifferentZeroPositions { get; }
+        Dictionary<ushort, int> Where0 { get; }
 
-        Dictionary<ushort, ushort> SequencesWithKOnes { get; }
+        Dictionary<ushort, int> SequencesWithOnes { get; }
+
+        Dictionary<ushort, int> Where1 { get; }
 
         bool IsSubsumed(IComparatorNetwork n, IEnumerable<int> [] permutations);
 

@@ -28,14 +28,17 @@
             for (var i = 0; i < k; i++)
             {
                 Trace.WriteLine($"Adding Comparator {i+1}");
-
                 Trace.WriteLine($"Generate--------------");
+                var generateWatch = Stopwatch.StartNew();
                 comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
                 Trace.WriteLine($"Length after Generate: {comparatorNets.Length}");
+                Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
 
                 Trace.WriteLine($"Prune--------------");
+                var pruneWatch = Stopwatch.StartNew();
                 comparatorNets = pruner.Prune(comparatorNets);
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Length}");
+                Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
                 Trace.WriteLine(string.Empty);
             }
 
