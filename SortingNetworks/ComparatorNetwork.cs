@@ -65,40 +65,13 @@
             if (!ShouldCheckSubsumption(n, this)) return false;
 
             // Create matrix for permutations
-            //var positions = new int[this.Inputs];
-            //ulong prod = 1;
-            //positions.Populate(-1);
-            //for (var pos = 0; pos < this.Inputs; pos++)
-            //{
-            //    for (ushort j = 1; j < this.Inputs; j++)
-            //    {
-            //        if (this.Where1.ContainsKey(j))
-            //        {
-            //            var x = this.Where1[j] & (1 << pos);
-            //            if (x != 0)
-            //            {
-            //                positions[pos] &= n.Where1[j];
-            //            }
-            //        }
+            var positions = this.GetPositions(n);
 
-            //        if (this.Where0.ContainsKey(j))
-            //        {
-            //            var y = this.Where0[j] & (1 << pos);
-            //            if (y != 0)
-            //            {
-            //                positions[pos] &= n.Where0[j];
-            //            }
-            //        }
-            //    }
-
-            //    prod *= CountBits((ulong)(positions[pos] & ((1 << this.Inputs) - 1)));
-            //}
-
-            //if (prod == 0)
+            //if (positions == null)
             //{
             //    return false;
             //}
-
+            
             //var toPermute = RestrictPermutations(permutations, positions);
             var toPermute = permutations;
 
@@ -135,6 +108,45 @@
             }
 
             return false;
+        }
+
+        private int[] GetPositions(IComparatorNetwork n)
+        {
+            var positions = new int[this.Inputs];
+            ulong prod = 1;
+            positions.Populate(-1);
+            for (var pos = 0; pos < this.Inputs; pos++)
+            {
+                for (ushort j = 1; j < this.Inputs; j++)
+                {
+                    if (this.Where1.ContainsKey(j))
+                    {
+                        var x = this.Where1[j] & (1 << pos);
+                        if (x != 0)
+                        {
+                            positions[pos] &= n.Where1[j];
+                        }
+                    }
+
+                    if (this.Where0.ContainsKey(j))
+                    {
+                        var y = this.Where0[j] & (1 << pos);
+                        if (y != 0)
+                        {
+                            positions[pos] &= n.Where0[j];
+                        }
+                    }
+                }
+
+                prod *= CountBits((ulong)(positions[pos] & ((1 << this.Inputs) - 1)));
+            }
+
+            if (prod == 0)
+            {
+                return null;
+            }
+
+            return positions;
         }
 
         private int[][] RestrictPermutations(IEnumerable<int>[] permutations, int[] positions)
@@ -183,8 +195,7 @@
         private static bool ShouldCheckSubsumption(IComparatorNetwork n1, IComparatorNetwork n2)
         {
             return SequencesAreCompatible(n1.SequencesWithOnes, n2.SequencesWithOnes) &&
-                   SequencesAreCompatible(n1.Where0, n2.Where0); // &&
-            //SequencesAreCompatible(n1.Where1, n2.Where1);
+                   CheckWhere0SetCount(n1.Where0, n2.Where0); // &&
         }
 
         private static bool SequencesAreCompatible(Dictionary<ushort, int> d1, Dictionary<ushort, int> d2)
@@ -194,6 +205,29 @@
                 if (d2.TryGetValue(key, out var value2))
                 {
                     if (value1 > value2)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static bool CheckWhere0SetCount(Dictionary<ushort, int> d1, Dictionary<ushort, int> d2)
+        {
+            foreach (var (key, value1) in d1)
+            {
+                if (d2.TryGetValue(key, out var value2))
+                {
+                    var s1 = System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)value1);
+                    var s2 = System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)value2);
+
+                    if (s1 > s2)
                     {
                         return false;
                     }
