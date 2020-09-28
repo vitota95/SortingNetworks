@@ -15,7 +15,7 @@ namespace SortingNetworks
             }
         }
 
-        public static IEnumerable<IEnumerable<T>> GetPermutations<T>(this IEnumerable<T> enumerable, int[] positions)
+        public static IEnumerable<IEnumerable<T>> GetPermutations<T>(this IEnumerable<T> enumerable)
         {
             var array = enumerable as T[] ?? enumerable.ToArray();
 

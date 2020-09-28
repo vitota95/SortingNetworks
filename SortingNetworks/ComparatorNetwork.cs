@@ -65,42 +65,42 @@
             if (!ShouldCheckSubsumption(n, this)) return false;
 
             // Create matrix for permutations
-            var positions = new int[this.Inputs];
-            ulong prod = 1;
-            positions.Populate(-1);
-            for (var pos = 0; pos < this.Inputs; pos++)
-            {
-                for (ushort j = 1; j < this.Inputs; j++)
-                {
-                    if (this.Where1.ContainsKey(j))
-                    {
-                        var x = this.Where1[j] & (1 << pos);
-                        if (x != 0)
-                        {
-                            positions[pos] &= n.Where1[j];
-                        }
-                    }
+            //var positions = new int[this.Inputs];
+            //ulong prod = 1;
+            //positions.Populate(-1);
+            //for (var pos = 0; pos < this.Inputs; pos++)
+            //{
+            //    for (ushort j = 1; j < this.Inputs; j++)
+            //    {
+            //        if (this.Where1.ContainsKey(j))
+            //        {
+            //            var x = this.Where1[j] & (1 << pos);
+            //            if (x != 0)
+            //            {
+            //                positions[pos] &= n.Where1[j];
+            //            }
+            //        }
 
-                    if (this.Where0.ContainsKey(j))
-                    {
-                        var y = this.Where0[j] & (1 << pos);
-                        if (y != 0)
-                        {
-                            positions[pos] &= n.Where0[j];
-                        }
-                    }
-                }
+            //        if (this.Where0.ContainsKey(j))
+            //        {
+            //            var y = this.Where0[j] & (1 << pos);
+            //            if (y != 0)
+            //            {
+            //                positions[pos] &= n.Where0[j];
+            //            }
+            //        }
+            //    }
 
-                prod *= CountBits((ulong)(positions[pos] & ((1 << this.Inputs) - 1)));
-            }
+            //    prod *= CountBits((ulong)(positions[pos] & ((1 << this.Inputs) - 1)));
+            //}
 
-            if (prod == 0)
-            {
-                return false;
-            }
+            //if (prod == 0)
+            //{
+            //    return false;
+            //}
 
-            var toPermute = RestrictPermutations(permutations, positions);
-            //var toPermute = permutations;
+            //var toPermute = RestrictPermutations(permutations, positions);
+            var toPermute = permutations;
 
             for (var i = 0; i < toPermute.GetLength(0); i++)
             {
