@@ -13,8 +13,9 @@ namespace SortingNetworksTests
         {
             // Arrange, Act
             ushort size = 2;
+            IComparatorNetwork.Inputs = size;
             var comparators = new Comparator[1] { new Comparator(0, 1) };
-            var s1 = new ComparatorNetwork(size,  comparators);
+            var s1 = new ComparatorNetwork(comparators);
 
             // Assert
             Assert.IsTrue(s1.IsSortingNetwork());
@@ -25,8 +26,9 @@ namespace SortingNetworksTests
         {
             // Arrange, Act
             ushort size = 3;
+            IComparatorNetwork.Inputs = size;
             var comparators = new Comparator[3] { new Comparator(0, 2), new Comparator(0, 1), new Comparator(1, 2) };
-            var s1 = new ComparatorNetwork(size, comparators);
+            var s1 = new ComparatorNetwork(comparators);
 
             // Assert
             Assert.IsTrue(s1.IsSortingNetwork());
@@ -37,8 +39,9 @@ namespace SortingNetworksTests
         {
             // Arrange, Act
             ushort size = 3;
+            IComparatorNetwork.Inputs = size;
             var comparators = new Comparator[3] { new Comparator(1, 2), new Comparator(0, 1), new Comparator(0, 2) };
-            var s1 = new ComparatorNetwork(size, comparators);
+            var s1 = new ComparatorNetwork(comparators);
 
             // Assert
             Assert.IsFalse(s1.IsSortingNetwork());
@@ -49,8 +52,9 @@ namespace SortingNetworksTests
         {
             // Arrange, Act
             ushort size = 3;
+            IComparatorNetwork.Inputs = size;
             var comparators = new Comparator[2] { new Comparator(0, 2), new Comparator(0, 1) };
-            var s1 = new ComparatorNetwork(size, comparators);
+            var s1 = new ComparatorNetwork(comparators);
 
             // Assert
             Assert.IsFalse(s1.IsSortingNetwork());
@@ -61,8 +65,9 @@ namespace SortingNetworksTests
         {
             // Arrange, Act
             ushort size = 3;
+            IComparatorNetwork.Inputs = size;
             var comparators = new Comparator[1] { new Comparator(0, 1) };
-            var s1 = new ComparatorNetwork(size, comparators);
+            var s1 = new ComparatorNetwork(comparators);
 
             // Assert
             Assert.IsFalse(s1.IsSortingNetwork());
@@ -73,8 +78,9 @@ namespace SortingNetworksTests
         {
             // Arrange
             ushort size = 3;
+            IComparatorNetwork.Inputs = size;
             var comparators = new Comparator[0];
-            var s1 = new ComparatorNetwork(size, comparators);
+            var s1 = new ComparatorNetwork(comparators);
 
             // Act
             var s2 = s1.CloneWithNewComparator(new Comparator(1, 2));
@@ -90,8 +96,9 @@ namespace SortingNetworksTests
         {
             // Arrange
             ushort size = 3;
+            IComparatorNetwork.Inputs = size;
             var comparators = new Comparator[1] { new Comparator(0, 1) };
-            var s1 = new ComparatorNetwork(size, comparators);
+            var s1 = new ComparatorNetwork(comparators);
 
             // Act
             var s2 = s1.CloneWithNewComparator(new Comparator(1, 2));
@@ -109,10 +116,11 @@ namespace SortingNetworksTests
         {
             // Arrange
             ushort size = 2;
+            IComparatorNetwork.Inputs = size;
             var c1 = new Comparator[1] { new Comparator(0, 1) };
             var c2 = new Comparator[1] { new Comparator(0, 1) };
-            var s1 = new ComparatorNetwork(size, c1);
-            var s2 = new ComparatorNetwork(size, c2);
+            var s1 = new ComparatorNetwork(c1);
+            var s2 = new ComparatorNetwork(c2);
 
             // Act
             var result = s2.IsRedundant(s1);
@@ -126,10 +134,11 @@ namespace SortingNetworksTests
         {
             // Arrange
             ushort size = 3;
+            IComparatorNetwork.Inputs = size;
             var c1 = new Comparator[1] { new Comparator(0, 1) };
             var c2 = new Comparator[1] { new Comparator(0, 2) };
-            var s1 = new ComparatorNetwork(size, c1);
-            var s2 = new ComparatorNetwork(size, c2);
+            var s1 = new ComparatorNetwork(c1);
+            var s2 = new ComparatorNetwork(c2);
 
             // Act
             var result = s2.IsRedundant(s1);
@@ -143,8 +152,9 @@ namespace SortingNetworksTests
         {
             // Arrange, Act
             ushort size = 3;
+            IComparatorNetwork.Inputs = size;
             var c1 = new Comparator[1] { new Comparator(0, 1) };
-            var n = new ComparatorNetwork(size, c1);
+            var n = new ComparatorNetwork(c1);
 
             // Assert
             Assert.AreEqual(4, n.Outputs.Count);

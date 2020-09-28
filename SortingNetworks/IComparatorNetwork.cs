@@ -4,7 +4,7 @@
 
     public interface IComparatorNetwork
     {
-        ushort Inputs { get; }
+        static ushort Inputs { get; set; }
 
         Comparator[] Comparators { get; set; }
 

@@ -19,7 +19,8 @@
             const ushort Size = 2;
             var comparators = new Comparator[] { new Comparator(0, 1), new Comparator(0, 1) };
             var generator = new ComparatorNetworksGenerator();
-            IComparatorNetwork[] nets = { new ComparatorNetwork(Size, comparators) };
+            IComparatorNetwork.Inputs = Size;
+            IComparatorNetwork[] nets = { new ComparatorNetwork(comparators) };
 
             // Act
             var result = generator.Generate(nets, comparators);
@@ -36,7 +37,8 @@
             var c1 = new Comparator[1] { new Comparator(0, 1) };
             var c2 = new Comparator[2] { new Comparator(0, 2), new Comparator(1, 2) };
             var generator = new ComparatorNetworksGenerator();
-            IComparatorNetwork[] nets = { new ComparatorNetwork(Size, c1) };
+            IComparatorNetwork.Inputs = Size;
+            IComparatorNetwork[] nets = { new ComparatorNetwork(c1) };
 
             // Act
             var result = generator.Generate(nets, c2);

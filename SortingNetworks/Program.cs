@@ -23,7 +23,8 @@
             }
 
             var stopWatch = Stopwatch.StartNew();
-            var comparatorNets = new IComparatorNetwork[] { new ComparatorNetwork(inputs, new Comparator[0]) };
+            var comparatorNets = new IComparatorNetwork[] { new ComparatorNetwork(new Comparator[0]) };
+            IComparatorNetwork.Inputs = inputs;
 
             for (var i = 0; i < k; i++)
             {

@@ -8,14 +8,13 @@
     /// <inheritdoc cref="IComparatorNetwork"/>
     public class ComparatorNetwork : IComparatorNetwork
     {
-        public ComparatorNetwork(ushort inputs, Comparator[] comparators) 
+        public ComparatorNetwork(Comparator[] comparators) 
         {
             this.Where0 = new Dictionary<ushort, int>();
             this.Where1 = new Dictionary<ushort, int>();
             this.SequencesWithOnes = new Dictionary<ushort, int>();
 
             this.Comparators = comparators;
-            this.Inputs = inputs;
             this.Outputs = this.CalculateOutput();
         }
 
@@ -26,12 +25,7 @@
 
         public Dictionary<ushort, int> Where1 { get; private set; }
 
-
         public Dictionary<ushort, int> SequencesWithOnes { get; private set; }
-
-
-        /// <inheritdoc/>
-        public ushort Inputs { get; private set; }
 
         /// <inheritdoc/>
         public Comparator[] Comparators { get;  set; }
@@ -39,7 +33,7 @@
         /// <inheritdoc/>
         public bool IsSortingNetwork()
         {
-            return this.Outputs.Count == this.Inputs - 1;
+            return this.Outputs.Count == IComparatorNetwork.Inputs - 1;
         }
 
         /// <inheritdoc/>
@@ -56,7 +50,7 @@
             Array.Copy(this.Comparators, newComparators, this.Comparators.Length);
             newComparators[comparatorsSize - 1] = comparator;
 
-            return new ComparatorNetwork(this.Inputs, newComparators);
+            return new ComparatorNetwork(newComparators);
         }
 
         /// <inheritdoc/>
@@ -66,14 +60,20 @@
 
             // Create matrix for permutations
             var positions = this.GetPositions(n);
+            var values = new int[IComparatorNetwork.Inputs];
+            for (int i = 0; i < values.Length; i++)
+            {
+                values[i] = i;
+            }
 
-            //if (positions == null)
-            //{
-            //    return false;
-            //}
-            
-            //var toPermute = RestrictPermutations(permutations, positions);
-            var toPermute = permutations;
+            if (positions == null)
+            {
+                return false;
+            }
+
+            //var toPermute = RestrictPermutations(values.GetPermutations().ToArray(), positions).ToArray();
+            var toPermute = permutations.ToArray();
+            //var toPermute = permutations;
 
             for (var i = 0; i < toPermute.GetLength(0); i++)
             {
@@ -112,33 +112,33 @@
 
         private int[] GetPositions(IComparatorNetwork n)
         {
-            var positions = new int[this.Inputs];
+            var positions = new int[IComparatorNetwork.Inputs];
             ulong prod = 1;
             positions.Populate(-1);
-            for (var pos = 0; pos < this.Inputs; pos++)
+            for (var pos = 0; pos < IComparatorNetwork.Inputs; pos++)
             {
-                for (ushort j = 1; j < this.Inputs; j++)
+                for (ushort j = 1; j < IComparatorNetwork.Inputs; j++)
                 {
-                    if (this.Where1.ContainsKey(j))
+                    if (n.Where1.ContainsKey(j))
                     {
-                        var x = this.Where1[j] & (1 << pos);
+                        var x = n.Where1[j] & (1 << pos);
                         if (x != 0)
                         {
-                            positions[pos] &= n.Where1[j];
+                            positions[pos] &= this.Where1[j];
                         }
                     }
 
-                    if (this.Where0.ContainsKey(j))
+                    if (n.Where0.ContainsKey(j))
                     {
-                        var y = this.Where0[j] & (1 << pos);
+                        var y = n.Where0[j] & (1 << pos);
                         if (y != 0)
                         {
-                            positions[pos] &= n.Where0[j];
+                            positions[pos] &= this.Where0[j];
                         }
                     }
                 }
 
-                prod *= CountBits((ulong)(positions[pos] & ((1 << this.Inputs) - 1)));
+                prod *= System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)(positions[pos] & ((1 << IComparatorNetwork.Inputs) - 1)));
             }
 
             if (prod == 0)
@@ -164,7 +164,7 @@
                 var shouldAdd = true;
                 for (var j = 0; j < permutation.Length; j++)
                 {
-                    if (!bitPositions[j].Get(permutation[j]))
+                    if (!bitPositions[permutation[j]].Get(j))
                     {
                         shouldAdd = false;
                         break;
@@ -243,7 +243,7 @@
 
         private HashSet<ushort> CalculateOutput() 
         {
-            var total = (1 << this.Inputs) - 1;
+            var total = (1 << IComparatorNetwork.Inputs) - 1;
             var output = new HashSet<ushort>();
 
             for (ushort i = 1; i < total; i++)
@@ -264,7 +264,7 @@
             // complement where 0
             foreach (var key in this.Where0.Keys.ToList())
             {
-                this.Where0[key] = ~this.Where0[key] & ((1 << this.Inputs) - 1);
+                this.Where0[key] = ~this.Where0[key] & ((1 << IComparatorNetwork.Inputs) - 1);
             }
 
             return output;
@@ -272,7 +272,7 @@
 
         private ushort ComputeOutput(ushort value, out ushort setBits) 
         {
-            var arr = new BitArray(new int[] { value }) { Length = this.Inputs };
+            var arr = new BitArray(new int[] { value }) { Length = IComparatorNetwork.Inputs };
             var length = arr.Length - 1;
 
             for (var i = 0; i < this.Comparators.Length; i++) 
@@ -299,28 +299,20 @@
 
         private void CalculateDifferentOnePositions(int value, ushort setBits)
         {
-            if (this.Where1.ContainsKey(setBits))
+            if (!this.Where1.ContainsKey(setBits))
             {
-                this.Where1[setBits] |= value;
+                this.Where1[setBits] = 0;
             }
-            else
-            {
-                this.Where1[setBits] = value;
-            }
+            this.Where1[setBits] |= value;
         }
 
         private void CalculateDifferentZeroPositions(int value, ushort setBits)
         {
-            if (this.Where0.ContainsKey(setBits))
+            if (!this.Where0.ContainsKey(setBits))
             {
-                //this.Where0[setBits] |= ~value & ((1 << this.Inputs) - 1);
-                this.Where0[setBits] &= value;
+                this.Where0[setBits] = -1;
             }
-            else
-            {
-                //this.Where0[setBits] = ~value & ((1 << this.Inputs) - 1);
-                this.Where0[setBits] = value;
-            }
+            this.Where0[setBits] &= value;
         }
     }
 }

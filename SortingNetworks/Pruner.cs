@@ -10,7 +10,7 @@
         public IComparatorNetwork[] Prune(IComparatorNetwork[] nets)
         {
             var result = new List<IComparatorNetwork>();
-            var permutations = Enumerable.Range(0, nets[0].Inputs).GetPermutations().ToArray();
+            var permutations = Enumerable.Range(0, IComparatorNetwork.Inputs).GetPermutations().ToArray();
 
             for (var i = 0; i < nets.Length; i++) 
             {

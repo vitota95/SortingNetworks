@@ -5,6 +5,8 @@ using System.Text;
 
 namespace SortingNetworks
 {
+    using System.Collections;
+
     public static class IEnumerableExtensions
     {
         public static void Populate<T>(this T[] arr, T value)
@@ -27,6 +29,33 @@ namespace SortingNetworks
             {
                 var sequence = GenerateSequence(i, array.Length - 1, factorials);
                 yield return GeneratePermutation(array, sequence);
+            }
+        } 
+        
+        public static IEnumerable<IEnumerable<int>> GetPermutationsWithSkip(this IEnumerable<int> enumerable, int[] positions)
+        {
+            var array = enumerable.ToArray();
+
+            var factorials = Enumerable.Range(0, array.Length + 1)
+                .Select(Factorial)
+                .ToArray();
+
+            for (var i = 0L; i < factorials[array.Length]; i++)
+            {
+                var sequence = GenerateSequence(i, array.Length - 1, factorials);
+                var permutation = GeneratePermutation(array, sequence).ToArray();
+                var add = true;
+                for (int j = 0; j < permutation.Length; j++)
+                {
+                    var arr = new BitArray(new int[] { positions[permutation[j]] }) { Length = positions.Length };
+                    if (!arr.Get(j))
+                    {
+                        add = false;
+                        break;
+                    }
+                }
+
+                if (add) yield return permutation;
             }
         }
 
