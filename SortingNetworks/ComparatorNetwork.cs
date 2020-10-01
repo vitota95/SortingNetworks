@@ -72,42 +72,7 @@
                 return false;
             }
 
-            //var toPermute = this.RestrictPermutations(values.GetPermutations().ToArray(), positions);
-            var toPermute = permutations.ToArray();
-
-            for (var i = 0; i < toPermute.GetLength(0); i++)
-            {
-                var permutation = toPermute[i].ToArray();
-                var isSubset = true;
-
-                using (var enumerator = n.Outputs.GetEnumerator())
-                {
-                    while (enumerator.MoveNext())
-                    {
-                        var output = enumerator.Current;
-                        var newOutput = 0;
-
-                        // permute bits
-                        for (var j = 0; j < permutation.Length; j++)
-                        {
-                            if ((output & (1 << permutation[j])) > 0) newOutput |= 1 << j;
-                        }
-
-                        if (!this.Outputs.Contains((ushort)newOutput))
-                        {
-                            isSubset = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (isSubset)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return this.ApplyPermutations(n, permutations, positions);
         }
 
         /// <summary>
@@ -166,6 +131,56 @@
             return true;
         }
 
+        private bool ApplyPermutations(IComparatorNetwork n, IEnumerable<int>[] permutations, int[] positions)
+        {
+            for (var i = 0; i < permutations.Length; i++)
+            {
+                var permutation = permutations[i].ToArray();
+                var isValidPermutation = true;
+                for (var j = 0; j < permutation.Length; j++)
+                {
+                    if ((positions[permutation[j]] & (1 << j)) == 0)
+                    {
+                        isValidPermutation = false;
+                        break;
+                    }
+                }
+
+                if (isValidPermutation)
+                {
+                    var isSubset = true;
+
+                    using (var enumerator = n.Outputs.GetEnumerator())
+                    {
+                        while (enumerator.MoveNext())
+                        {
+                            var output = enumerator.Current;
+                            var newOutput = 0;
+
+                            // permute bits
+                            for (var j = 0; j < permutation.Length; j++)
+                            {
+                                if ((output & (1 << permutation[j])) > 0) newOutput |= 1 << j;
+                            }
+
+                            if (!this.Outputs.Contains((ushort)newOutput))
+                            {
+                                isSubset = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (isSubset)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         private int[] GetPositions(IComparatorNetwork n)
         {
             var positions = new int[IComparatorNetwork.Inputs];
@@ -203,32 +218,6 @@
             }
 
             return positions;
-        }
-
-        private int[][] RestrictPermutations(IEnumerable<int>[] permutations, int[] positions)
-        {
-            var newPermutations = new List<int[]>();
-
-            for (var i = 0; i < permutations.Length; i++)
-            {
-                var permutation = permutations[i].ToArray();
-                var shouldAdd = true;
-                for (var j = 0; j < permutation.Length; j++)
-                {
-                    if ((positions[permutation[j]] & (1 << j)) == 0)
-                    {
-                        shouldAdd = false;
-                        break;
-                    }
-                }
-
-                if (shouldAdd)
-                {
-                    newPermutations.Add(permutation);
-                }
-            }
-
-            return newPermutations.ToArray();
         }
 
         private HashSet<ushort> CalculateOutput() 
