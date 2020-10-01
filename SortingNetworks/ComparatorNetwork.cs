@@ -4,6 +4,7 @@
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
+    using static System.Runtime.Intrinsics.X86.Popcnt;
 
     /// <inheritdoc cref="IComparatorNetwork"/>
     public class ComparatorNetwork : IComparatorNetwork
@@ -61,7 +62,7 @@
             // Create matrix for permutations
             var positions = this.GetPositions(n);
             var values = new int[IComparatorNetwork.Inputs];
-            for (int i = 0; i < values.Length; i++)
+            for (var i = 0; i < values.Length; i++)
             {
                 values[i] = i;
             }
@@ -71,9 +72,8 @@
                 return false;
             }
 
-            //var toPermute = RestrictPermutations(values.GetPermutations().ToArray(), positions).ToArray();
+            //var toPermute = this.RestrictPermutations(values.GetPermutations().ToArray(), positions);
             var toPermute = permutations.ToArray();
-            //var toPermute = permutations;
 
             for (var i = 0; i < toPermute.GetLength(0); i++)
             {
@@ -108,81 +108,6 @@
             }
 
             return false;
-        }
-
-        private int[] GetPositions(IComparatorNetwork n)
-        {
-            var positions = new int[IComparatorNetwork.Inputs];
-            ulong prod = 1;
-            positions.Populate(-1);
-            for (var pos = 0; pos < IComparatorNetwork.Inputs; pos++)
-            {
-                for (ushort j = 1; j < IComparatorNetwork.Inputs; j++)
-                {
-                    if (n.Where1.ContainsKey(j))
-                    {
-                        var x = n.Where1[j] & (1 << pos);
-                        if (x != 0)
-                        {
-                            positions[pos] &= this.Where1[j];
-                        }
-                    }
-
-                    if (n.Where0.ContainsKey(j))
-                    {
-                        var y = n.Where0[j] & (1 << pos);
-                        if (y != 0)
-                        {
-                            positions[pos] &= this.Where0[j];
-                        }
-                    }
-                }
-
-                prod *= System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)(positions[pos] & ((1 << IComparatorNetwork.Inputs) - 1)));
-            }
-
-            if (prod == 0)
-            {
-                return null;
-            }
-
-            return positions;
-        }
-
-        private int[][] RestrictPermutations(IEnumerable<int>[] permutations, int[] positions)
-        {
-            var newPermutations = new List<int[]>();
-            var bitPositions = new BitArray[positions.Length];
-            for (var i = 0; i < positions.Length; i++)
-            {
-                bitPositions[i] = new BitArray(new int[] { positions[i] }) { Length = positions.Length };
-            }
-
-            for (var i = 1; i < permutations.Length; i++)
-            {
-                var permutation = permutations[i].ToArray();
-                var shouldAdd = true;
-                for (var j = 0; j < permutation.Length; j++)
-                {
-                    if (!bitPositions[permutation[j]].Get(j))
-                    {
-                        shouldAdd = false;
-                        break;
-                    }
-                }
-
-                if (shouldAdd)
-                {
-                    newPermutations.Add(permutation);
-                }
-            }
-
-            return newPermutations.ToArray();
-        }
-
-        private static ulong CountBits(ulong l)
-        {
-            return (l * 0x_200040008001UL & 0x_111111111111111UL) % 0x_f;
         }
 
         /// <summary>
@@ -224,8 +149,8 @@
             {
                 if (d2.TryGetValue(key, out var value2))
                 {
-                    var s1 = System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)value1);
-                    var s2 = System.Runtime.Intrinsics.X86.Popcnt.PopCount((uint)value2);
+                    var s1 = PopCount((uint)value1);
+                    var s2 = PopCount((uint)value2);
 
                     if (s1 > s2)
                     {
@@ -241,6 +166,71 @@
             return true;
         }
 
+        private int[] GetPositions(IComparatorNetwork n)
+        {
+            var positions = new int[IComparatorNetwork.Inputs];
+            ulong prod = 1;
+            positions.Populate(-1);
+            for (var pos = 0; pos < IComparatorNetwork.Inputs; pos++)
+            {
+                for (ushort j = 1; j < IComparatorNetwork.Inputs; j++)
+                {
+                    if (n.Where1.ContainsKey(j))
+                    {
+                        var x = n.Where1[j] & (1 << pos);
+                        if (x != 0)
+                        {
+                            positions[pos] &= this.Where1[j];
+                        }
+                    }
+
+                    if (n.Where0.ContainsKey(j))
+                    {
+                        var y = n.Where0[j] & (1 << pos);
+                        if (y != 0)
+                        {
+                            positions[pos] &= this.Where0[j];
+                        }
+                    }
+                }
+
+                prod *= PopCount((uint)(positions[pos] & ((1 << IComparatorNetwork.Inputs) - 1)));
+            }
+
+            if (prod == 0)
+            {
+                return null;
+            }
+
+            return positions;
+        }
+
+        private int[][] RestrictPermutations(IEnumerable<int>[] permutations, int[] positions)
+        {
+            var newPermutations = new List<int[]>();
+
+            for (var i = 0; i < permutations.Length; i++)
+            {
+                var permutation = permutations[i].ToArray();
+                var shouldAdd = true;
+                for (var j = 0; j < permutation.Length; j++)
+                {
+                    if ((positions[permutation[j]] & (1 << j)) == 0)
+                    {
+                        shouldAdd = false;
+                        break;
+                    }
+                }
+
+                if (shouldAdd)
+                {
+                    newPermutations.Add(permutation);
+                }
+            }
+
+            return newPermutations.ToArray();
+        }
+
         private HashSet<ushort> CalculateOutput() 
         {
             var total = (1 << IComparatorNetwork.Inputs) - 1;
@@ -252,7 +242,7 @@
                 {
                     if (this.SequencesWithOnes.ContainsKey(setBits))
                     {
-                        this.SequencesWithOnes[setBits] ++;
+                        this.SequencesWithOnes[setBits]++;
                     }
                     else
                     {
@@ -290,7 +280,7 @@
 
             var outputValue = new uint[1];
             arr.CopyTo(outputValue, 0);
-            setBits = (ushort)System.Runtime.Intrinsics.X86.Popcnt.PopCount(outputValue[0]);
+            setBits = (ushort)PopCount(outputValue[0]);
             this.CalculateDifferentOnePositions((int)outputValue[0], setBits);
             this.CalculateDifferentZeroPositions((int)outputValue[0], setBits);
 
