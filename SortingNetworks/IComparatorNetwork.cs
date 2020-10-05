@@ -1,5 +1,6 @@
 ﻿namespace SortingNetworks
 {
+    using System;
     using System.Collections.Generic;
 
     public interface IComparatorNetwork
@@ -10,11 +11,13 @@
 
         HashSet<ushort> Outputs { get; }
 
-        Dictionary<ushort, int> Where0 { get; }
+        int[] Where0 { get; }
 
-        Dictionary<ushort, int> SequencesWithOnes { get; }
+        int[] Where0SetCount { get; }
 
-        Dictionary<ushort, int> Where1 { get; }
+        int[] SequencesWithOnes { get; }
+
+        int[] Where1 { get; }
 
         bool IsSubsumed(IComparatorNetwork n, IEnumerable<int> [] permutations);
 

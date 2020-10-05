@@ -3,6 +3,7 @@
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using static System.Runtime.Intrinsics.X86.Popcnt;
 
@@ -11,9 +12,10 @@
     {
         public ComparatorNetwork(Comparator[] comparators) 
         {
-            this.Where0 = new Dictionary<ushort, int>();
-            this.Where1 = new Dictionary<ushort, int>();
-            this.SequencesWithOnes = new Dictionary<ushort, int>();
+            this.Where0 = new int[IComparatorNetwork.Inputs];
+            this.Where1 = new int[IComparatorNetwork.Inputs];
+            this.Where0SetCount = new int[IComparatorNetwork.Inputs];
+            this.SequencesWithOnes = new int[IComparatorNetwork.Inputs];
 
             this.Comparators = comparators;
             this.Outputs = this.CalculateOutput();
@@ -22,11 +24,13 @@
         /// <inheritdoc/>
         public HashSet<ushort> Outputs { get; private set; }
 
-        public Dictionary<ushort, int> Where0 { get; private set; }
+        public int[] Where0 { get; private set; }
 
-        public Dictionary<ushort, int> Where1 { get; private set; }
+        public int[] Where0SetCount { get; }
 
-        public Dictionary<ushort, int> SequencesWithOnes { get; private set; }
+        public int[] Where1 { get; private set; }
+
+        public int[] SequencesWithOnes { get; private set; }
 
         /// <inheritdoc/>
         public Comparator[] Comparators { get;  set; }
@@ -84,45 +88,15 @@
         /// <returns>True if subsume test should be done, False otherwise.</returns>
         private static bool ShouldCheckSubsumption(IComparatorNetwork n1, IComparatorNetwork n2)
         {
-            return SequencesAreCompatible(n1.SequencesWithOnes, n2.SequencesWithOnes) &&
-                   CheckWhere0SetCount(n1.Where0, n2.Where0); // &&
+            return SequencesAreCompatible(n1.SequencesWithOnes, n2.SequencesWithOnes)&&
+                   SequencesAreCompatible(n1.Where0SetCount, n2.Where0SetCount);
         }
 
-        private static bool SequencesAreCompatible(Dictionary<ushort, int> d1, Dictionary<ushort, int> d2)
+        private static bool SequencesAreCompatible(int[] a1, int[] a2)
         {
-            foreach (var (key, value1) in d1)
+            for (var i = 0; i < a1.Length; i++)
             {
-                if (d2.TryGetValue(key, out var value2))
-                {
-                    if (value1 > value2)
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        private static bool CheckWhere0SetCount(Dictionary<ushort, int> d1, Dictionary<ushort, int> d2)
-        {
-            foreach (var (key, value1) in d1)
-            {
-                if (d2.TryGetValue(key, out var value2))
-                {
-                    var s1 = PopCount((uint)value1);
-                    var s2 = PopCount((uint)value2);
-
-                    if (s1 > s2)
-                    {
-                        return false;
-                    }
-                }
-                else
+                if (a1[i] != 0 && a1[i] > a2[i])
                 {
                     return false;
                 }
@@ -190,22 +164,16 @@
             {
                 for (ushort j = 1; j < IComparatorNetwork.Inputs; j++)
                 {
-                    if (n.Where1.ContainsKey(j))
+                    var x = n.Where1[j] & (1 << pos);
+                    if (x != 0)
                     {
-                        var x = n.Where1[j] & (1 << pos);
-                        if (x != 0)
-                        {
-                            positions[pos] &= this.Where1[j];
-                        }
+                        positions[pos] &= this.Where1[j];
                     }
 
-                    if (n.Where0.ContainsKey(j))
+                    var y = n.Where0[j] & (1 << pos);
+                    if (y != 0)
                     {
-                        var y = n.Where0[j] & (1 << pos);
-                        if (y != 0)
-                        {
-                            positions[pos] &= this.Where0[j];
-                        }
+                        positions[pos] &= this.Where0[j];
                     }
                 }
 
@@ -229,21 +197,18 @@
             {
                 if (output.Add(this.ComputeOutput(i, out var setBits)))
                 {
-                    if (this.SequencesWithOnes.ContainsKey(setBits))
-                    {
-                        this.SequencesWithOnes[setBits]++;
-                    }
-                    else
-                    {
-                        this.SequencesWithOnes.Add(setBits, 1);
-                    }
+                    this.SequencesWithOnes[setBits]++;
                 }
             }
 
             // complement where 0
-            foreach (var key in this.Where0.Keys.ToList())
+            for (var i = 0; i < this.Where0.Length; i++)
             {
-                this.Where0[key] = ~this.Where0[key] & ((1 << IComparatorNetwork.Inputs) - 1);
+                if (this.Where0[i] > 0)
+                {
+                    this.Where0[i] = ~this.Where0[i] & ((1 << IComparatorNetwork.Inputs) - 1);
+                    this.Where0SetCount[i] = (int)PopCount((uint)this.Where0[i]);
+                }
             }
 
             return output;
@@ -251,47 +216,25 @@
 
         private ushort ComputeOutput(ushort value, out ushort setBits) 
         {
-            var arr = new BitArray(new int[] { value }) { Length = IComparatorNetwork.Inputs };
-            var length = arr.Length - 1;
-
-            for (var i = 0; i < this.Comparators.Length; i++) 
+            for (var i = 0; i < this.Comparators.Length; i++)
             {
-                var b1 = arr.Get(length - this.Comparators[i].X);
-                var b2 = arr.Get(length - this.Comparators[i].Y);
+                var pos1 = IComparatorNetwork.Inputs - this.Comparators[i].X - 1;
+                var pos2 = IComparatorNetwork.Inputs - this.Comparators[i].Y - 1;
+                var bit1 = (value >> pos1) & 1;
+                var bit2 = (value >> pos2) & 1;
 
-                if (!b1 && b2) 
+                if ((~bit1 & bit2) != 0)
                 {
-                    var temp = b1;
-                    arr.Set(length - this.Comparators[i].X, b2);
-                    arr.Set(length - this.Comparators[i].Y, temp);
+                    value = (ushort)(value & ~(1 << pos2));
+                    value = (ushort)(value | (1 << pos1));
                 }
             }
 
-            var outputValue = new uint[1];
-            arr.CopyTo(outputValue, 0);
-            setBits = (ushort)PopCount(outputValue[0]);
-            this.CalculateDifferentOnePositions((int)outputValue[0], setBits);
-            this.CalculateDifferentZeroPositions((int)outputValue[0], setBits);
-
-            return (ushort)outputValue[0];
-        }
-
-        private void CalculateDifferentOnePositions(int value, ushort setBits)
-        {
-            if (!this.Where1.ContainsKey(setBits))
-            {
-                this.Where1[setBits] = 0;
-            }
+            setBits = (ushort)PopCount(value);
             this.Where1[setBits] |= value;
-        }
-
-        private void CalculateDifferentZeroPositions(int value, ushort setBits)
-        {
-            if (!this.Where0.ContainsKey(setBits))
-            {
-                this.Where0[setBits] = -1;
-            }
             this.Where0[setBits] &= value;
+
+            return value;
         }
     }
 }
