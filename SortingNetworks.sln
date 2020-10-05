@@ -5,12 +5,14 @@ VisualStudioVersion = 16.0.30413.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SortingNetworks", "SortingNetworks\SortingNetworks.csproj", "{CD4ED2A8-F634-479E-AD94-24A6B9BC2F11}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SortingNetworksTests", "SortingNetworksTests\SortingNetworksTests.csproj", "{573976E3-BE2F-498B-B312-801D2877B59C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SortingNetworksTests", "SortingNetworksTests\SortingNetworksTests.csproj", "{573976E3-BE2F-498B-B312-801D2877B59C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D7B2FED8-F7D8-45CB-A7C3-4184FDBA4F68}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarks", "Benchmarks\Benchmarks.csproj", "{6768563E-DC6E-4535-80A3-9071C670A920}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,7 +27,10 @@ Global
 		{573976E3-BE2F-498B-B312-801D2877B59C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{573976E3-BE2F-498B-B312-801D2877B59C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{573976E3-BE2F-498B-B312-801D2877B59C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{573976E3-BE2F-498B-B312-801D2877B59C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6768563E-DC6E-4535-80A3-9071C670A920}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6768563E-DC6E-4535-80A3-9071C670A920}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6768563E-DC6E-4535-80A3-9071C670A920}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6768563E-DC6E-4535-80A3-9071C670A920}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
