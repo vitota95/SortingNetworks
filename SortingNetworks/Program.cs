@@ -43,6 +43,7 @@
                 Trace.WriteLine(string.Empty);
             }
 
+            //Trace.WriteLine($"Subsume no check: {IComparatorNetwork.SubsumeNoCheck} ");
             Trace.WriteLine($"Elapsed Time: {stopWatch.Elapsed} ");
             Trace.WriteLine(string.Empty);
 

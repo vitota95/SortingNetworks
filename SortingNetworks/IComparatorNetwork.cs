@@ -5,6 +5,8 @@
 
     public interface IComparatorNetwork
     {
+        static long SubsumeNoCheck { get; set; }
+
         static ushort Inputs { get; set; }
 
         Comparator[] Comparators { get; set; }

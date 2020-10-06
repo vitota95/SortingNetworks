@@ -13,6 +13,10 @@
         public ComparatorNetwork(Comparator[] comparators) 
         {
             this.Where0 = new int[IComparatorNetwork.Inputs];
+            for (var i = 0; i < IComparatorNetwork.Inputs; i++)
+            {
+                this.Where0[i] = -1;
+            }
             this.Where1 = new int[IComparatorNetwork.Inputs];
             this.Where0SetCount = new int[IComparatorNetwork.Inputs];
             this.SequencesWithOnes = new int[IComparatorNetwork.Inputs];
@@ -61,7 +65,11 @@
         /// <inheritdoc/>
         public bool IsSubsumed(IComparatorNetwork n, IEnumerable<int>[] permutations)
         {
-            if (!ShouldCheckSubsumption(n, this)) return false;
+            if (!ShouldCheckSubsumption(n, this))
+            {
+                //IComparatorNetwork.SubsumeNoCheck++;
+                return false;
+            }
 
             // Create matrix for permutations
             var positions = this.GetPositions(n);
@@ -88,8 +96,8 @@
         /// <returns>True if subsume test should be done, False otherwise.</returns>
         private static bool ShouldCheckSubsumption(IComparatorNetwork n1, IComparatorNetwork n2)
         {
-            return SequencesAreCompatible(n1.SequencesWithOnes, n2.SequencesWithOnes)&&
-                   SequencesAreCompatible(n1.Where0SetCount, n2.Where0SetCount);
+            return SequencesAreCompatible(n1.SequencesWithOnes, n2.SequencesWithOnes) &&
+            SequencesAreCompatible(n1.Where0SetCount, n2.Where0SetCount);
         }
 
         private static bool SequencesAreCompatible(int[] a1, int[] a2)
@@ -204,9 +212,9 @@
             // complement where 0
             for (var i = 0; i < this.Where0.Length; i++)
             {
-                if (this.Where0[i] > 0)
+                this.Where0[i] = ~this.Where0[i] & ((1 << IComparatorNetwork.Inputs) - 1);
+                if (this.Where0[i] != -1)
                 {
-                    this.Where0[i] = ~this.Where0[i] & ((1 << IComparatorNetwork.Inputs) - 1);
                     this.Where0SetCount[i] = (int)PopCount((uint)this.Where0[i]);
                 }
             }
