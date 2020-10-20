@@ -6,6 +6,8 @@
 
 namespace SortingNetworks
 {
+    using System.Collections.Generic;
+
     /// <summary>
     /// The Pruner interface.
     /// </summary>
@@ -20,6 +22,6 @@ namespace SortingNetworks
         /// <returns>
         /// The <see cref="IComparatorNetwork[]"/>.
         /// </returns>
-        IComparatorNetwork[] Prune(IComparatorNetwork[] nets);
+        IReadOnlyList<IComparatorNetwork> Prune(IReadOnlyList<IComparatorNetwork> nets);
     }
 }

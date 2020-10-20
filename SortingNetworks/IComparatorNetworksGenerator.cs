@@ -4,6 +4,6 @@
 
     public interface IComparatorNetworksGenerator
     {
-        IComparatorNetwork[] Generate(IComparatorNetwork[] nets, IList<Comparator> comparators);
+        IReadOnlyList<IComparatorNetwork> Generate(IReadOnlyList<IComparatorNetwork> nets, IList<Comparator> comparators);
     }
 }

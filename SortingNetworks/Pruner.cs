@@ -7,12 +7,12 @@
     public class Pruner : IPruner
     {
         /// <inheritdoc cref="IPruner.Prune"/>
-        public IComparatorNetwork[] Prune(IComparatorNetwork[] nets)
+        public IReadOnlyList<IComparatorNetwork> Prune(IReadOnlyList<IComparatorNetwork> nets)
         {
             var result = new List<IComparatorNetwork>();
             var permutations = Enumerable.Range(0, IComparatorNetwork.Inputs).GetPermutations().ToArray();
 
-            for (var i = 0; i < nets.Length; i++) 
+            for (var i = 0; i < nets.Count; i++) 
             {
                 var isSubsumed = false;
 
@@ -38,7 +38,7 @@
                 }
             }
 
-            return result.ToArray();
+            return result;
         }
     }
 }

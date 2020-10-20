@@ -1,6 +1,7 @@
 ﻿namespace SortingNetworks
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
 
@@ -23,7 +24,7 @@
             }
 
             var stopWatch = Stopwatch.StartNew();
-            var comparatorNets = new IComparatorNetwork[] { new ComparatorNetwork(new Comparator[0]) };
+            IReadOnlyList<IComparatorNetwork> comparatorNets = new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[0]) };
             IComparatorNetwork.Inputs = inputs;
 
             for (var i = 0; i < k; i++)
@@ -32,13 +33,13 @@
                 Trace.WriteLine($"Generate--------------");
                 var generateWatch = Stopwatch.StartNew();
                 comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
-                Trace.WriteLine($"Length after Generate: {comparatorNets.Length}");
+                Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
                 Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
 
                 Trace.WriteLine($"Prune--------------");
                 var pruneWatch = Stopwatch.StartNew();
                 comparatorNets = pruner.Prune(comparatorNets);
-                Trace.WriteLine($"Length after Prune: {comparatorNets.Length}");
+                Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
                 Trace.WriteLine(string.Empty);
             }
@@ -74,7 +75,7 @@
             return new TraceListener[] { twtl, ctl };
         }
 
-        private static void PrintSortingNetworks(IComparatorNetwork[] nets, int inputs, int k) 
+        private static void PrintSortingNetworks(IReadOnlyList<IComparatorNetwork> nets, int inputs, int k) 
         {
             var sortingNets = nets.Where(x => x.IsSortingNetwork()).ToList();
             Trace.WriteLine($"{sortingNets.Count} Sorting Networks found with {inputs} inputs and {k} comparators");

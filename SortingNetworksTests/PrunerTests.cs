@@ -28,7 +28,7 @@
             var result = pruner.Prune(nets);
 
             // Assert
-            Assert.AreEqual(nets.Length, result.Length);
+            Assert.AreEqual(nets.Length, result.Count);
         }
 
         [TestMethod]
@@ -46,7 +46,7 @@
             var result = pruner.Prune(nets);
 
             // Assert
-            Assert.AreEqual(2, result.Length);
+            Assert.AreEqual(2, result.Count);
         }  
         
         [TestMethod]
@@ -64,7 +64,7 @@
             var result = pruner.Prune(nets);
 
             // Assert
-            Assert.AreEqual(2, result.Length);
+            Assert.AreEqual(2, result.Count);
         }
         
         [TestMethod]
@@ -87,7 +87,7 @@
             var result = pruner.Prune(nets);
 
             // Assert
-            Assert.AreEqual(1, result.Length);
+            Assert.AreEqual(1, result.Count);
             Assert.AreEqual(netMocks[0].Object, result[0]);
         }
     }

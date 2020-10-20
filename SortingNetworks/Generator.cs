@@ -4,10 +4,10 @@ namespace SortingNetworks
 {
     public class ComparatorNetworksGenerator : IComparatorNetworksGenerator
     {
-        public IComparatorNetwork[] Generate(IComparatorNetwork[] nets, IList<Comparator> comparators)
+        public IReadOnlyList<IComparatorNetwork> Generate(IReadOnlyList<IComparatorNetwork> nets, IList<Comparator> comparators)
         {
             var newSet = new List<IComparatorNetwork>();
-            for (var i = 0; i < nets.Length; i++)
+            for (var i = 0; i < nets.Count; i++)
             {
                 var net = nets[i];
                 for (var j = 0; j < comparators.Count; j++)

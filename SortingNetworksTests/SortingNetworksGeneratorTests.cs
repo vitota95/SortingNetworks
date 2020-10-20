@@ -1,6 +1,7 @@
 ﻿namespace SortingNetworksTests
 {
     using System;
+    using System.Collections.Generic;
 
     using AutoFixture;
     using AutoFixture.AutoMoq;
@@ -26,7 +27,7 @@
             var result = generator.Generate(nets, comparators);
 
             // Assert
-            Assert.AreEqual(0, result.Length);
+            Assert.AreEqual(0, result.Count);
         }
         
         [TestMethod]
@@ -44,7 +45,7 @@
             var result = generator.Generate(nets, c2);
 
             // Assert
-            Assert.AreEqual(2, result.Length);
+            Assert.AreEqual(2, result.Count);
         }
         
         [TestMethod]
@@ -55,13 +56,13 @@
             var comparators = new[] { new Comparator(0, 1), new Comparator(0, 2), new Comparator(1, 2) };
             var generator = new ComparatorNetworksGenerator();
             var netMock = fixture.Freeze<IComparatorNetwork>();
-            var nets = new[] { netMock };
+            IReadOnlyList<IComparatorNetwork> nets = new List<IComparatorNetwork> { netMock };
 
             // Act, Assert
             for (var i = 0; i < comparators.Length; i++)
             {
                 nets = generator.Generate(nets, comparators);
-                Assert.AreEqual(Math.Pow(3, i + 1), nets.Length);
+                Assert.AreEqual(Math.Pow(3, i + 1), nets.Count);
             }
         }
     }
