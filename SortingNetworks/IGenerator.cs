@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
 
-    public interface IComparatorNetworksGenerator
+    public interface IGenerator
     {
         IReadOnlyList<IComparatorNetwork> Generate(IReadOnlyList<IComparatorNetwork> nets, IList<Comparator> comparators);
     }

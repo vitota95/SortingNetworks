@@ -8,6 +8,7 @@
     using static System.Runtime.Intrinsics.X86.Popcnt;
 
     /// <inheritdoc cref="IComparatorNetwork"/>
+    [Serializable]
     public class ComparatorNetwork : IComparatorNetwork
     {
         public ComparatorNetwork(Comparator[] comparators) 

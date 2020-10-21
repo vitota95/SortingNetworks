@@ -2,7 +2,7 @@
 
 namespace SortingNetworks
 {
-    public class ComparatorNetworksGenerator : IComparatorNetworksGenerator
+    public class Generator : IGenerator
     {
         public IReadOnlyList<IComparatorNetwork> Generate(IReadOnlyList<IComparatorNetwork> nets, IList<Comparator> comparators)
         {

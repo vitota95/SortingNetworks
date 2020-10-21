@@ -19,7 +19,7 @@
             // Arrange
             const ushort Size = 2;
             var comparators = new Comparator[] { new Comparator(0, 1), new Comparator(0, 1) };
-            var generator = new ComparatorNetworksGenerator();
+            var generator = new Generator();
             IComparatorNetwork.Inputs = Size;
             IComparatorNetwork[] nets = { new ComparatorNetwork(comparators) };
 
@@ -37,7 +37,7 @@
             const ushort Size = 3;
             var c1 = new Comparator[1] { new Comparator(0, 1) };
             var c2 = new Comparator[2] { new Comparator(0, 2), new Comparator(1, 2) };
-            var generator = new ComparatorNetworksGenerator();
+            var generator = new Generator();
             IComparatorNetwork.Inputs = Size;
             IComparatorNetwork[] nets = { new ComparatorNetwork(c1) };
 
@@ -54,7 +54,7 @@
             // Arrange
             var fixture = new Fixture().Customize(new AutoMoqCustomization());
             var comparators = new[] { new Comparator(0, 1), new Comparator(0, 2), new Comparator(1, 2) };
-            var generator = new ComparatorNetworksGenerator();
+            var generator = new Generator();
             var netMock = fixture.Freeze<IComparatorNetwork>();
             IReadOnlyList<IComparatorNetwork> nets = new List<IComparatorNetwork> { netMock };
 

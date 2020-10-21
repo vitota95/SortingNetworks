@@ -14,7 +14,7 @@
             var traceFile = args[2];
 
             var comparatorsGenerator = new ComparatorsGenerator();
-            var sortingNetworksGenerator = new ComparatorNetworksGenerator();
+            var sortingNetworksGenerator = new Generator();
             var pruner = new Pruner();
             var comparators = comparatorsGenerator.GenerateComparators(Enumerable.Range(0, inputs).ToArray());
 
