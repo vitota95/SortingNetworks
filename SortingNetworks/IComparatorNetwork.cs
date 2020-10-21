@@ -30,6 +30,7 @@
         IComparatorNetwork CloneWithNewComparator(Comparator comparator);
     }
 
+    [Serializable]
     public struct Comparator
     {
         public ushort X;

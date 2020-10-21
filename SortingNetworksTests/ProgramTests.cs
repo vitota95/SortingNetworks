@@ -24,7 +24,7 @@
             SortingNetworks.Program.InitiateTracer(new[] { listenerMock.Object });
 
             // Act
-            SortingNetworks.Program.Main(new[] { inputs, k, string.Empty, string.Empty });
+            SortingNetworks.Program.Main(new[] { $"-s:{inputs}", $"-k:{k}" });
 
             // Assert
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 1"), Times.Exactly(2));
@@ -43,7 +43,7 @@
             SortingNetworks.Program.InitiateTracer(new[] { listenerMock.Object });
 
             // Act
-            SortingNetworks.Program.Main(new[] { inputs, k, string.Empty, string.Empty });
+            SortingNetworks.Program.Main(new[] { $"-s:{inputs}", $"-k:{k}" });
 
             // Assert
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 1"), Times.Exactly(2));
@@ -64,7 +64,7 @@
             SortingNetworks.Program.InitiateTracer(new[] { listenerMock.Object });
 
             // Act
-            SortingNetworks.Program.Main(new[] { inputs, k, string.Empty, string.Empty });
+            SortingNetworks.Program.Main(new[] { $"-s:{inputs}", $"-k:{k}" });
 
             // Assert
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 1"), Times.Exactly(2));
@@ -88,7 +88,7 @@
             SortingNetworks.Program.InitiateTracer(new[] { listenerMock.Object });
 
             // Act
-            SortingNetworks.Program.Main(new[] { inputs, k, string.Empty, string.Empty });
+            SortingNetworks.Program.Main(new[] { $"-s:{inputs}", $"-k:{k}"});
 
             // Assert
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 1"), Times.Exactly(2));

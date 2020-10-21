@@ -5,29 +5,56 @@
     using System.Diagnostics;
     using System.Linq;
 
+    using SortingNetworks.Utils;
+
     public class Program
     {
         public static void Main(string[] args)
         {
-            var inputs = Convert.ToUInt16(args[0]);
-            var k = Convert.ToInt16(args[1]);
-            var traceFile = args[2];
+            ushort k = 0;
+            ushort pause = 0;
+            IReadOnlyList<IComparatorNetwork> comparatorNets = null;
+
+            foreach (var arg in args)
+            {
+                switch (arg.Substring(0, 2).ToLower())
+                {
+                    case "-s":
+                        // size
+                        var size = Convert.ToUInt16(arg.Substring(3));
+                        IComparatorNetwork.Inputs = size;
+                        break;
+                    case "-k":
+                        // comparators
+                        k = Convert.ToUInt16(arg.Substring(3));
+                        break;
+                    case "-l":
+                        // log file
+                        var traceFile = arg.Substring(3);
+                        InitiateTracer(CreateDefaultListeners(traceFile));
+                        break;
+                    case "-p":
+                        // step for pause
+                        pause = Convert.ToUInt16(arg.Substring(3));
+                        break;
+                    case "-r":
+                        var path = arg.Substring(3);
+                        var serializer = new BinarySerializer(path);
+                        comparatorNets = serializer.Deserialize<IReadOnlyList<IComparatorNetwork>>();
+                        break;
+                }
+            }
 
             var comparatorsGenerator = new ComparatorsGenerator();
             var sortingNetworksGenerator = new Generator();
             var pruner = new Pruner();
-            var comparators = comparatorsGenerator.GenerateComparators(Enumerable.Range(0, inputs).ToArray());
-
-            if (args.Length < 4)
-            {
-                InitiateTracer(CreateDefaultListeners(traceFile));
-            }
-
+            var comparators = comparatorsGenerator.GenerateComparators(Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray());
             var stopWatch = Stopwatch.StartNew();
-            IReadOnlyList<IComparatorNetwork> comparatorNets = new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[0]) };
-            IComparatorNetwork.Inputs = inputs;
 
-            for (var i = 0; i < k; i++)
+            comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[0]) } ;
+            var numComparators = comparatorNets[0].Comparators.Length;
+
+            for (var i = numComparators; i < k; i++)
             {
                 Trace.WriteLine($"Adding Comparator {i+1}");
                 Trace.WriteLine($"Generate--------------");
@@ -42,13 +69,22 @@
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
                 Trace.WriteLine(string.Empty);
+
+                if (pause != 0 && i == pause)
+                {
+                    System.IO.Directory.CreateDirectory("SavedNetworks");
+                    var binarySerializer = new BinarySerializer($"SavedNetworks/nets{DateTime.Now:yyyyMMddHHmmssfff}.dat");
+                    binarySerializer.Serialize(comparatorNets);
+                    Trace.WriteLine($"Stopped execution at step: {i}");
+                    break;
+                }
             }
 
-            //Trace.WriteLine($"Subsume no check: {IComparatorNetwork.SubsumeNoCheck} ");
+            // Trace.WriteLine($"Subsume no check: {IComparatorNetwork.SubsumeNoCheck} ");
             Trace.WriteLine($"Elapsed Time: {stopWatch.Elapsed} ");
             Trace.WriteLine(string.Empty);
 
-            PrintSortingNetworks(comparatorNets, inputs, k);
+            PrintSortingNetworks(comparatorNets, IComparatorNetwork.Inputs, k);
         }
 
         public static void InitiateTracer(TraceListener[] listeners)

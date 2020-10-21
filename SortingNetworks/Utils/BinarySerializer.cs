@@ -1,4 +1,6 @@
-﻿namespace SortingNetworks.Utils
+﻿using System.Diagnostics;
+
+namespace SortingNetworks.Utils
 {
     using System.IO;
     using System.Runtime.Serialization.Formatters.Binary;
@@ -16,11 +18,12 @@
         {
             var formatter = new BinaryFormatter();
             var stream = new FileStream(this.FilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+            Trace.WriteLine($"Writing file at path: {stream.Name}");
             formatter.Serialize(stream, toSerialize);
             stream.Close();
         }
 
-        public T DeSerialize<T>()
+        public T Deserialize<T>()
         {
             var formatter = new BinaryFormatter();
             var stream = new FileStream(this.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);

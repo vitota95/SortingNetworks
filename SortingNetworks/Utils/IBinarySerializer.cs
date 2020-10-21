@@ -6,6 +6,6 @@
 
         void Serialize<T>(T toSerialize);
 
-        T DeSerialize<T>();
+        T Deserialize<T>();
     }
 }
