@@ -13,10 +13,10 @@
         {
             void SaveNetworks(ushort size, int i, IReadOnlyList<IComparatorNetwork> readOnlyList)
             {
-                Trace.WriteLine(@"Save Network for step {step}");
+                Trace.WriteLine($"Save Network for step {i}"); 
                 System.IO.Directory.CreateDirectory("SavedNetworks");
                 var binarySerializer =
-                    new BinarySerializer($"SavedNetworks/nets_{size}_{i + 1}_{DateTime.Now:yyyyMMddHHmmssfff}.dat");
+                    new BinarySerializer($"SavedNetworks/nets_{size}_{i}_{DateTime.Now:yyyyMMddHHmmssfff}.dat");
                 binarySerializer.Serialize(readOnlyList);
             }
 
@@ -79,7 +79,7 @@
 
             for (var i = numComparators; i < k; i++)
             {
-                if (i == copy)
+                if (i == copy && copy != 0)
                 {
                     SaveNetworks(k, i, comparatorNets);
                     copy += copySteps;
@@ -101,7 +101,7 @@
 
                 if (pause != 0 && i+1 == pause)
                 {
-                    SaveNetworks(k, i, comparatorNets);
+                    SaveNetworks(k, i+1, comparatorNets);
                     Trace.WriteLine($"Stopped execution at step: {i+1}");
                     break;
                 }
