@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SortingNetworks
 {
@@ -9,6 +10,58 @@ namespace SortingNetworks
 
     public static class IEnumerableExtensions
     {
+        public static IEnumerable<IEnumerable<T>> SplitList<T>(this IEnumerable<T> source, int nSize = 1000)
+        {
+            var result = source.ToList();
+            for (var i = 0; i < result.Count; i += nSize)
+            {
+                yield return result.GetRange(i, Math.Min(nSize, result.Count - i));
+            }
+        }
+
+        public static T AggregateInParallel<T>(this IEnumerable<T> values, Func<T, T, T> function, int numTasks)
+        {
+            Queue<T> queue = new Queue<T>();
+            var netsPerTask = queue.Count / numTasks;
+            foreach (var value in values)
+                queue.Enqueue(value);
+            if (!queue.Any())
+                return default(T);  //Consider throwing or doing something else here if the sequence is empty
+
+            var tasks = Enumerable.Range(0, numTasks)
+                .Select(_ => Task.Run(() =>
+                {
+                    (T, T)? GetFromQueue()
+                    {
+                        lock (queue)
+                        {
+                            if (queue.Count > 2)
+                            {
+                                return (queue.Dequeue(), queue.Dequeue());
+                            }
+                            else
+                            {
+                                return null;
+                            }
+                        }
+                    }
+                    var pair = GetFromQueue();
+                    while (pair != null)
+                    {
+                        var result = function(pair.Value.Item1, pair.Value.Item2);
+                        lock (queue)
+                        {
+                            queue.Enqueue(result);
+                        }
+                        pair = GetFromQueue();
+                    }
+                }))
+                .ToArray();
+            Task.WaitAll(tasks);
+            return queue.Dequeue();
+        }
+
+
         public static void Populate<T>(this T[] arr, T value)
         {
             for (int i = 0; i < arr.Length; ++i)

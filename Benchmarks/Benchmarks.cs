@@ -16,11 +16,10 @@
         }
 
         [Benchmark]
-        [Arguments(6, 12)]
         [Arguments(7, 16)]
         public void SingleCore(int inputs, int comparators)
         {
-            var args = $@"{inputs} {comparators} benchmarks.log".Split(' ');
+            var args = $@"-s:{inputs} -k:{comparators} -l:benchmarks.log".Split(' ');
             Program.Main(args);
         }
     }

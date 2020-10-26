@@ -1,4 +1,6 @@
-﻿namespace SortingNetworks
+﻿using SortingNetworks.Parallel;
+
+namespace SortingNetworks
 {
     using System;
     using System.Collections.Generic;
@@ -69,7 +71,7 @@
 
             var comparatorsGenerator = new ComparatorsGenerator();
             var sortingNetworksGenerator = new Generator();
-            var pruner = new Pruner();
+            var pruner = new ParallelPruner();
             var comparators = comparatorsGenerator.GenerateComparators(Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray());
             var stopWatch = Stopwatch.StartNew();
 
@@ -94,7 +96,7 @@
 
                 Trace.WriteLine($"Prune--------------");
                 var pruneWatch = Stopwatch.StartNew();
-                comparatorNets = pruner.Prune(comparatorNets);
+                comparatorNets = pruner.Prune(comparatorNets, 12);
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
                 Trace.WriteLine(string.Empty);
