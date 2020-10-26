@@ -11,8 +11,18 @@
     {
         public static void Main(string[] args)
         {
+            void SaveNetworks(ushort size, int i, IReadOnlyList<IComparatorNetwork> readOnlyList)
+            {
+                Trace.WriteLine(@"Save Network for step {step}");
+                System.IO.Directory.CreateDirectory("SavedNetworks");
+                var binarySerializer =
+                    new BinarySerializer($"SavedNetworks/nets_{size}_{i + 1}_{DateTime.Now:yyyyMMddHHmmssfff}.dat");
+                binarySerializer.Serialize(readOnlyList);
+            }
+
             ushort k = 0;
             ushort pause = 0;
+            ushort copySteps = 0;
             IReadOnlyList<IComparatorNetwork> comparatorNets = null;
 
             foreach (var arg in args)
@@ -42,6 +52,18 @@
                         var serializer = new BinarySerializer(path);
                         comparatorNets = serializer.Deserialize<IReadOnlyList<IComparatorNetwork>>();
                         break;
+                    case "-c":
+                        copySteps = Convert.ToUInt16(arg.Substring(3));
+                        break;
+                    default:
+                        Trace.WriteLine("Usage:");
+                        Trace.WriteLine("-s input size");
+                        Trace.WriteLine("-k comparators number");
+                        Trace.WriteLine("-l log file path");
+                        Trace.WriteLine("-p pause step");
+                        Trace.WriteLine("-r resume from binary file");
+                        Trace.WriteLine("-c create copy file each c steps");
+                        break;
                 }
             }
 
@@ -53,9 +75,16 @@
 
             comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[0]) } ;
             var numComparators = comparatorNets[0].Comparators.Length;
+            var copy = copySteps;
 
             for (var i = numComparators; i < k; i++)
             {
+                if (i == copy)
+                {
+                    SaveNetworks(k, i, comparatorNets);
+                    copy += copySteps;
+                }
+
                 Trace.WriteLine($"Adding Comparator {i+1}");
                 Trace.WriteLine($"Generate--------------");
                 var generateWatch = Stopwatch.StartNew();
@@ -70,12 +99,10 @@
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
                 Trace.WriteLine(string.Empty);
 
-                if (pause != 0 && i == pause)
+                if (pause != 0 && i+1 == pause)
                 {
-                    System.IO.Directory.CreateDirectory("SavedNetworks");
-                    var binarySerializer = new BinarySerializer($"SavedNetworks/nets{DateTime.Now:yyyyMMddHHmmssfff}.dat");
-                    binarySerializer.Serialize(comparatorNets);
-                    Trace.WriteLine($"Stopped execution at step: {i}");
+                    SaveNetworks(k, i, comparatorNets);
+                    Trace.WriteLine($"Stopped execution at step: {i+1}");
                     break;
                 }
             }
