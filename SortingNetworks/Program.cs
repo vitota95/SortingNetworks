@@ -96,7 +96,7 @@ namespace SortingNetworks
 
                 Trace.WriteLine($"Prune--------------");
                 var pruneWatch = Stopwatch.StartNew();
-                comparatorNets = pruner.Prune(comparatorNets, 12);
+                comparatorNets = pruner.Prune(comparatorNets.SplitList(1000).ToList());
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
                 Trace.WriteLine(string.Empty);

@@ -10,25 +10,24 @@ namespace SortingNetworks.Parallel
 {
     public class ParallelPruner
     {
-        public IReadOnlyList<IComparatorNetwork> Prune(IReadOnlyList<IComparatorNetwork> nets, int numTasks)
+        public IReadOnlyList<IComparatorNetwork> Prune(IReadOnlyList<IReadOnlyList<IComparatorNetwork>> nets)
         {
             var pruner = new Pruner();
-            var splitNets = nets.SplitList().ToList();
-            var netsAfterPrune = new IReadOnlyList<IComparatorNetwork>[numTasks];
+            var netsAfterPrune = new IReadOnlyList<IComparatorNetwork>[nets.Count];
 
-            var tasks = Enumerable.Range(0, splitNets.Count)
+            var tasks = Enumerable.Range(0, nets.Count)
                 .Select(i => Task.Run(() =>
                 {
-                    var net = splitNets[i].ToList();
+                    var net = nets[i].ToList();
                     netsAfterPrune[i] = pruner.Prune(net);
                 })).ToArray();
 
             Task.WaitAll(tasks);
 
-            for (var i = 0; i < splitNets.Count; i++)
+            for (var i = 0; i < nets.Count; i++)
             {
                 var index = i;
-                var removeTasks = Enumerable.Range(0, splitNets.Count)
+                var removeTasks = Enumerable.Range(0, nets.Count)
                     .Select(j => Task.Run(() =>
                     {
                         var s1 = netsAfterPrune[index];
@@ -43,8 +42,8 @@ namespace SortingNetworks.Parallel
                 Task.WaitAll(removeTasks);
             }
             
-            return netsAfterPrune.Where(n => n != null)
-                .SelectMany(x => x).Distinct().ToList();
+            return netsAfterPrune
+                .SelectMany(x => x).ToList();
         }
     }
 }

@@ -10,7 +10,7 @@ namespace SortingNetworks
 
     public static class IEnumerableExtensions
     {
-        public static IEnumerable<IEnumerable<T>> SplitList<T>(this IEnumerable<T> source, int nSize = 1000)
+        public static IEnumerable<IReadOnlyList<T>> SplitList<T>(this IEnumerable<T> source, int nSize = 1000)
         {
             var result = source.ToList();
             for (var i = 0; i < result.Count; i += nSize)

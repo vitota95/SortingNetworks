@@ -13,15 +13,22 @@
     [TestClass]
     public class ProgramTests
     {
+        private Mock<TraceListener> listenerMock;
+
+        [TestInitialize]
+        public void Initialize()
+        {
+            var fixture = new Fixture().Customize(new AutoMoqCustomization());
+            listenerMock = fixture.Create<Mock<TraceListener>>();
+            SortingNetworks.Program.InitiateTracer(new[] { listenerMock.Object });
+        }
+
         [TestMethod]
         public void Main_With3InputsAnd3Comparators()
         {
             // Arrange
             var inputs = "3";
             var k = "3";
-            var fixture = new Fixture().Customize(new AutoMoqCustomization());
-            var listenerMock = fixture.Create<Mock<TraceListener>>();
-            SortingNetworks.Program.InitiateTracer(new[] { listenerMock.Object });
 
             // Act
             SortingNetworks.Program.Main(new[] { $"-s:{inputs}", $"-k:{k}" });
@@ -38,9 +45,6 @@
             // Arrange
             var inputs = "4";
             var k = "5";
-            var fixture = new Fixture().Customize(new AutoMoqCustomization());
-            var listenerMock = fixture.Create<Mock<TraceListener>>();
-            SortingNetworks.Program.InitiateTracer(new[] { listenerMock.Object });
 
             // Act
             SortingNetworks.Program.Main(new[] { $"-s:{inputs}", $"-k:{k}" });
@@ -59,9 +63,6 @@
             // Arrange
             var inputs = "5";
             var k = "9";
-            var fixture = new Fixture().Customize(new AutoMoqCustomization());
-            var listenerMock = fixture.Create<Mock<TraceListener>>();
-            SortingNetworks.Program.InitiateTracer(new[] { listenerMock.Object });
 
             // Act
             SortingNetworks.Program.Main(new[] { $"-s:{inputs}", $"-k:{k}" });
@@ -83,9 +84,6 @@
             // Arrange
             var inputs = "6";
             var k = "12";
-            var fixture = new Fixture().Customize(new AutoMoqCustomization());
-            var listenerMock = fixture.Create<Mock<TraceListener>>();
-            SortingNetworks.Program.InitiateTracer(new[] { listenerMock.Object });
 
             // Act
             SortingNetworks.Program.Main(new[] { $"-s:{inputs}", $"-k:{k}"});
