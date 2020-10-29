@@ -22,7 +22,7 @@ namespace SortingNetworks
         /// <returns>
         /// The <see cref="IComparatorNetwork[]"/>.
         /// </returns>
-        IReadOnlyList<IComparatorNetwork> Prune(IReadOnlyList<IComparatorNetwork> nets);
+        IReadOnlyList<IComparatorNetwork> Prune<T>(IReadOnlyList<T> nets);
 
         IReadOnlyList<IComparatorNetwork> Remove(IReadOnlyList<IComparatorNetwork> nets1, IReadOnlyList<IComparatorNetwork> nets2);
     }

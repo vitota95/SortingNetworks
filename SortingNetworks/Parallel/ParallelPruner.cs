@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace SortingNetworks.Parallel
 {
-    public class ParallelPruner
+    public class ParallelPruner : IPruner
     {
-        public IReadOnlyList<IComparatorNetwork> Prune(IReadOnlyList<IReadOnlyList<IComparatorNetwork>> nets)
+        public IReadOnlyList<IComparatorNetwork> Prune<T>(IReadOnlyList<T> nets)
         {
             var pruner = new Pruner();
             var netsAfterPrune = new IReadOnlyList<IComparatorNetwork>[nets.Count];
@@ -18,7 +18,7 @@ namespace SortingNetworks.Parallel
             var tasks = Enumerable.Range(0, nets.Count)
                 .Select(i => Task.Run(() =>
                 {
-                    var net = nets[i].ToList();
+                    var net = nets[i] as List<IComparatorNetwork>;
                     netsAfterPrune[i] = pruner.Prune(net);
                 })).ToArray();
 
@@ -44,6 +44,11 @@ namespace SortingNetworks.Parallel
             
             return netsAfterPrune
                 .SelectMany(x => x).ToList();
+        }
+
+        public IReadOnlyList<IComparatorNetwork> Remove(IReadOnlyList<IComparatorNetwork> nets1, IReadOnlyList<IComparatorNetwork> nets2)
+        {
+            throw new NotImplementedException();
         }
     }
 }

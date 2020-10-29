@@ -9,33 +9,33 @@
         private static readonly IEnumerable<int>[] Permutations = Enumerable.Range(0, IComparatorNetwork.Inputs).GetPermutations().ToArray();
 
         /// <inheritdoc cref="IPruner.Prune"/>
-        public IReadOnlyList<IComparatorNetwork> Prune(IReadOnlyList<IComparatorNetwork> nets)
+        public IReadOnlyList<IComparatorNetwork> Prune<T>(IReadOnlyList<T> nets)
         {
             var result = new List<IComparatorNetwork>();
 
             for (var i = 0; i < nets.Count; i++) 
             {
                 var isSubsumed = false;
+                var n1 = nets[i] as IComparatorNetwork;
 
                 for (var index = result.Count - 1; index >= 0; index--)
                 {
-                    var n = result[index];
-
-                    if (nets[i].IsSubsumed(n, Permutations))
+                    var n2 = result[index];
+                    if (n1.IsSubsumed(n2, Permutations))
                     {
                         isSubsumed = true;
                         break;
                     }
 
-                    if (n.IsSubsumed(nets[i], Permutations))
+                    if (n2.IsSubsumed(n1, Permutations))
                     {
-                        result.Remove(n);
+                        result.Remove(n2);
                     }
                 }
 
                 if (!isSubsumed) 
                 {
-                    result.Add(nets[i]);
+                    result.Add(n1);
                 }
             }
 
