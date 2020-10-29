@@ -11,6 +11,8 @@
     [Serializable]
     public class ComparatorNetwork : IComparatorNetwork
     {
+        private Outputs _outputs;
+
         public ComparatorNetwork(Comparator[] comparators) 
         {
             this.Where0 = new int[IComparatorNetwork.Inputs];
@@ -23,11 +25,11 @@
             this.SequencesWithOnes = new int[IComparatorNetwork.Inputs];
 
             this.Comparators = comparators;
-            this.Outputs = this.CalculateOutput();
+            this.CalculateOutput();
         }
 
         /// <inheritdoc/>
-        public HashSet<ushort> Outputs { get; private set; }
+        public Outputs Outputs => _outputs;
 
         public int[] Where0 { get; private set; }
 
@@ -43,13 +45,13 @@
         /// <inheritdoc/>
         public bool IsSortingNetwork()
         {
-            return this.Outputs.Count == IComparatorNetwork.Inputs - 1;
+            return this.Outputs.Size == IComparatorNetwork.Inputs - 1;
         }
 
         /// <inheritdoc/>
         public bool IsRedundant(IComparatorNetwork n)
         {
-            return this.Outputs.SetEquals(n.Outputs);
+            return this.Outputs.AreEqual(n.Outputs);
         }
 
         /// <inheritdoc/>
@@ -133,27 +135,24 @@
                 {
                     var isSubset = true;
 
-                    using (var enumerator = n.Outputs.GetEnumerator())
+                    for (var output = 1; output < n.Outputs.Values.Length; output++)
                     {
-                        while (enumerator.MoveNext())
+                        if(!n.Outputs.Values[output]) continue;
+                        
+                        var newOutput = 0;
+
+                        // permute bits
+                        for (var k = 0; k < permutation.Length; k++)
                         {
-                            var output = enumerator.Current;
-                            var newOutput = 0;
+                            if ((output & (1 << permutation[k])) > 0) newOutput |= 1 << k;
+                        }
 
-                            // permute bits
-                            for (var j = 0; j < permutation.Length; j++)
-                            {
-                                if ((output & (1 << permutation[j])) > 0) newOutput |= 1 << j;
-                            }
-
-                            if (!this.Outputs.Contains((ushort)newOutput))
-                            {
-                                isSubset = false;
-                                break;
-                            }
+                        if (!this.Outputs.Values[newOutput])
+                        {
+                            isSubset = false;
+                            break;
                         }
                     }
-
                     if (isSubset)
                     {
                         return true;
@@ -197,15 +196,18 @@
             return positions;
         }
 
-        private HashSet<ushort> CalculateOutput() 
+        private void CalculateOutput() 
         {
             var total = (1 << IComparatorNetwork.Inputs) - 1;
-            var output = new HashSet<ushort>();
+            _outputs = new Outputs {Values = new bool[total]};
 
             for (ushort i = 1; i < total; i++)
             {
-                if (output.Add(this.ComputeOutput(i, out var setBits)))
+                var index = this.ComputeOutput(i, out var setBits);
+                if (!_outputs.Values[index])
                 {
+                    _outputs.Values[index] = true;
+                    _outputs.Size++;
                     this.SequencesWithOnes[setBits]++;
                 }
             }
@@ -219,8 +221,6 @@
                     this.Where0SetCount[i] = (int)PopCount((uint)this.Where0[i]);
                 }
             }
-
-            return output;
         }
 
         private ushort ComputeOutput(ushort value, out ushort setBits) 

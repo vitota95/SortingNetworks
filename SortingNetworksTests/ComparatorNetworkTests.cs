@@ -157,8 +157,8 @@ namespace SortingNetworksTests
             var n = new ComparatorNetwork(c1);
 
             // Assert
-            Assert.AreEqual(4, n.Outputs.Count);
-            Assert.IsTrue(n.Outputs.SetEquals(new HashSet<ushort> { 1, 4, 5, 6 }));
+            Assert.AreEqual(4, n.Outputs.Size);
+            Assert.IsTrue(n.Outputs.AreEqual(new Outputs(){Size = 4, Values = new bool[] { false, true, false, false, true, true, true, false } }));
         }
     }
 }

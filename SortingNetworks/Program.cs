@@ -25,7 +25,9 @@ namespace SortingNetworks
             ushort k = 0;
             ushort pause = 0;
             ushort copySteps = 0;
+            ushort threads = 1;
             IReadOnlyList<IComparatorNetwork> comparatorNets = null;
+            IPruner pruner = new Pruner();
 
             foreach (var arg in args)
             {
@@ -57,6 +59,13 @@ namespace SortingNetworks
                     case "-c":
                         copySteps = Convert.ToUInt16(arg.Substring(3));
                         break;
+                    case "-t":
+                        threads = Convert.ToUInt16(arg.Substring(3));
+                        if (threads > 1)
+                        {
+                            pruner = new ParallelPruner();
+                        }
+                        break;
                     default:
                         Trace.WriteLine("Usage:");
                         Trace.WriteLine("-s input size");
@@ -71,7 +80,6 @@ namespace SortingNetworks
 
             var comparatorsGenerator = new ComparatorsGenerator();
             var sortingNetworksGenerator = new Generator();
-            var pruner = new ParallelPruner();
             var comparators = comparatorsGenerator.GenerateComparators(Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray());
             var stopWatch = Stopwatch.StartNew();
 
@@ -91,12 +99,14 @@ namespace SortingNetworks
                 Trace.WriteLine($"Generate--------------");
                 var generateWatch = Stopwatch.StartNew();
                 comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
+                var splitNets = comparatorNets.SplitList(comparatorNets.Count / threads + 1).ToList();
                 Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
                 Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
 
                 Trace.WriteLine($"Prune--------------");
                 var pruneWatch = Stopwatch.StartNew();
-                comparatorNets = pruner.Prune(comparatorNets.SplitList(1000).ToList());
+                comparatorNets =  splitNets.Count == 1 ? pruner.Prune(splitNets[0]) : pruner.Prune(splitNets);
+                
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
                 Trace.WriteLine(string.Empty);

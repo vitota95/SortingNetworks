@@ -1,4 +1,6 @@
-﻿namespace SortingNetworks
+﻿using System.Collections;
+
+namespace SortingNetworks
 {
     using System;
     using System.Collections.Generic;
@@ -11,7 +13,7 @@
 
         Comparator[] Comparators { get; set; }
 
-        HashSet<ushort> Outputs { get; }
+        Outputs Outputs { get; }
 
         int[] Where0 { get; }
 
@@ -40,6 +42,25 @@
         {
             this.X = x;
             this.Y = y;
+        }
+    }
+
+    [Serializable]
+    public struct Outputs
+    {
+        public bool[] Values;
+        public ushort Size;
+
+        public bool AreEqual(Outputs o2)
+        {
+            if (this.Size != o2.Size) return false;
+
+            for (var i = 0; i < this.Values.Length; i++)
+            {
+                if (this.Values[i] != o2.Values[i]) return false;
+            }
+
+            return true;
         }
     }
 }
