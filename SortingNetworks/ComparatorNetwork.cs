@@ -5,7 +5,7 @@
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using static System.Runtime.Intrinsics.X86.Popcnt;
+    using static System.Numerics.BitOperations;
 
     /// <inheritdoc cref="IComparatorNetwork"/>
     [Serializable]
@@ -85,7 +85,8 @@
                 return false;
             }
 
-            return this.ApplyPermutations(n, permutations, positions);
+            var enumerable = Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray();
+            return this.ApplyPermutations(enumerable, positions, n, 0, IComparatorNetwork.Inputs - 1);
         }
 
         /// <summary>
@@ -114,60 +115,123 @@
             return true;
         }
 
-        private bool ApplyPermutations(IComparatorNetwork n, IEnumerable<int>[] permutations, int[] positions)
+        //private bool ApplyPermutations(IComparatorNetwork n, int[] positions)
+        //{
+            //for (var i = 0; i < permutations.Length; i++)
+            //{
+            //    var permutation = permutations[i].ToArray();
+            //    var isValidPermutation = true;
+            //    for (var j = 0; j < permutation.Length; j++)
+            //    {
+            //        if ((positions[permutation[j]] & (1 << j)) == 0)
+            //        {
+            //            isValidPermutation = false;
+            //            break;
+            //        }
+            //    }
+
+            //    if (isValidPermutation)
+            //    {
+            //        var isSubset = true;
+
+            //        using (var enumerator = n.Outputs.GetEnumerator())
+            //        {
+            //            while (enumerator.MoveNext())
+            //            {
+            //                var output = enumerator.Current;
+            //                var newOutput = 0;
+
+            //                // permute bits
+            //                for (var j = 0; j < permutation.Length; j++)
+            //                {
+            //                    if ((output & (1 << permutation[j])) > 0) newOutput |= 1 << j;
+            //                }
+
+            //                if (!this.Outputs.Contains((ushort)newOutput))
+            //                {
+            //                    isSubset = false;
+            //                    break;
+            //                }
+            //            }
+            //        }
+
+            //        if (isSubset)
+            //        {
+            //            return true;
+            //        }
+            //    }
+            //}
+
+        //    return false;
+        //}
+
+        private bool ApplyPermutations(int[] permutation, int[] positions, IComparatorNetwork n, int l, int r)
         {
-            for (var i = 0; i < permutations.Length; i++)
+            if (l == r) return false;
+            
+            for (var i = l; i <= r; i++)
             {
-                var permutation = permutations[i].ToArray();
-                var isValidPermutation = true;
-                for (var j = 0; j < permutation.Length; j++)
-                {
-                    if ((positions[permutation[j]] & (1 << j)) == 0)
-                    {
-                        isValidPermutation = false;
-                        break;
-                    }
-                }
+                permutation = Swap(permutation, l, i);
+                if (!IsValidPermutation(permutation, positions)) continue;
 
-                if (isValidPermutation)
-                {
-                    var isSubset = true;
+                var isSubset = true;
 
-                    using (var enumerator = n.Outputs.GetEnumerator())
+                using (var enumerator = n.Outputs.GetEnumerator())
+                {
+                    while (enumerator.MoveNext())
                     {
-                        while (enumerator.MoveNext())
+                        var output = enumerator.Current;
+                        var newOutput = 0;
+
+                        // permute bits
+                        for (var j = 0; j < permutation.Length; j++)
                         {
-                            var output = enumerator.Current;
-                            var newOutput = 0;
+                            if ((output & (1 << permutation[j])) > 0) newOutput |= 1 << j;
+                        }
 
-                            // permute bits
-                            for (var j = 0; j < permutation.Length; j++)
-                            {
-                                if ((output & (1 << permutation[j])) > 0) newOutput |= 1 << j;
-                            }
-
-                            if (!this.Outputs.Contains((ushort)newOutput))
-                            {
-                                isSubset = false;
-                                break;
-                            }
+                        if (!this.Outputs.Contains((ushort)newOutput))
+                        {
+                            isSubset = false;
+                            break;
                         }
                     }
-
-                    if (isSubset)
-                    {
-                        return true;
-                    }
                 }
+
+                if (isSubset)
+                {
+                    return true;
+                }
+
+                if (ApplyPermutations(permutation, positions, n, l + 1, r)) return true;
+
+                permutation = Swap(permutation, l, i);
             }
 
-            return false;
+            return true;
+        }
+
+        private static bool IsValidPermutation(int[] output, int[] positions)
+        {
+            for (var j = 0; j < output.Length; j++)
+            {
+                if ((positions[output[j]] & (1 << j)) == 0) return false;
+            }
+
+            return true;
+        }
+
+        private static int[] Swap(int[] p, int i, int j)
+        {
+            var temp = p[i];
+            p[i] = p[j];
+            p[j] = temp;
+            return p;
         }
 
         private int[] GetPositions(IComparatorNetwork n)
         {
             var positions = new int[IComparatorNetwork.Inputs];
-            ulong prod = 1;
+            var prod = 1;
             positions.Populate(-1);
             for (var pos = 0; pos < IComparatorNetwork.Inputs; pos++)
             {
