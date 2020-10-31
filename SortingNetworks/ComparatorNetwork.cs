@@ -5,7 +5,7 @@
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using static System.Runtime.Intrinsics.X86.Popcnt;
+    using static System.Numerics.BitOperations;
 
     /// <inheritdoc cref="IComparatorNetwork"/>
     [Serializable]
@@ -167,7 +167,7 @@
         private int[] GetPositions(IComparatorNetwork n)
         {
             var positions = new int[IComparatorNetwork.Inputs];
-            ulong prod = 1;
+            var prod = 1;
             positions.Populate(-1);
             for (var pos = 0; pos < IComparatorNetwork.Inputs; pos++)
             {
