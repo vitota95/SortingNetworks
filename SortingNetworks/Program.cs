@@ -127,6 +127,8 @@ namespace SortingNetworks
             Debug.WriteLine($"Output count bigger:{IComparatorNetwork.OutputCountBigger:N}");
             Debug.WriteLine($"Subsume number:{IComparatorNetwork.SubsumeNumber:N}");
             Debug.WriteLine($"Subsume succeed:{IComparatorNetwork.SubsumeSucceed:N}");
+            Debug.WriteLine($"Permutations performed:{IComparatorNetwork.PermutationsNumber:N}");
+            Debug.WriteLine($"Permutations walk:{IComparatorNetwork.PermutationsWalk:N}");
 #endif
 
             Trace.WriteLine(string.Empty);

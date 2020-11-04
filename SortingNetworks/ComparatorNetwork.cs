@@ -174,6 +174,9 @@
 
         private bool TryPermutation(int[] permutation, int[] positions, HashSet<ushort> o2)
         {
+//#if DEBUG
+//            IComparatorNetwork.PermutationsWalk++;
+//#endif
             if (!IsValidPermutation(permutation, positions)) return false;
             var isSubset = OutputIsSubset(permutation, o2);
 
@@ -182,6 +185,9 @@
 
         private bool OutputIsSubset(int[] permutation, HashSet<ushort> o2)
         {
+#if DEBUG
+            IComparatorNetwork.PermutationsNumber++;
+#endif
             using (var enumerator = o2.GetEnumerator())
             {
                 while (enumerator.MoveNext())

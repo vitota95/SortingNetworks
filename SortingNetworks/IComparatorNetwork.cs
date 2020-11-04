@@ -10,6 +10,7 @@
         static long SubsumeNoCheck2 { get; set; }
         static long OutputCountBigger { get; set; }
         static long PermutationsNumber { get; set; }
+        static long PermutationsWalk { get; set; }
         static long SubsumeNumber { get; set; }
         static long SubsumeSucceed{ get; set; }
 #endif
