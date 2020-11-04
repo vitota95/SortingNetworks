@@ -1,9 +1,7 @@
 ﻿namespace SortingNetworks
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using static System.Numerics.BitOperations;
 
@@ -86,7 +84,7 @@
             }
 
             var enumerable = Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray();
-            return this.ApplyPermutations(enumerable, positions, n, 0, IComparatorNetwork.Inputs - 1);
+            return this.ApplyPermutations(enumerable, positions, n.Outputs, 0, IComparatorNetwork.Inputs - 1);
         }
 
         /// <summary>
@@ -115,96 +113,52 @@
             return true;
         }
 
-        //private bool ApplyPermutations(IComparatorNetwork n, int[] positions)
-        //{
-            //for (var i = 0; i < permutations.Length; i++)
-            //{
-            //    var permutation = permutations[i].ToArray();
-            //    var isValidPermutation = true;
-            //    for (var j = 0; j < permutation.Length; j++)
-            //    {
-            //        if ((positions[permutation[j]] & (1 << j)) == 0)
-            //        {
-            //            isValidPermutation = false;
-            //            break;
-            //        }
-            //    }
-
-            //    if (isValidPermutation)
-            //    {
-            //        var isSubset = true;
-
-            //        using (var enumerator = n.Outputs.GetEnumerator())
-            //        {
-            //            while (enumerator.MoveNext())
-            //            {
-            //                var output = enumerator.Current;
-            //                var newOutput = 0;
-
-            //                // permute bits
-            //                for (var j = 0; j < permutation.Length; j++)
-            //                {
-            //                    if ((output & (1 << permutation[j])) > 0) newOutput |= 1 << j;
-            //                }
-
-            //                if (!this.Outputs.Contains((ushort)newOutput))
-            //                {
-            //                    isSubset = false;
-            //                    break;
-            //                }
-            //            }
-            //        }
-
-            //        if (isSubset)
-            //        {
-            //            return true;
-            //        }
-            //    }
-            //}
-
-        //    return false;
-        //}
-
-        private bool ApplyPermutations(int[] permutation, int[] positions, IComparatorNetwork n, int l, int r)
+        private bool ApplyPermutations(int[] permutation, int[] positions, HashSet<ushort> o2, int l, int r)
         {
             if (l == r) return false;
             
             for (var i = l; i <= r; i++)
             {
                 permutation = Swap(permutation, l, i);
-                if (!IsValidPermutation(permutation, positions)) continue;
+                if (TryPermutation(permutation, positions, o2)) return true;
 
-                var isSubset = true;
-
-                using (var enumerator = n.Outputs.GetEnumerator())
-                {
-                    while (enumerator.MoveNext())
-                    {
-                        var output = enumerator.Current;
-                        var newOutput = 0;
-
-                        // permute bits
-                        for (var j = 0; j < permutation.Length; j++)
-                        {
-                            if ((output & (1 << permutation[j])) > 0) newOutput |= 1 << j;
-                        }
-
-                        if (!this.Outputs.Contains((ushort)newOutput))
-                        {
-                            isSubset = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (isSubset)
-                {
-                    return true;
-                }
-
-                if (ApplyPermutations(permutation, positions, n, l + 1, r)) return true;
+                if (ApplyPermutations(permutation, positions, o2, l + 1, r)) return true;
 
                 permutation = Swap(permutation, l, i);
+                if (TryPermutation(permutation, positions, o2)) return true;
+            }
+
+            return false;
+        }
+
+        private bool TryPermutation(int[] permutation, int[] positions, HashSet<ushort> o2)
+        {
+            if (!IsValidPermutation(permutation, positions)) return false;
+            var isSubset = OutputIsSubset(permutation, o2);
+
+            return isSubset;
+        }
+
+        private bool OutputIsSubset(int[] permutation, HashSet<ushort> o2)
+        {
+            using (var enumerator = o2.GetEnumerator())
+            {
+                while (enumerator.MoveNext())
+                {
+                    var output = enumerator.Current;
+                    var newOutput = 0;
+
+                    // permute bits
+                    for (var j = 0; j < permutation.Length; j++)
+                    {
+                        if ((output & (1 << permutation[j])) > 0) newOutput |= 1 << j;
+                    }
+
+                    if (!this.Outputs.Contains((ushort)newOutput))
+                    {
+                        return false;
+                    }
+                }
             }
 
             return true;
