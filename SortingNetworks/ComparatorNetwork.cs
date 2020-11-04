@@ -137,7 +137,7 @@
         {
             for (var i = 0; i < a1.Length; i++)
             {
-                if (a1[i] != 0 && a1[i] > a2[i])
+                if (a1[i] > a2[i])
                 {
                     return false;
                 }
