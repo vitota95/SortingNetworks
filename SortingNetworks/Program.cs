@@ -124,6 +124,7 @@ namespace SortingNetworks
 #if DEBUG
             Debug.WriteLine($"Subsume no check 1:{IComparatorNetwork.SubsumeNoCheck1:N}");
             Debug.WriteLine($"Subsume no check 2:{IComparatorNetwork.SubsumeNoCheck2:N}");
+            Debug.WriteLine($"Output count bigger:{IComparatorNetwork.OutputCountBigger:N}");
             Debug.WriteLine($"Subsume number:{IComparatorNetwork.SubsumeNumber:N}");
             Debug.WriteLine($"Subsume succeed:{IComparatorNetwork.SubsumeSucceed:N}");
 #endif

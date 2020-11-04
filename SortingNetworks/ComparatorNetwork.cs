@@ -111,24 +111,32 @@
         private static bool ShouldCheckSubsumption(IComparatorNetwork n1, IComparatorNetwork n2)
         {
 #if DEBUG
+            if (n1.Outputs.Count > n2.Outputs.Count)
+            {
+                IComparatorNetwork.OutputCountBigger++;
+                return false;
+            }
+
             if (!SequencesAreCompatible(n1.SequencesWithOnes, n2.SequencesWithOnes))
             {
                 IComparatorNetwork.SubsumeNoCheck1++;
-
                 return false;
             }
 
             if (!SequencesAreCompatible(n1.Where0SetCount, n2.Where0SetCount))
             {
-
                 IComparatorNetwork.SubsumeNoCheck2++;
-
-            return false;
+                return false;
             }
 
             return true;
 
 #endif
+            if (n1.Outputs.Count > n2.Outputs.Count)
+            {
+                return false;
+            }
+
             return SequencesAreCompatible(n1.SequencesWithOnes, n2.SequencesWithOnes) && 
                    SequencesAreCompatible(n1.Where0SetCount, n2.Where0SetCount);
         }
