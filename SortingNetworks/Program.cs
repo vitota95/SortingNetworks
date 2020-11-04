@@ -121,6 +121,13 @@ namespace SortingNetworks
 
             // Trace.WriteLine($"Subsume no check: {IComparatorNetwork.SubsumeNoCheck} ");
             Trace.WriteLine($"Elapsed Time: {stopWatch.Elapsed} ");
+#if DEBUG
+            Debug.WriteLine($"Subsume number:{IComparatorNetwork.SubsumeNumber}");
+            Debug.WriteLine($"Subsume no check 1:{IComparatorNetwork.SubsumeNoCheck1}");
+            Debug.WriteLine($"Subsume no check 2:{IComparatorNetwork.SubsumeNoCheck2}");
+            Debug.WriteLine($"Subsume succeed:{IComparatorNetwork.SubsumeSucceed}");
+#endif
+
             Trace.WriteLine(string.Empty);
 
             PrintSortingNetworks(comparatorNets, IComparatorNetwork.Inputs, k);

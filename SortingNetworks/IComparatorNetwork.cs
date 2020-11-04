@@ -5,8 +5,13 @@
 
     public interface IComparatorNetwork
     {
-        static long SubsumeNoCheck { get; set; }
-
+#if DEBUG
+        static long SubsumeNoCheck1 { get; set; }
+        static long SubsumeNoCheck2 { get; set; }
+        static long PermutationsNumber { get; set; }
+        static long SubsumeNumber { get; set; }
+        static long SubsumeSucceed{ get; set; }
+#endif
         static ushort Inputs { get; set; }
 
         Comparator[] Comparators { get; set; }

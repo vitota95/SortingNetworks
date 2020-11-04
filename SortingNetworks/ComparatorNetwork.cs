@@ -70,6 +70,10 @@
                 return false;
             }
 
+#if DEBUG
+            IComparatorNetwork.SubsumeNumber++;
+#endif
+
             // Create matrix for permutations
             var positions = this.GetPositions(n);
             var values = new int[IComparatorNetwork.Inputs];
@@ -84,7 +88,17 @@
             }
 
             var enumerable = Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray();
+#if DEBUG
+            var succeed = this.ApplyPermutations(enumerable, positions, n.Outputs, 0, IComparatorNetwork.Inputs - 1);
+            if (succeed)
+            {
+                IComparatorNetwork.SubsumeSucceed++;
+            }
+
+            return succeed;
+#else
             return this.ApplyPermutations(enumerable, positions, n.Outputs, 0, IComparatorNetwork.Inputs - 1);
+#endif
         }
 
         /// <summary>
@@ -96,8 +110,27 @@
         /// <returns>True if subsume test should be done, False otherwise.</returns>
         private static bool ShouldCheckSubsumption(IComparatorNetwork n1, IComparatorNetwork n2)
         {
-            return SequencesAreCompatible(n1.SequencesWithOnes, n2.SequencesWithOnes) &&
-            SequencesAreCompatible(n1.Where0SetCount, n2.Where0SetCount);
+#if DEBUG
+            if (!SequencesAreCompatible(n1.SequencesWithOnes, n2.SequencesWithOnes))
+            {
+                IComparatorNetwork.SubsumeNoCheck1++;
+
+                return false;
+            }
+
+            if (!SequencesAreCompatible(n1.Where0SetCount, n2.Where0SetCount))
+            {
+
+                IComparatorNetwork.SubsumeNoCheck2++;
+
+            return false;
+            }
+
+            return true;
+
+#endif
+            return SequencesAreCompatible(n1.SequencesWithOnes, n2.SequencesWithOnes) && 
+                   SequencesAreCompatible(n1.Where0SetCount, n2.Where0SetCount);
         }
 
         private static bool SequencesAreCompatible(int[] a1, int[] a2)
