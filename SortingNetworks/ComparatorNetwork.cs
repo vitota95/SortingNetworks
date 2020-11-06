@@ -1,4 +1,6 @@
-﻿namespace SortingNetworks
+﻿using System.Diagnostics;
+
+namespace SortingNetworks
 {
     using System;
     using System.Collections.Generic;
@@ -23,6 +25,8 @@
             this.Comparators = comparators;
             this.Outputs = this.CalculateOutput();
         }
+
+        private object lockobj = new object();
 
         /// <inheritdoc/>
         public HashSet<ushort> Outputs { get; private set; }
@@ -89,7 +93,8 @@
 
             var enumerable = Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray();
 #if DEBUG
-            var succeed = this.ApplyPermutations(enumerable, positions, n.Outputs, 0, IComparatorNetwork.Inputs - 1);
+            //var succeed = this.ApplyPermutations(enumerable, positions, n.Outputs, 0, IComparatorNetwork.Inputs - 1);
+            var succeed = NewTryPermutation(positions, new int[IComparatorNetwork.Inputs],  n.Outputs, 0);
             if (succeed)
             {
                 IComparatorNetwork.SubsumeSucceed++;
@@ -97,7 +102,7 @@
 
             return succeed;
 #else
-            return this.ApplyPermutations(enumerable, positions, n.Outputs, 0, IComparatorNetwork.Inputs - 1);
+            return this.NewTryPermutation(positions, new int[IComparatorNetwork.Inputs], n.Outputs, 0);
 #endif
         }
 
@@ -177,10 +182,84 @@
 //#if DEBUG
 //            IComparatorNetwork.PermutationsWalk++;
 //#endif
-            if (!IsValidPermutation(permutation, positions)) return false;
+            //if (!IsValidPermutation(permutation, positions)) return false;
             var isSubset = OutputIsSubset(permutation, o2);
 
             return isSubset;
+        }
+
+        private bool NewTryPermutation(int[] positions, int[] permutation, HashSet<ushort> o2, int index)
+        {
+            for (var i = index; i < IComparatorNetwork.Inputs; i++)
+            {
+                for (var j = 0; j < IComparatorNetwork.Inputs; j++)
+                {
+                    if ((positions[j] & (1 << i)) == 0) continue;
+                    if (IsAlreadyAdded(permutation, j, i-1)) continue;
+                    permutation[i] = j;
+
+                    // Investigar esto
+                    //if (index == IComparatorNetwork.Inputs - 1)
+                    //{
+                    //    if (this.TryPermutation(permutation, positions, o2))
+                    //    {
+                    //        return true;
+                    //    }
+                    //    break;
+                    //}
+
+                    var result = NewTryPermutation(positions, permutation, o2, index + 1);
+                    if (result)
+                    {
+                        return true;
+                    }
+                }
+
+                //lock (lockobj)
+                //{
+                //    Trace.WriteLine($"[{string.Join(", ", permutation)}], fixed is {index}");
+                //}
+
+                if (!AllAreDistinct(permutation))
+                {
+                    continue;
+                }
+
+                if (this.TryPermutation(permutation, positions, o2))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsAlreadyAdded(int[] a, int value, int limit)
+        {
+            if (limit < 0)
+            {
+                return false;
+            }
+
+            for (int i = 0; i <= limit; i++)
+            {
+                if (a[i] == value)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool AllAreDistinct(int[] arr)
+        {
+            // Put all array elements in a HashSet 
+            var s = new HashSet<int>(arr);
+
+            // If all elements are distinct, size of 
+            // HashSet should be same array. 
+            return s.Count == arr.Length;
         }
 
         private bool OutputIsSubset(int[] permutation, HashSet<ushort> o2)
@@ -211,11 +290,11 @@
             return true;
         }
 
-        private static bool IsValidPermutation(int[] output, int[] positions)
+        private static bool IsValidPermutation(int[] permutation, int[] positions)
         {
-            for (var j = 0; j < output.Length; j++)
+            for (var i = 0; i < permutation.Length; i++)
             {
-                if ((positions[output[j]] & (1 << j)) == 0) return false;
+                if ((positions[permutation[i]] & (1 << i)) == 0) return false;
             }
 
             return true;
