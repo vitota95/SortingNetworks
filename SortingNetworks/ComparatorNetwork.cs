@@ -94,7 +94,9 @@ namespace SortingNetworks
             var enumerable = Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray();
 #if DEBUG
             //var succeed = this.ApplyPermutations(enumerable, positions, n.Outputs, 0, IComparatorNetwork.Inputs - 1);
-            var succeed = NewTryPermutation(positions, new int[IComparatorNetwork.Inputs],  n.Outputs, 0);
+            var arr = new int[IComparatorNetwork.Inputs];
+            arr.Populate(-1);
+            var succeed = NewTryPermutation(positions, arr,  n.Outputs, 0);
             if (succeed)
             {
                 IComparatorNetwork.SubsumeSucceed++;
@@ -102,7 +104,7 @@ namespace SortingNetworks
 
             return succeed;
 #else
-            return this.NewTryPermutation(positions, new int[IComparatorNetwork.Inputs], n.Outputs, 0);
+            return this.TryPermutations(positions, new int[IComparatorNetwork.Inputs], n.Outputs, 0);
 #endif
         }
 
@@ -159,36 +161,7 @@ namespace SortingNetworks
             return true;
         }
 
-        private bool ApplyPermutations(int[] permutation, int[] positions, HashSet<ushort> o2, int l, int r)
-        {
-            if (l == r) return false;
-            
-            for (var i = l; i <= r; i++)
-            {
-                permutation = Swap(permutation, l, i);
-                if (TryPermutation(permutation, positions, o2)) return true;
-
-                if (ApplyPermutations(permutation, positions, o2, l + 1, r)) return true;
-
-                permutation = Swap(permutation, l, i);
-                if (TryPermutation(permutation, positions, o2)) return true;
-            }
-
-            return false;
-        }
-
-        private bool TryPermutation(int[] permutation, int[] positions, HashSet<ushort> o2)
-        {
-//#if DEBUG
-//            IComparatorNetwork.PermutationsWalk++;
-//#endif
-            //if (!IsValidPermutation(permutation, positions)) return false;
-            var isSubset = OutputIsSubset(permutation, o2);
-
-            return isSubset;
-        }
-
-        private bool NewTryPermutation(int[] positions, int[] permutation, HashSet<ushort> o2, int index)
+        private bool TryPermutations(int[] positions, int[] permutation, HashSet<ushort> o2, int index)
         {
             for (var i = index; i < IComparatorNetwork.Inputs; i++)
             {
@@ -198,36 +171,29 @@ namespace SortingNetworks
                     if (IsAlreadyAdded(permutation, j, i-1)) continue;
                     permutation[i] = j;
 
-                    // Investigar esto
-                    //if (index == IComparatorNetwork.Inputs - 1)
-                    //{
-                    //    if (this.TryPermutation(permutation, positions, o2))
-                    //    {
-                    //        return true;
-                    //    }
-                    //    break;
-                    //}
-
-                    var result = NewTryPermutation(positions, permutation, o2, index + 1);
+                    var result = TryPermutations(positions, permutation, o2, i+1);
                     if (result)
                     {
                         return true;
                     }
                 }
 
-                //lock (lockobj)
-                //{
-                //    Trace.WriteLine($"[{string.Join(", ", permutation)}], fixed is {index}");
-                //}
-
-                if (!AllAreDistinct(permutation))
+                if (permutation[i] == -1)
                 {
-                    continue;
+                    return false;
                 }
 
-                if (this.TryPermutation(permutation, positions, o2))
+                if (index == IComparatorNetwork.Inputs - 1)
                 {
-                    return true;
+                    if (!AllAreDistinct(permutation))
+                    {
+                        continue;
+                    }
+
+                    if (OutputIsSubset(permutation, o2))
+                    {
+                        return true;
+                    }
                 }
             }
 
@@ -236,12 +202,7 @@ namespace SortingNetworks
 
         private static bool IsAlreadyAdded(int[] a, int value, int limit)
         {
-            if (limit < 0)
-            {
-                return false;
-            }
-
-            for (int i = 0; i <= limit; i++)
+            for (var i = 0; i <= limit; i++)
             {
                 if (a[i] == value)
                 {
