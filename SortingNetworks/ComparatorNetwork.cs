@@ -96,7 +96,7 @@ namespace SortingNetworks
             //var succeed = this.ApplyPermutations(enumerable, positions, n.Outputs, 0, IComparatorNetwork.Inputs - 1);
             var arr = new int[IComparatorNetwork.Inputs];
             arr.Populate(-1);
-            var succeed = NewTryPermutation(positions, arr,  n.Outputs, 0);
+            var succeed = TryPermutations(positions, arr,  n.Outputs, 0);
             if (succeed)
             {
                 IComparatorNetwork.SubsumeSucceed++;
