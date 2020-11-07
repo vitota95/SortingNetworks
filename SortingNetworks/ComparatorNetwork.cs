@@ -163,41 +163,51 @@ namespace SortingNetworks
 
         private bool TryPermutations(int[] positions, int[] permutation, HashSet<ushort> o2, int index)
         {
-            for (var i = index; i < IComparatorNetwork.Inputs; i++)
+            if (index == IComparatorNetwork.Inputs)
             {
-                for (var j = 0; j < IComparatorNetwork.Inputs; j++)
+                return false;
+            }
+
+            for (var j = 0; j < IComparatorNetwork.Inputs; j++)
+            {
+                if ((positions[j] & (1 << index)) == 0) continue;
+                if (IsAlreadyAdded(permutation, j, index-1)) continue;
+                permutation[index] = j;
+                var result = TryPermutations(positions, permutation, o2, index+1);
+                if (result)
                 {
-                    if ((positions[j] & (1 << i)) == 0) continue;
-                    if (IsAlreadyAdded(permutation, j, i-1)) continue;
-                    permutation[i] = j;
-
-                    var result = TryPermutations(positions, permutation, o2, i+1);
-                    if (result)
-                    {
-                        return true;
-                    }
+                    return true;
                 }
+                // As permutation is passed by reference when it returns from recursion, we need to reset the values after index.
+                // This is quicker and consumes less memory than cloning the array.
+                permutation = ResetPositions(index + 1, permutation);
+            }
 
-                if (permutation[i] == -1)
+            if (index == IComparatorNetwork.Inputs - 1)
+            {
+                if (permutation[index] == -1)
                 {
                     return false;
                 }
 
-                if (index == IComparatorNetwork.Inputs - 1)
+                if (OutputIsSubset(permutation, o2))
                 {
-                    if (!AllAreDistinct(permutation))
-                    {
-                        continue;
-                    }
-
-                    if (OutputIsSubset(permutation, o2))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
 
+
             return false;
+        }
+
+        private static int[] ResetPositions(int start, int[] arr)
+        {
+            for (var i = start; i < arr.Length; i++)
+            {
+                arr[i] = -1;
+            }
+
+            return arr;
         }
 
         private static bool IsAlreadyAdded(int[] a, int value, int limit)
@@ -246,16 +256,6 @@ namespace SortingNetworks
                         return false;
                     }
                 }
-            }
-
-            return true;
-        }
-
-        private static bool IsValidPermutation(int[] permutation, int[] positions)
-        {
-            for (var i = 0; i < permutation.Length; i++)
-            {
-                if ((positions[permutation[i]] & (1 << i)) == 0) return false;
             }
 
             return true;

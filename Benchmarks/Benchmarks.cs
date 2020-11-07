@@ -17,6 +17,7 @@
 
         [Benchmark]
         [Arguments(7, 16)]
+        [Arguments(8, 19)]
         public void SingleCore(int inputs, int comparators)
         {
             var args = $@"-s:{inputs} -k:{comparators} -l:benchmarks.log".Split(' ');
