@@ -171,21 +171,12 @@ namespace SortingNetworks
                 {
                     return true;
                 }
-                // As permutation is passed by reference when it returns from recursion, we need to reset the values after index.
+                // As permutation is passed by reference, when it returns from recursion we need to reset the values after index.
                 // This is quicker and consumes less memory than cloning the array.
                 permutation = ResetPositions(index + 1, permutation);
             }
 
-            if (index == IComparatorNetwork.Inputs - 1)
-            {
-                if (OutputIsSubset(permutation, o2))
-                {
-                    return true;
-                }
-            }
-
-
-            return false;
+            return index == IComparatorNetwork.Inputs - 1 && OutputIsSubset(permutation, o2);
         }
 
         private static int[] ResetPositions(int start, int[] arr)
