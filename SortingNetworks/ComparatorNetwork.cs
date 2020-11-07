@@ -26,9 +26,6 @@ namespace SortingNetworks
             this.Outputs = this.CalculateOutput();
         }
 
-        private object lockobj = new object();
-
-        /// <inheritdoc/>
         public HashSet<ushort> Outputs { get; private set; }
 
         public int[] Where0 { get; private set; }
@@ -91,12 +88,8 @@ namespace SortingNetworks
                 return false;
             }
 
-            var enumerable = Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray();
 #if DEBUG
-            //var succeed = this.ApplyPermutations(enumerable, positions, n.Outputs, 0, IComparatorNetwork.Inputs - 1);
-            var arr = new int[IComparatorNetwork.Inputs];
-            arr.Populate(-1);
-            var succeed = TryPermutations(positions, arr,  n.Outputs, 0);
+            var succeed = TryPermutations(positions, new int[IComparatorNetwork.Inputs],  n.Outputs, 0);
             if (succeed)
             {
                 IComparatorNetwork.SubsumeSucceed++;
@@ -185,11 +178,6 @@ namespace SortingNetworks
 
             if (index == IComparatorNetwork.Inputs - 1)
             {
-                if (permutation[index] == -1)
-                {
-                    return false;
-                }
-
                 if (OutputIsSubset(permutation, o2))
                 {
                     return true;
@@ -223,16 +211,6 @@ namespace SortingNetworks
             return false;
         }
 
-        public static bool AllAreDistinct(int[] arr)
-        {
-            // Put all array elements in a HashSet 
-            var s = new HashSet<int>(arr);
-
-            // If all elements are distinct, size of 
-            // HashSet should be same array. 
-            return s.Count == arr.Length;
-        }
-
         private bool OutputIsSubset(int[] permutation, HashSet<ushort> o2)
         {
 #if DEBUG
@@ -259,14 +237,6 @@ namespace SortingNetworks
             }
 
             return true;
-        }
-
-        private static int[] Swap(int[] p, int i, int j)
-        {
-            var temp = p[i];
-            p[i] = p[j];
-            p[j] = temp;
-            return p;
         }
 
         private int[] GetPositions(IComparatorNetwork n)
@@ -321,7 +291,7 @@ namespace SortingNetworks
                 this.Where0[i] = ~this.Where0[i] & ((1 << IComparatorNetwork.Inputs) - 1);
                 if (this.Where0[i] != -1)
                 {
-                    this.Where0SetCount[i] = (int)PopCount((uint)this.Where0[i]);
+                    this.Where0SetCount[i] = PopCount((uint)this.Where0[i]);
                 }
             }
 
