@@ -87,6 +87,8 @@
                 return false;
             }
 
+            var matches = GraphMatchesFinder.FindPerfectMatchs(positions);   
+
             var enumerable = Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray();
 #if DEBUG
             var succeed = this.ApplyPermutations(enumerable, positions, n.Outputs, 0, IComparatorNetwork.Inputs - 1);
