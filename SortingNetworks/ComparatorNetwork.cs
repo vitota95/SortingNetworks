@@ -87,11 +87,17 @@
                 return false;
             }
 
-            var matches = GraphMatchesFinder.FindPerfectMatches(positions);   
+            var finder = new GraphMatchesFinder();
+            var permutation = finder.FindPerfectMatch(positions);
+            if (permutation.Contains(-1))
+            {
+                return false;
+            }
 
             var enumerable = Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray();
 #if DEBUG
-            var succeed = this.ApplyPermutations(enumerable, positions, n.Outputs, 0, IComparatorNetwork.Inputs - 1);
+            //var succeed = this.ApplyPermutations(enumerable, positions, n.Outputs, 0, IComparatorNetwork.Inputs - 1);
+            var succeed = this.TryPermutation(permutation, positions, n.Outputs);
             if (succeed)
             {
                 IComparatorNetwork.SubsumeSucceed++;
@@ -176,7 +182,10 @@
 
         private bool TryPermutation(int[] permutation, int[] positions, HashSet<ushort> o2)
         {
-            if (!IsValidPermutation(permutation, positions)) return false;
+            if (!IsValidPermutation(permutation, positions))
+            {
+                return false;
+            }
             var isSubset = OutputIsSubset(permutation, o2);
 
             return isSubset;

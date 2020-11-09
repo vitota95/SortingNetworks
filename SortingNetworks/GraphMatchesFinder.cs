@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 
@@ -7,107 +8,151 @@ namespace SortingNetworks
 {
     public class GraphMatchesFinder
     {
-        private static bool HasAugmentingPath(Queue<int> queue, int[] toMatchedLeft, int[] toMatchedRight, int[] distances, int[]edges)
-        {
-            var maxValue = edges.Length;
+        private static int V { get; set; }
 
+        public IEnumerable<int[]> FindAllPerfectMatches(int[] edges)
+        {
+            V = edges.Length;
+            var bpGraph = new bool[edges.Length, edges.Length];
             for (var i = 0; i < edges.Length; i++)
             {
-                if (toMatchedRight[i] == maxValue)
+                for (var j = 0; j < edges.Length; j++)
                 {
-                    distances[i] = 0;
-                    queue.Enqueue(i);
-                }
-                else
-                {
-                    distances[i] = int.MaxValue;
+                    bpGraph[i, j] = ((edges[i] >> j) & 1) == 1;
                 }
             }
 
-            // distances[NIL] hay que iniciar to matched a este valor
-            distances[maxValue] = int.MaxValue;
+            var permutation = this.FindPerfectMatch(bpGraph);
 
-            while (0 < queue.Count)
+            if (permutation.Contains(-1))
             {
-                var left = queue.Dequeue();
-
-                if (distances[left] < distances[maxValue])
-                {
-                    for (var right = 0; right < edges.Length; right++)
-                    {
-                        if ((edges[right] & (1 << right)) == 0) continue;
-
-                        var nextLeft = toMatchedLeft[right];
-                        if (distances[nextLeft] == int.MaxValue)
-                        {
-                            // The nextLeft has not been visited and is being visited.
-                            distances[nextLeft] = distances[left] + 1;
-                            queue.Enqueue(nextLeft);
-                        }
-                    }
-                }
+                return null;
             }
 
-            return distances[maxValue] != int.MaxValue;
+            return this.FindPerfectMatchesRecursive(bpGraph, new List<int[]>{permutation});
         }
 
-        private static bool TryMatching(int left, int[] edges, int[] toMatchedLeft, int[] toMatchedRight, int[] distances)
+        private bool BPM(bool[,] bpGraph, int u, bool[] seen, int[] matchR)
         {
-            var distancesNil = edges.Length;
-            if (left == distancesNil)
+            for (var v = 0; v < bpGraph.GetLength(0); v++)
             {
-                return true;
-            }
+                if (!bpGraph[u, v] || seen[v]) continue;
 
-            
-            for (var right = 0; right < edges.Length; right++)
-            {
-                if ((edges[left] & (1 << right)) == 0) continue;
+                seen[v] = true;
 
-                var nextLeft = toMatchedLeft[right];
-                if (distances[nextLeft] == distances[left] + 1)
+                if (matchR[v] < 0 || BPM(bpGraph, matchR[v], seen, matchR))
                 {
-                    if (TryMatching(nextLeft, edges, toMatchedLeft, toMatchedRight, distances))
-                    {
-                        toMatchedLeft[right] = left;
-                        toMatchedRight[left] = right;
-                        return true;
-                    }
+                    matchR[v] = u;
+                    return true;
                 }
             }
-            
-
-            // The left could not match any right.
-            distances[left] = int.MaxValue;
             return false;
         }
 
-        public static int[] FindPerfectMatches(int[] edges)
+        // Returns maximum number of  
+
+        // matching from M to N 
+
+        public int[] FindPerfectMatch(bool[,] bpGraph)
         {
-            var length = edges.Length + 1;
-            var maxValue = edges.Length;
-            var distances = new int[length];
-            var queue = new Queue<int>();
-            var toMatchedRight = new int[edges.Length];
-            var toMatchedLeft = new int[edges.Length];
+            var dimension = bpGraph.GetLength(0);
+            var matchR = new int[dimension];
 
-            // set o maximum array
-            toMatchedRight.Populate(maxValue);
-            toMatchedLeft.Populate(maxValue);
+            for (var i = 0; i < dimension; ++i) matchR[i] = -1;
 
-            while (HasAugmentingPath(queue, toMatchedLeft, toMatchedRight, distances, edges))
+            for (var u = 0; u < dimension; u++)
             {
-                for (var i = 0; i < edges.Length; i++)
+                var seen = new bool[dimension];
+                for (var i = 0; i < dimension; ++i)
+                    seen[i] = false;
+
+                BPM(bpGraph, u, seen, matchR);
+            }
+
+            return matchR;
+        }
+
+        private IReadOnlyList<int[]> FindPerfectMatchesRecursive(bool[,] bpGraph, List<int[]> perfectMatches)
+        {
+            var hasEdges = false;
+            int d1;
+            int d2;
+            for (var i = 0; i < bpGraph.GetLength(0); i++)
+            {
+                for (var j = 0; j < bpGraph.GetLength(1); j++)
                 {
-                    if (toMatchedRight[i] == maxValue)
+                    if (bpGraph[i,j])
                     {
-                        TryMatching(i, edges, toMatchedLeft, toMatchedRight, distances);
+                        hasEdges = true;
+                        d1 = i;
+                        d2 = j;
+                        break;
                     }
+                }
+
+                if (hasEdges)
+                {
+                    break;
                 }
             }
 
-            // If there is any unmatch no subsumption
-            return toMatchedRight;
+            if (!hasEdges)
+            {
+                return perfectMatches;
+            }
+
+
+
+        }
+        // A recursive function that uses visited[]  
+        // and parent to detect cycle in subgraph 
+        // reachable from vertex v. 
+        Boolean isCyclicUtil(int v, Boolean[] visited, int parent)
+        {
+            // Mark the current node as visited 
+            visited[v] = true;
+
+            // Recur for all the vertices  
+            // adjacent to this vertex 
+            foreach (int i in adj[v])
+            {
+                // If an adjacent is not visited,  
+                // then recur for that adjacent 
+                if (!visited[i])
+                {
+                    if (isCyclicUtil(i, visited, v))
+                        return true;
+                }
+
+                // If an adjacent is visited and  
+                // not parent of current vertex, 
+                // then there is a cycle. 
+                else if (i != parent)
+                    return true;
+            }
+            return false;
+        }
+
+        // Returns true if the graph contains  
+        // a cycle, else false. 
+        Boolean isCyclic()
+        {
+            // Mark all the vertices as not visited  
+            // and not part of recursion stack 
+            Boolean[] visited = new Boolean[V];
+            for (int i = 0; i < V; i++)
+                visited[i] = false;
+
+            // Call the recursive helper function  
+            // to detect cycle in different DFS trees 
+            for (int u = 0; u < V; u++)
+
+                // Don't recur for u if already visited 
+                if (!visited[u])
+                    if (isCyclicUtil(u, visited, -1))
+                        return true;
+
+            return false;
         }
     }
 }
