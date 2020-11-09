@@ -87,7 +87,7 @@
                 return false;
             }
 
-            var matches = GraphMatchesFinder.FindPerfectMatchs(positions);   
+            var matches = GraphMatchesFinder.FindPerfectMatches(positions);   
 
             var enumerable = Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray();
 #if DEBUG

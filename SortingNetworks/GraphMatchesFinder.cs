@@ -7,30 +7,31 @@ namespace SortingNetworks
 {
     public class GraphMatchesFinder
     {
-        private static bool BFS(Queue<int> queue, int[] toMatchedLeft, int[] toMatchedRight, int[] distances, int[]edges)
+        private static bool HasAugmentingPath(Queue<int> queue, int[] toMatchedLeft, int[] toMatchedRight, int[] distances, int[]edges)
         {
-            var distancesNil = edges.Length;
+            var maxValue = edges.Length;
 
-            for (var i = 0; i < toMatchedLeft.Length; i++)
+            for (var i = 0; i < edges.Length; i++)
             {
-                if (distances[i] == 0)
+                if (toMatchedRight[i] == maxValue)
                 {
+                    distances[i] = 0;
                     queue.Enqueue(i);
                 }
                 else
                 {
-                    distances[i] = 0;
+                    distances[i] = int.MaxValue;
                 }
             }
 
             // distances[NIL] hay que iniciar to matched a este valor
-            distances[distancesNil] = int.MaxValue;
+            distances[maxValue] = int.MaxValue;
 
-            while (queue.Count > 0)
+            while (0 < queue.Count)
             {
                 var left = queue.Dequeue();
 
-                if (distances[left] < distances[distancesNil])
+                if (distances[left] < distances[maxValue])
                 {
                     for (var right = 0; right < edges.Length; right++)
                     {
@@ -47,10 +48,10 @@ namespace SortingNetworks
                 }
             }
 
-            return distances[distancesNil] != int.MaxValue;
+            return distances[maxValue] != int.MaxValue;
         }
 
-        private static bool DFS(int left, int[] edges, int[] toMatchedLeft, int[] toMatchedRight, int[] distances)
+        private static bool TryMatching(int left, int[] edges, int[] toMatchedLeft, int[] toMatchedRight, int[] distances)
         {
             var distancesNil = edges.Length;
             if (left == distancesNil)
@@ -58,54 +59,54 @@ namespace SortingNetworks
                 return true;
             }
 
-            for (var right = 0; right<edges.Length; right++)
+            
+            for (var right = 0; right < edges.Length; right++)
             {
-                for (var i = 0; i < edges.Length; i++)
-                {
-                    if ((edges[right] & (1 << i)) == 0) continue;
+                if ((edges[left] & (1 << right)) == 0) continue;
 
-                    var nextLeft = toMatchedLeft[right];
-                    if (distances[nextLeft] == distances[left] + 1)
+                var nextLeft = toMatchedLeft[right];
+                if (distances[nextLeft] == distances[left] + 1)
+                {
+                    if (TryMatching(nextLeft, edges, toMatchedLeft, toMatchedRight, distances))
                     {
-                        if (DFS(nextLeft, edges, toMatchedRight, toMatchedLeft, distances))
-                        {
-                            toMatchedLeft[right] = left;
-                            toMatchedRight[left] = right;
-                            return true;
-                        }
+                        toMatchedLeft[right] = left;
+                        toMatchedRight[left] = right;
+                        return true;
                     }
                 }
             }
+            
 
             // The left could not match any right.
             distances[left] = int.MaxValue;
             return false;
         }
 
-        public static int[] FindPerfectMatchs(int[] edges)
+        public static int[] FindPerfectMatches(int[] edges)
         {
-            var defaultvalue = edges.Length + 1;
-            var distances = new int[defaultvalue];
+            var length = edges.Length + 1;
+            var maxValue = edges.Length;
+            var distances = new int[length];
             var queue = new Queue<int>();
             var toMatchedRight = new int[edges.Length];
             var toMatchedLeft = new int[edges.Length];
 
-            toMatchedRight.Populate(defaultvalue - 1);
-            toMatchedLeft.Populate(defaultvalue - 1);
+            // set o maximum array
+            toMatchedRight.Populate(maxValue);
+            toMatchedLeft.Populate(maxValue);
 
-            while (BFS(queue, toMatchedLeft, toMatchedRight, distances, edges))
+            while (HasAugmentingPath(queue, toMatchedLeft, toMatchedRight, distances, edges))
             {
-                for (int i = 0; i < edges.Length; i++)
+                for (var i = 0; i < edges.Length; i++)
                 {
-                    if (toMatchedRight[i] == defaultvalue - 1)
+                    if (toMatchedRight[i] == maxValue)
                     {
-                        DFS(i, edges, toMatchedLeft, toMatchedRight, distances);
+                        TryMatching(i, edges, toMatchedLeft, toMatchedRight, distances);
                     }
                 }
             }
 
-            // REMOVE UNMATCHES??
-
+            // If there is any unmatch no subsumption
             return toMatchedRight;
         }
     }
