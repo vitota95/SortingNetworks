@@ -109,6 +109,7 @@ namespace SortingNetworks
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
                 Trace.WriteLine(string.Empty);
 
+
                 if (pause != 0 && i + 1 == pause)
                 {
                     SaveNetworks(k, i + 1, comparatorNets);
@@ -119,20 +120,38 @@ namespace SortingNetworks
 
             // Trace.WriteLine($"Subsume no check: {IComparatorNetwork.SubsumeNoCheck} ");
             Trace.WriteLine($"Elapsed Time: {stopWatch.Elapsed} ");
+
 #if DEBUG
+            Trace.WriteLine(string.Empty);
+            Debug.WriteLine($"Subsume total:{IComparatorNetwork.SubsumeTotal:N}");
             Debug.WriteLine($"Subsume no check 1:{IComparatorNetwork.SubsumeNoCheck1:N}");
             Debug.WriteLine($"Subsume no check 2:{IComparatorNetwork.SubsumeNoCheck2:N}");
             Debug.WriteLine($"Output count bigger:{IComparatorNetwork.OutputCountBigger:N}");
+            Debug.WriteLine($"Subsume no check total:{IComparatorNetwork.SubsumeNoCheckTotal:N}");
             Debug.WriteLine($"Subsume number:{IComparatorNetwork.SubsumeNumber:N}");
             Debug.WriteLine($"Subsume succeed:{IComparatorNetwork.SubsumeSucceed:N}");
             Debug.WriteLine($"Permutations performed:{IComparatorNetwork.PermutationsNumber:N}");
             Debug.WriteLine($"Permutations walk:{IComparatorNetwork.PermutationsWalk:N}");
 #endif
 
+
             Trace.WriteLine(string.Empty);
 
             PrintSortingNetworks(comparatorNets, IComparatorNetwork.Inputs, k);
         }
+
+#if DEBUG
+        private static void ResetCounters()
+        {
+            IComparatorNetwork.SubsumeNoCheck1 = 0;
+            IComparatorNetwork.SubsumeNoCheck2 = 0;
+            IComparatorNetwork.OutputCountBigger = 0;
+            IComparatorNetwork.PermutationsNumber = 0;
+            IComparatorNetwork.PermutationsWalk = 0;
+            IComparatorNetwork.SubsumeNumber = 0;
+            IComparatorNetwork.SubsumeSucceed= 0;
+        }
+#endif
 
         public static void InitiateTracer(TraceListener[] listeners)
         {

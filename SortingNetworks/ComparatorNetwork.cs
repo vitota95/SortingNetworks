@@ -63,11 +63,16 @@ namespace SortingNetworks
         }
 
         /// <inheritdoc/>
-        public bool IsSubsumed(IComparatorNetwork n, IEnumerable<int>[] permutations)
+        public bool IsSubsumed(IComparatorNetwork n)
         {
+#if DEBUG
+            IComparatorNetwork.SubsumeTotal++;
+#endif
             if (!ShouldCheckSubsumption(n, this))
             {
-                //IComparatorNetwork.SubsumeNoCheck++;
+#if DEBUG
+                IComparatorNetwork.SubsumeNoCheckTotal++;
+#endif
                 return false;
             }
 
@@ -204,13 +209,13 @@ namespace SortingNetworks
 
         private bool OutputIsSubset(int[] permutation, HashSet<ushort> o2)
         {
-#if DEBUG
-            IComparatorNetwork.PermutationsNumber++;
-#endif
             using (var enumerator = o2.GetEnumerator())
             {
                 while (enumerator.MoveNext())
                 {
+#if DEBUG
+                    IComparatorNetwork.PermutationsNumber++;
+#endif
                     var output = enumerator.Current;
                     var newOutput = 0;
 

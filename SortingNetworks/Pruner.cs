@@ -6,8 +6,6 @@
     /// <inheritdoc cref="IPruner"/>
     public class Pruner : IPruner
     {
-        private static readonly IEnumerable<int>[] Permutations = Enumerable.Range(0, IComparatorNetwork.Inputs).GetPermutations().ToArray();
-
         /// <inheritdoc cref="IPruner.Prune"/>
         public IReadOnlyList<IComparatorNetwork> Prune<T>(IReadOnlyList<T> nets)
         {
@@ -21,13 +19,13 @@
                 for (var index = result.Count - 1; index >= 0; index--)
                 {
                     var n2 = result[index];
-                    if (n1.IsSubsumed(n2, Permutations))
+                    if (n1.IsSubsumed(n2))
                     {
                         isSubsumed = true;
                         break;
                     }
 
-                    if (n2.IsSubsumed(n1, Permutations))
+                    if (n2.IsSubsumed(n1))
                     {
                         result.Remove(n2);
                     }
@@ -50,7 +48,7 @@
             {
                 for (var j = 0; j < nets1.Count; j++)
                 {
-                    if (nets2[i].IsSubsumed(nets1[j], Permutations))
+                    if (nets2[i].IsSubsumed(nets1[j]))
                     {
                         result.Remove(nets2[i]);
                     }
