@@ -7,9 +7,12 @@ namespace SortingNetworks.Graphs
 {
     public class Graph
     {
+        private Vertex[][] _adjacency;
         public IReadOnlyList<Edge> Edges { get; }
 
-        public IReadOnlyList<int> Vertices { get; }
+        public IReadOnlyList<Vertex> Vertices { get; }
+
+        public IReadOnlyList<IReadOnlyList<Vertex>> Adjacency => _adjacency;
 
         public Graph(IReadOnlyList<int> positions)
         {
@@ -31,28 +34,38 @@ namespace SortingNetworks.Graphs
 
         public IReadOnlyList<Edge> GetCycle(Edge edge)
         {
+            var cycle = new HashSet<Edge>();
+            var vertex = new Vertex(0);
+            this.GetCycleRecursive(vertex, ref cycle);
+
+            return cycle.ToArray();
+        }
+
+        private static Vertex[][] GetAdjacencyMatrix(IReadOnlyList<Edge> edges, int size)
+        {
+            var matrix = new Vertex[size][];
+            for (var j = 0; j < size; j++)
+            {
+                matrix[j] = new Vertex[size];
+            }
+
+            foreach (var edge in edges)
+            {
+               matrix[edge.V1.Id][edge.V2.Id] = edge.V2;
+               matrix[edge.V2.Id][edge.V1.Id] = edge.V1;
+            }
+
+            return matrix;
+        }
+
+        public IReadOnlyList<Vertex> GetAdjacency(Vertex v)
+        {
 
         }
 
-        private bool GetCycleRecursive(Edge source, ref HashSet<Edge> visited)
+        private bool GetCycleRecursive(Vertex vertex, ref HashSet<Edge> visited)
         {
-            if (!visited.Contains(source))
-            {
-                // Mark the current node as visited
-                visited.Add(source);
-
-                // Recur for all the vertices adjacent to this vertex
-                foreach (var adjacent in this.Neighbors(source))
-                {
-                    // If an adjacent node was not visited, then check the DFS forest of the adjacent for UNdirected cycles.
-                    if (!visited.Contains(adjacent) && GetCycleRecursive(adjacent, source, ref visited))
-                        return true;
-
-                    // If an adjacent is visited and NOT parent of current vertex, then there is a cycle.
-                    if (parent != (object)null && !adjacent.IsEqualTo((T)parent))
-                        return true;
-                }
-            }
+            
 
             return false;
         }
@@ -65,13 +78,25 @@ namespace SortingNetworks.Graphs
 
     public struct Edge
     {
-        public int V1;
-        public int V2;
+        public Vertex V1;
+        public Vertex V2;
 
-        public Edge(int v1, int v2)
+        public Edge(Vertex v1, Vertex v2)
         {
             this.V1 = v1;
             this.V2 = v2;
+        }
+    }
+
+    public struct Vertex
+    {
+        public bool Color;
+        public int Id;
+
+        public Vertex(int id)
+        {
+            this.Color = false;
+            this.Id = id;
         }
     }
 }
