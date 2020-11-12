@@ -93,22 +93,21 @@ namespace SortingNetworks
                 return false;
             }
 
-<<<<<<< HEAD
+
             var finder = new GraphMatchesFinder();
             var permutation = finder.FindPerfectMatch(positions);
+            if (OutputIsSubset(permutation, n.Outputs))
+            {
+                return true;
+            }
             if (permutation.Contains(-1))
             {
                 return false;
             }
 
-            var enumerable = Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray();
-#if DEBUG
-            //var succeed = this.ApplyPermutations(enumerable, positions, n.Outputs, 0, IComparatorNetwork.Inputs - 1);
-            var succeed = this.TryPermutation(permutation, positions, n.Outputs);
-=======
 #if DEBUG
             var succeed = TryPermutations(positions, new int[IComparatorNetwork.Inputs],  n.Outputs, 0);
->>>>>>> master
+
             if (succeed)
             {
                 IComparatorNetwork.SubsumeSucceed++;
@@ -210,13 +209,6 @@ namespace SortingNetworks
 
         private static bool IsAlreadyAdded(int[] a, int value, int limit)
         {
-<<<<<<< HEAD
-            if (!IsValidPermutation(permutation, positions))
-            {
-                return false;
-            }
-            var isSubset = OutputIsSubset(permutation, o2);
-=======
             for (var i = 0; i <= limit; i++)
             {
                 if (a[i] == value)
@@ -224,7 +216,6 @@ namespace SortingNetworks
                     return true;
                 }
             }
->>>>>>> master
 
             return false;
         }

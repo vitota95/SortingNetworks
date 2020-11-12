@@ -11,16 +11,29 @@ namespace SortingNetworksTests
     public class GraphMatchesFinderTests
     {
         [TestMethod]
-        public void FindPerfectMatches_Test()
+        public void FindPerfectMatches_WhenGraphContainsAPerfectMatch()
         {
-            //// Arrange
-            //var sut = new GraphMatchesFinder(new[] { 3, 17, 12, 17, 10 });
+            // Arrange
+            var sut = new GraphMatchesFinder();
 
-            //// Act
-            //var result = sut.FindPerfectMatches();
+            // Act
+            var result = sut.FindPerfectMatch(new[] { 1, 2, 4, 8, 16 });
 
-            //// Assert
-            //result.Should().ContainInOrder(new int[] { 1, 4, 2, 0, 3 });
+            // Assert
+            result.Should().ContainInOrder(new int[] { 0, 1, 2, 3, 4 });
+        } 
+        
+        [TestMethod]
+        public void FindPerfectMatches_WhenGraphContainsNoPerfectMatch()
+        {
+            // Arrange
+            var sut = new GraphMatchesFinder();
+
+            // Act
+            var result = sut.FindPerfectMatch(new[] { 0, 2, 4, 8, 16 });
+
+            // Assert
+            result.Should().BeNull();
         }
     }
 }

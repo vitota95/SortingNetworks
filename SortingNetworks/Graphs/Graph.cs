@@ -8,28 +8,30 @@ namespace SortingNetworks.Graphs
     public class Graph
     {
         private Vertex[][] _adjacency;
+
+        private static readonly IReadOnlyList<Vertex> _vertices = Enumerable.Range(0, IComparatorNetwork.Inputs - 1).Select(x => new Vertex(x)).ToList(); 
+
         public IReadOnlyList<Edge> Edges { get; }
 
-        public IReadOnlyList<Vertex> Vertices { get; }
+        public IReadOnlyList<Vertex> Vertices => _vertices;
 
         public IReadOnlyList<IReadOnlyList<Vertex>> Adjacency => _adjacency;
 
         public Graph(IReadOnlyList<int> positions)
         {
-            var vertices = new int[positions.Count];
             var edges = new List<Edge>();
 
             for (var i = 0; i < positions.Count; i++)
             {
-                vertices[i] = i;
                 for (var j = 0; j < positions.Count; j++)
                 {
                     if ((positions[i] & (1 << j)) == 0) continue;
-                    edges.Add(new Edge(i, j));
+                    edges.Add(new Edge(this.Vertices[i], this.Vertices[j]));
                 }
             }
 
             this.Edges = edges;
+            this._adjacency = GetAdjacencyMatrix(edges, positions.Count);
         }
 
         public IReadOnlyList<Edge> GetCycle(Edge edge)
@@ -51,28 +53,23 @@ namespace SortingNetworks.Graphs
 
             foreach (var edge in edges)
             {
-               matrix[edge.V1.Id][edge.V2.Id] = edge.V2;
-               matrix[edge.V2.Id][edge.V1.Id] = edge.V1;
+                matrix[edge.V1.Id][edge.V2.Id] = edge.V2;
+                matrix[edge.V2.Id][edge.V1.Id] = edge.V1;
             }
 
             return matrix;
         }
 
-        public IReadOnlyList<Vertex> GetAdjacency(Vertex v)
-        {
-
-        }
-
         private bool GetCycleRecursive(Vertex vertex, ref HashSet<Edge> visited)
         {
-            
+
 
             return false;
         }
 
         private IEnumerable<Edge> Neighbors(Edge source)
         {
-            return this.Edges.Where(x => x.V1 == source.V1 || x.V2 == source.V2);
+            return this.Edges.Where(x => x.V1.Id == source.V1.Id || x.V2.Id == source.V2.Id);
         }
     }
 
