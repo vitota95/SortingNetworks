@@ -6,10 +6,13 @@
     public interface IComparatorNetwork
     {
 #if DEBUG
+        static long SubsumeTotal { get; set; }
         static long SubsumeNoCheck1 { get; set; }
         static long SubsumeNoCheck2 { get; set; }
+        static long SubsumeNoCheckTotal { get; set; }
         static long OutputCountBigger { get; set; }
         static long PermutationsNumber { get; set; }
+        static long PermutationsWalk { get; set; }
         static long SubsumeNumber { get; set; }
         static long SubsumeSucceed{ get; set; }
 #endif
@@ -27,7 +30,7 @@
 
         int[] Where1 { get; }
 
-        bool IsSubsumed(IComparatorNetwork n, IEnumerable<int> [] permutations);
+        bool IsSubsumed(IComparatorNetwork n);
 
         bool IsRedundant(IComparatorNetwork n);
 

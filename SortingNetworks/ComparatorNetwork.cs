@@ -1,4 +1,6 @@
-﻿namespace SortingNetworks
+﻿using System.Diagnostics;
+
+namespace SortingNetworks
 {
     using System;
     using System.Collections.Generic;
@@ -24,7 +26,6 @@
             this.Outputs = this.CalculateOutput();
         }
 
-        /// <inheritdoc/>
         public HashSet<ushort> Outputs { get; private set; }
 
         public int[] Where0 { get; private set; }
@@ -62,11 +63,16 @@
         }
 
         /// <inheritdoc/>
-        public bool IsSubsumed(IComparatorNetwork n, IEnumerable<int>[] permutations)
+        public bool IsSubsumed(IComparatorNetwork n)
         {
+#if DEBUG
+            IComparatorNetwork.SubsumeTotal++;
+#endif
             if (!ShouldCheckSubsumption(n, this))
             {
-                //IComparatorNetwork.SubsumeNoCheck++;
+#if DEBUG
+                IComparatorNetwork.SubsumeNoCheckTotal++;
+#endif
                 return false;
             }
 
@@ -87,6 +93,7 @@
                 return false;
             }
 
+<<<<<<< HEAD
             var finder = new GraphMatchesFinder();
             var permutation = finder.FindPerfectMatch(positions);
             if (permutation.Contains(-1))
@@ -98,6 +105,10 @@
 #if DEBUG
             //var succeed = this.ApplyPermutations(enumerable, positions, n.Outputs, 0, IComparatorNetwork.Inputs - 1);
             var succeed = this.TryPermutation(permutation, positions, n.Outputs);
+=======
+#if DEBUG
+            var succeed = TryPermutations(positions, new int[IComparatorNetwork.Inputs],  n.Outputs, 0);
+>>>>>>> master
             if (succeed)
             {
                 IComparatorNetwork.SubsumeSucceed++;
@@ -105,7 +116,7 @@
 
             return succeed;
 #else
-            return this.ApplyPermutations(enumerable, positions, n.Outputs, 0, IComparatorNetwork.Inputs - 1);
+            return this.TryPermutations(positions, new int[IComparatorNetwork.Inputs], n.Outputs, 0);
 #endif
         }
 
@@ -162,33 +173,60 @@
             return true;
         }
 
-        private bool ApplyPermutations(int[] permutation, int[] positions, HashSet<ushort> o2, int l, int r)
+        private bool TryPermutations(int[] positions, int[] permutation, HashSet<ushort> o2, int index)
         {
-            if (l == r) return false;
-            
-            for (var i = l; i <= r; i++)
+            if (index == IComparatorNetwork.Inputs)
             {
-                permutation = Swap(permutation, l, i);
-                if (TryPermutation(permutation, positions, o2)) return true;
-
-                if (ApplyPermutations(permutation, positions, o2, l + 1, r)) return true;
-
-                permutation = Swap(permutation, l, i);
-                if (TryPermutation(permutation, positions, o2)) return true;
+                return false;
             }
 
-            return false;
+            for (var j = 0; j < IComparatorNetwork.Inputs; j++)
+            {
+                if ((positions[j] & (1 << index)) == 0) continue;
+                if (IsAlreadyAdded(permutation, j, index-1)) continue;
+                permutation[index] = j;
+                var result = TryPermutations(positions, permutation, o2, index+1);
+                if (result)
+                {
+                    return true;
+                }
+                // As permutation is passed by reference, when it returns from recursion we need to reset the values after index.
+                // This is quicker and consumes less memory than cloning the array.
+                permutation = ResetPositions(index + 1, permutation);
+            }
+
+            return index == IComparatorNetwork.Inputs - 1 && OutputIsSubset(permutation, o2);
         }
 
-        private bool TryPermutation(int[] permutation, int[] positions, HashSet<ushort> o2)
+        private static int[] ResetPositions(int start, int[] arr)
         {
+            for (var i = start; i < arr.Length; i++)
+            {
+                arr[i] = -1;
+            }
+
+            return arr;
+        }
+
+        private static bool IsAlreadyAdded(int[] a, int value, int limit)
+        {
+<<<<<<< HEAD
             if (!IsValidPermutation(permutation, positions))
             {
                 return false;
             }
             var isSubset = OutputIsSubset(permutation, o2);
+=======
+            for (var i = 0; i <= limit; i++)
+            {
+                if (a[i] == value)
+                {
+                    return true;
+                }
+            }
+>>>>>>> master
 
-            return isSubset;
+            return false;
         }
 
         private bool OutputIsSubset(int[] permutation, HashSet<ushort> o2)
@@ -197,6 +235,9 @@
             {
                 while (enumerator.MoveNext())
                 {
+#if DEBUG
+                    IComparatorNetwork.PermutationsNumber++;
+#endif
                     var output = enumerator.Current;
                     var newOutput = 0;
 
@@ -214,24 +255,6 @@
             }
 
             return true;
-        }
-
-        private static bool IsValidPermutation(int[] output, int[] positions)
-        {
-            for (var j = 0; j < output.Length; j++)
-            {
-                if ((positions[output[j]] & (1 << j)) == 0) return false;
-            }
-
-            return true;
-        }
-
-        private static int[] Swap(int[] p, int i, int j)
-        {
-            var temp = p[i];
-            p[i] = p[j];
-            p[j] = temp;
-            return p;
         }
 
         private int[] GetPositions(IComparatorNetwork n)
@@ -286,7 +309,7 @@
                 this.Where0[i] = ~this.Where0[i] & ((1 << IComparatorNetwork.Inputs) - 1);
                 if (this.Where0[i] != -1)
                 {
-                    this.Where0SetCount[i] = (int)PopCount((uint)this.Where0[i]);
+                    this.Where0SetCount[i] = PopCount((uint)this.Where0[i]);
                 }
             }
 

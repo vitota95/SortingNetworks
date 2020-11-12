@@ -24,7 +24,7 @@ namespace SortingNetworks
 
             ushort k = 0;
             ushort pause = 0;
-            ushort copySteps = 0;
+            var copySteps = new List<ushort>();
             ushort threads = 1;
             IReadOnlyList<IComparatorNetwork> comparatorNets = null;
             IPruner pruner = new Pruner();
@@ -57,7 +57,7 @@ namespace SortingNetworks
                         comparatorNets = serializer.Deserialize<IReadOnlyList<IComparatorNetwork>>();
                         break;
                     case "-c":
-                        copySteps = Convert.ToUInt16(arg.Substring(3));
+                        copySteps.AddRange(arg.Substring(3).Split(",").Select(step => Convert.ToUInt16(step)));
                         break;
                     case "-t":
                         threads = Convert.ToUInt16(arg.Substring(3));
@@ -85,14 +85,12 @@ namespace SortingNetworks
 
             comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[0]) };
             var numComparators = comparatorNets[0].Comparators.Length;
-            var copy = copySteps;
 
             for (var i = numComparators; i < k; i++)
             {
-                if (i == copy && copy != 0)
+                if (copySteps.Contains((ushort) i))
                 {
                     SaveNetworks(k, i, comparatorNets);
-                    copy += copySteps;
                 }
 
                 Trace.WriteLine($"Adding Comparator {i + 1}");
@@ -111,6 +109,7 @@ namespace SortingNetworks
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
                 Trace.WriteLine(string.Empty);
 
+
                 if (pause != 0 && i + 1 == pause)
                 {
                     SaveNetworks(k, i + 1, comparatorNets);
@@ -121,18 +120,38 @@ namespace SortingNetworks
 
             // Trace.WriteLine($"Subsume no check: {IComparatorNetwork.SubsumeNoCheck} ");
             Trace.WriteLine($"Elapsed Time: {stopWatch.Elapsed} ");
+
 #if DEBUG
+            Trace.WriteLine(string.Empty);
+            Debug.WriteLine($"Subsume total:{IComparatorNetwork.SubsumeTotal:N}");
             Debug.WriteLine($"Subsume no check 1:{IComparatorNetwork.SubsumeNoCheck1:N}");
             Debug.WriteLine($"Subsume no check 2:{IComparatorNetwork.SubsumeNoCheck2:N}");
             Debug.WriteLine($"Output count bigger:{IComparatorNetwork.OutputCountBigger:N}");
+            Debug.WriteLine($"Subsume no check total:{IComparatorNetwork.SubsumeNoCheckTotal:N}");
             Debug.WriteLine($"Subsume number:{IComparatorNetwork.SubsumeNumber:N}");
             Debug.WriteLine($"Subsume succeed:{IComparatorNetwork.SubsumeSucceed:N}");
+            Debug.WriteLine($"Permutations performed:{IComparatorNetwork.PermutationsNumber:N}");
+            Debug.WriteLine($"Permutations walk:{IComparatorNetwork.PermutationsWalk:N}");
 #endif
+
 
             Trace.WriteLine(string.Empty);
 
             PrintSortingNetworks(comparatorNets, IComparatorNetwork.Inputs, k);
         }
+
+#if DEBUG
+        private static void ResetCounters()
+        {
+            IComparatorNetwork.SubsumeNoCheck1 = 0;
+            IComparatorNetwork.SubsumeNoCheck2 = 0;
+            IComparatorNetwork.OutputCountBigger = 0;
+            IComparatorNetwork.PermutationsNumber = 0;
+            IComparatorNetwork.PermutationsWalk = 0;
+            IComparatorNetwork.SubsumeNumber = 0;
+            IComparatorNetwork.SubsumeSucceed= 0;
+        }
+#endif
 
         public static void InitiateTracer(TraceListener[] listeners)
         {
