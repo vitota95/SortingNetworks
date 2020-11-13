@@ -95,18 +95,18 @@ namespace SortingNetworks
 
 
             var finder = new GraphMatchesFinder();
-            var permutation = finder.FindPerfectMatch(positions);
-            if (OutputIsSubset(permutation, n.Outputs))
-            {
-                return true;
-            }
-            if (permutation.Contains(-1))
-            {
-                return false;
-            }
+            //var permutation = finder.FindPerfectMatch(positions);
+            //if (OutputIsSubset(permutation, n.Outputs))
+            //{
+            //    return true;
+            //}
+            //if (permutation.Contains(-1))
+            //{
+            //    return false;
+            //}
 
 #if DEBUG
-            var succeed = TryPermutations(positions, new int[IComparatorNetwork.Inputs],  n.Outputs, 0);
+            var succeed = finder.TryPerfectMatches(positions, this.Outputs, n.Outputs);
 
             if (succeed)
             {
@@ -220,7 +220,7 @@ namespace SortingNetworks
             return false;
         }
 
-        private bool OutputIsSubset(int[] permutation, HashSet<ushort> o2)
+        private bool OutputIsSubset(IReadOnlyList<int> permutation, HashSet<ushort> o2)
         {
             using (var enumerator = o2.GetEnumerator())
             {
@@ -233,7 +233,7 @@ namespace SortingNetworks
                     var newOutput = 0;
 
                     // permute bits
-                    for (var j = 0; j < permutation.Length; j++)
+                    for (var j = 0; j < permutation.Count; j++)
                     {
                         if ((output & (1 << permutation[j])) > 0) newOutput |= 1 << j;
                     }
