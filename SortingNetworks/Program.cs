@@ -25,7 +25,6 @@ namespace SortingNetworks
             ushort k = 0;
             ushort pause = 0;
             var copySteps = new List<ushort>();
-            ushort threads = 1;
             IReadOnlyList<IComparatorNetwork> comparatorNets = null;
             IPruner pruner = new Pruner();
 
@@ -60,8 +59,8 @@ namespace SortingNetworks
                         copySteps.AddRange(arg.Substring(3).Split(",").Select(step => Convert.ToUInt16(step)));
                         break;
                     case "-t":
-                        threads = Convert.ToUInt16(arg.Substring(3));
-                        if (threads > 1)
+                        IPruner.Threads = Convert.ToUInt16(arg.Substring(3));
+                        if (IPruner.Threads > 1)
                         {
                             pruner = new ParallelPruner();
                         }
@@ -97,13 +96,14 @@ namespace SortingNetworks
                 Trace.WriteLine($"Generate--------------");
                 var generateWatch = Stopwatch.StartNew();
                 comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
-                var splitNets = comparatorNets.SplitList(comparatorNets.Count / threads + 1).ToList();
+                var count = double.Parse(comparatorNets.Count.ToString());
+                var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 2000)).ToList();
                 Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
                 Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
 
                 Trace.WriteLine($"Prune--------------");
                 var pruneWatch = Stopwatch.StartNew();
-                comparatorNets = splitNets.Count == 1 ? pruner.Prune(splitNets[0]) : pruner.Prune(splitNets);
+                comparatorNets =  pruner.Prune(splitNets);
 
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");

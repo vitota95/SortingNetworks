@@ -13,6 +13,10 @@ namespace SortingNetworks.Parallel
         public IReadOnlyList<IComparatorNetwork> Prune<T>(IReadOnlyList<T> nets)
         {
             var pruner = new Pruner();
+            if (nets.Count == 1)
+            {
+                return pruner.Prune((IReadOnlyList<IComparatorNetwork>) nets[0]);
+            }
             var netsAfterPrune = new IReadOnlyList<IComparatorNetwork>[nets.Count];
 
             var tasks = Enumerable.Range(0, nets.Count)
