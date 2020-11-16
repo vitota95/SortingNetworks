@@ -26,24 +26,38 @@ namespace SortingNetworks
             while (problems.Count > 0)
             {
                 var problem = problems.Dequeue();
-                var previousMatch = problem.Item2.ToList();
                 positions = problem.Item1.ToArray();
+                var previousMatch = problem.Item2.ToList();
                 var g1 = new Graph(positions.ToArray());
-                var g2 = new Graph(previousMatch);
+                var g2 = new Graph(previousMatch, true);
 
                 // TODO no need to create new positions
                 g1.RemoveEdges(new Graph(problem.Item2).Edges);
                 g1.Merge(g2);
                 var cycle = g1.GetCycle();
 
-                if (cycle == null) return false;
+                if (cycle == null || cycle.Edges.Count <= 1) continue;
 
-                perfectMatch = Graph.GetSymmetricDifference(cycle, previousMatch);
+                var symDiffGraph = Graph.GetSymmetricDifference(new Graph(previousMatch), cycle);
+                perfectMatch = symDiffGraph.Adjacency;
                 if (perfectMatch.Count == 0) continue;
-                
+
                 if (OutputIsSubset(perfectMatch, o1, o2))
                 {
                     return true;
+                }
+
+                var newMatchGraph = new Graph(perfectMatch);
+                var gDiff = new Graph(previousMatch);
+                gDiff.RemoveEdges(newMatchGraph.Edges);
+
+                var gOutE = new Graph(positions);
+                if (gDiff.Edges.Count != 0)
+                {
+                    gOutE.RemoveEdge(gDiff.Edges[0]);
+                    problems.Enqueue(new Tuple<IReadOnlyList<int>, IReadOnlyList<int>>(gOutE.Adjacency, previousMatch));
+                    var gInE = new Graph(positions);
+                    problems.Enqueue(new Tuple<IReadOnlyList<int>, IReadOnlyList<int>>(gInE.Adjacency, perfectMatch));
                 }
             }
 

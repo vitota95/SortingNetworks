@@ -9,9 +9,9 @@ namespace SortingNetworks.Graphs
     {
         private static readonly IReadOnlyList<int> _vertices = Enumerable.Range(0, IComparatorNetwork.Inputs).ToList();
 
-        private List<Edge> _edges;
+        protected List<Edge> _edges;
 
-        private List<int> _adjacency;
+        protected int[] _adjacency;
 
         public IReadOnlyList<Edge> Edges => _edges;
 
@@ -35,17 +35,26 @@ namespace SortingNetworks.Graphs
             }
 
             this._edges = edges;
-            this._adjacency = positions.ToList();
+            this._adjacency = positions.ToArray();
         }
 
-        public IReadOnlyList<int> GetCycle()
+        private Graph()
+        {
+
+        }
+
+
+        public Graph GetCycle()
         {
             var visited = new HashSet<int>(this.Vertices.Count);
             var cycle = new HashSet<int>(this.Vertices.Count);
 
             foreach (var vertex in this.Vertices)
             {
-                if (this.GetCycleRecursive(vertex, visited, ref cycle)) return cycle.ToArray();
+                if (this.GetCycleRecursive(vertex, visited, ref cycle))
+                {
+                    return CreateGraphFromVertices(cycle.ToArray());
+                }
             }
 
             return null;
@@ -66,36 +75,32 @@ namespace SortingNetworks.Graphs
             this._adjacency[edge.V1] &= ~(1 << edge.V2);
         }        
         
-        public void RemoveEdgesAndAdjacent(IReadOnlyList<Edge> edges)
-        {
-            foreach (var e in edges)
-            {
-                this._edges.Remove(e);
-                this._adjacency[e.V1] = 0;
-            }
-        }
 
         public void Merge(Graph g)
         {
             this._edges.AddRange(g.Edges);
         }
 
-        public static IReadOnlyList<int> GetSymmetricDifference(IReadOnlyList<int> a, IReadOnlyList<int> b)
+        public static Graph GetSymmetricDifference(Graph a, Graph b)
         {
-            var x2 = b.ToList();
-            //var differences = a.Except(b).Union(b.Except(a));
+            a.RemoveEdges(b.Edges);
+            b.RemoveEdges(a.Edges);
+            a.Merge(b);
+            return a;
+        }
 
-            foreach (var e in a)
+        private static Graph CreateGraphFromVertices(IReadOnlyList<int> vertices)
+        {
+            var graph = new Graph();
+            graph._adjacency = new int[IComparatorNetwork.Inputs];
+            graph._edges = new List<Edge>();
+            for (var i = 0; i < vertices.Count - 1; i++)
             {
-                var i = x2.IndexOf(e);
-                if (i != -1)
-                {
-                    x2[i] = i;
-                    x2[e] = e;
-                }
+                graph._edges.Add(new Edge(vertices[i], vertices[i+1]));
+                graph._adjacency[vertices[i]] &= 1 << vertices[i + 1];
             }
 
-            return x2;
+            return graph;
         }
 
         private bool GetCycleRecursive(int vertex,  HashSet<int> visited, ref HashSet<int> recStack)
