@@ -26,7 +26,9 @@ namespace SortingNetworks
             this.Outputs = this.CalculateOutput();
         }
 
-        public HashSet<ushort> Outputs { get; private set; }
+        public int[] Outputs { get; private set; }
+
+        public int OutputsPopCount { get; private set; }
 
         public int[] Where0 { get; private set; }
 
@@ -42,13 +44,13 @@ namespace SortingNetworks
         /// <inheritdoc/>
         public bool IsSortingNetwork()
         {
-            return this.Outputs.Count == IComparatorNetwork.Inputs - 1;
+            return this.OutputsPopCount == IComparatorNetwork.Inputs - 1;
         }
 
         /// <inheritdoc/>
         public bool IsRedundant(IComparatorNetwork n)
         {
-            return this.Outputs.SetEquals(n.Outputs);
+            return this.Outputs.SequenceEqual(n.Outputs);
         }
 
         /// <inheritdoc/>
@@ -116,7 +118,7 @@ namespace SortingNetworks
         private static bool ShouldCheckSubsumption(IComparatorNetwork n1, IComparatorNetwork n2)
         {
 #if DEBUG
-            if (n1.Outputs.Count > n2.Outputs.Count)
+            if (n1.OutputsPopCount > n2.OutputsPopCount)
             {
                 IComparatorNetwork.OutputCountBigger++;
                 return false;
@@ -137,7 +139,7 @@ namespace SortingNetworks
             return true;
 
 #endif
-            if (n1.Outputs.Count > n2.Outputs.Count)
+            if (n1.OutputsPopCount > n2.OutputsPopCount)
             {
                 return false;
             }
@@ -159,7 +161,7 @@ namespace SortingNetworks
             return true;
         }
 
-        private bool TryPermutations(int[] positions, int[] permutation, HashSet<ushort> o2, int index)
+        private bool TryPermutations(int[] positions, int[] permutation, int[] o2, int index)
         {
             if (index == IComparatorNetwork.Inputs)
             {
@@ -207,28 +209,23 @@ namespace SortingNetworks
             return false;
         }
 
-        private bool OutputIsSubset(int[] permutation, HashSet<ushort> o2)
+        private bool OutputIsSubset(int[] permutation, int[] o2)
         {
-            using (var enumerator = o2.GetEnumerator())
+            for (var output = 1; output < (1 << IComparatorNetwork.Inputs); output++)
             {
-                while (enumerator.MoveNext())
+                if (!o2.GetBitValue(output)) continue;
+
+                var newOutput = 0;
+
+                // permute bits
+                for (var j = 0; j < permutation.Length; j++)
                 {
-#if DEBUG
-                    IComparatorNetwork.PermutationsNumber++;
-#endif
-                    var output = enumerator.Current;
-                    var newOutput = 0;
+                    if ((output & (1 << permutation[j])) != 0) newOutput |= 1 << j;
+                }
 
-                    // permute bits
-                    for (var j = 0; j < permutation.Length; j++)
-                    {
-                        if ((output & (1 << permutation[j])) > 0) newOutput |= 1 << j;
-                    }
-
-                    if (!this.Outputs.Contains((ushort)newOutput))
-                    {
-                        return false;
-                    }
+                if (!this.Outputs.GetBitValue(newOutput))
+                {
+                    return false;
                 }
             }
 
@@ -268,17 +265,26 @@ namespace SortingNetworks
             return positions;
         }
 
-        private HashSet<ushort> CalculateOutput() 
+        private int[] CalculateOutput() 
         {
             var total = (1 << IComparatorNetwork.Inputs) - 1;
-            var output = new HashSet<ushort>();
+            var outputs = new int[IComparatorNetwork.OutputSize];
 
             for (ushort i = 1; i < total; i++)
             {
-                if (output.Add(this.ComputeOutput(i, out var setBits)))
+                var position = this.ComputeOutput(i, out var setBits);
+
+                if (!outputs.GetBitValue(position))
                 {
                     this.SequencesWithOnes[setBits]++;
                 }
+
+                outputs.SetBit(position);
+            }
+
+            for (var i = 0; i < outputs.Length; i++)
+            {
+                this.OutputsPopCount += PopCount((uint) outputs[i]);
             }
 
             // complement where 0
@@ -291,7 +297,7 @@ namespace SortingNetworks
                 }
             }
 
-            return output;
+            return outputs;
         }
 
         private ushort ComputeOutput(ushort value, out ushort setBits) 

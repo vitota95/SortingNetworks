@@ -18,9 +18,13 @@
 #endif
         static ushort Inputs { get; set; }
 
+        static ushort OutputSize => (ushort) Math.Max((1 << Inputs) / 32, 1);
+
         Comparator[] Comparators { get; set; }
 
-        HashSet<ushort> Outputs { get; }
+        int[] Outputs { get; }
+
+        int OutputsPopCount { get; }
 
         int[] Where0 { get; }
 

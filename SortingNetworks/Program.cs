@@ -96,14 +96,21 @@ namespace SortingNetworks
                 Trace.WriteLine($"Generate--------------");
                 var generateWatch = Stopwatch.StartNew();
                 comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
-                var count = double.Parse(comparatorNets.Count.ToString());
-                var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 2000)).ToList();
                 Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
                 Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
+                var count = double.Parse(comparatorNets.Count.ToString());
 
                 Trace.WriteLine($"Prune--------------");
                 var pruneWatch = Stopwatch.StartNew();
-                comparatorNets =  pruner.Prune(splitNets);
+                if (IPruner.Threads > 1)
+                {
+                    var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 2000)).ToList();
+                    comparatorNets = pruner.Prune(splitNets);
+                }
+                else
+                {
+                    comparatorNets = pruner.Prune(comparatorNets);
+                }
 
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
