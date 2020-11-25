@@ -1,4 +1,5 @@
-﻿using SortingNetworks.Parallel;
+﻿using System.Runtime.InteropServices;
+using SortingNetworks.Parallel;
 
 namespace SortingNetworks
 {
@@ -115,7 +116,6 @@ namespace SortingNetworks
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
                 Trace.WriteLine(string.Empty);
-
 
                 if (pause != 0 && i + 1 == pause)
                 {

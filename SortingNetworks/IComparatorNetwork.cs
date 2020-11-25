@@ -1,4 +1,6 @@
-﻿namespace SortingNetworks
+﻿//#define DUAL
+
+namespace SortingNetworks
 {
     using System;
     using System.Collections.Generic;
@@ -16,6 +18,14 @@
         static long SubsumeNumber { get; set; }
         static long SubsumeSucceed{ get; set; }
 #endif
+
+#if DUAL
+        int[] OutputsDual { get; }
+
+        int[] Where0Dual { get; }
+
+        int[] Where1Dual { get; }
+#endif
         static ushort Inputs { get; set; }
 
         static ushort OutputSize => (ushort) Math.Max((1 << Inputs) / 32, 1);
@@ -28,16 +38,17 @@
 
         int[] Where0 { get; }
 
+
         int[] Where0SetCount { get; }
 
         int[] SequencesWithOnes { get; }
 
         int[] Where1 { get; }
 
+
         bool IsSubsumed(IComparatorNetwork n);
 
         bool IsRedundant(IComparatorNetwork n);
-
         bool IsSortingNetwork();
 
         IComparatorNetwork CloneWithNewComparator(Comparator comparator);

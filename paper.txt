@@ -1,0 +1,17 @@
+Comparator Network representation: The comparator network is composed by the following items:
+	- 
+
+
+Generate implementation:
+
+
+Prune implementation:
+
+
+Subsume implementation:
+
+
+Skip permutations:
+
+
+Dual outputs reduce mid sets by 1-2%, not worth it. Defined precompile variable DUAL in ComparatorNetwork 
