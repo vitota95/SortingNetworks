@@ -1,5 +1,12 @@
 ﻿//#define DUAL
 
+using System.Collections.Generic;
+using System.Diagnostics;
+using ILGPU;
+using ILGPU.IR.Types;
+using ILGPU.Runtime;
+using ILGPU.Runtime.Cuda;
+
 namespace SortingNetworks
 {
     using System;
@@ -10,6 +17,9 @@ namespace SortingNetworks
     [Serializable]
     public class ComparatorNetwork : IComparatorNetwork
     {
+        private static List<IEnumerable<int>> _permutations = Enumerable.Range(0, IComparatorNetwork.Inputs).GetPermutations().ToList();
+        private static readonly int inputs = IComparatorNetwork.Inputs;
+
         public ComparatorNetwork(Comparator[] comparators) 
         {
             this.Where0 = new int[IComparatorNetwork.Inputs];
@@ -103,7 +113,40 @@ namespace SortingNetworks
                 return false;
             }
 
-           
+            var p = new int[_permutations.Count, IComparatorNetwork.Inputs];
+            for (int i = 0; i < _permutations.Count; i++)
+            {
+                var arr = _permutations[i].ToArray();
+                for (int j = 0; j < arr.Length; j++)
+                {
+                    p[i, j] = arr[j];
+                }
+            }
+
+            using (var context = new Context())
+            {
+                using (var accelerator = new CudaAccelerator(context))
+                {
+                    var kernel = accelerator.LoadAutoGroupedStreamKernel<Index1, ArrayView<byte>, ArrayView<int>, ArrayView<int>, ArrayView<int>, ArrayView2D<int>>(TryPermutationsKernel);
+
+                    using (var resultsBuffer = accelerator.Allocate<byte>(_permutations.Count))
+                    using (var aBuffer = accelerator.Allocate<int>(Outputs.Length))
+                    using (var bBuffer = accelerator.Allocate<int>(n.Outputs.Length))
+                    using (var cBuffer = accelerator.Allocate<int>(positions.Length))
+                    using (var permutations = accelerator.Allocate<int>(p.GetLength(0), p.GetLength(1)))
+                    {
+                        aBuffer.CopyFrom(Outputs, Index1.Zero, Index1.Zero, aBuffer.Extent);
+                        bBuffer.CopyFrom(n.Outputs, Index1.Zero, Index1.Zero, bBuffer.Extent);
+                        cBuffer.CopyFrom(positions, Index1.Zero, Index1.Zero, cBuffer.Extent);
+                        permutations.CopyFrom(p, Index2.Zero, Index2.Zero, permutations.Extent);
+                        kernel((Index1) resultsBuffer.Extent, resultsBuffer, aBuffer, bBuffer, cBuffer, permutations);
+                        accelerator.Synchronize();
+
+                        return resultsBuffer.GetAsArray().Any(x => x == 1);
+                    }
+                }
+            }
+
 
             var succeed = TryPermutations(positions, new int[IComparatorNetwork.Inputs], this.Outputs,  n.Outputs, 0);
 #if DUAL
@@ -130,6 +173,71 @@ namespace SortingNetworks
             return succeed;
         }
 
+        private static void TryPermutationsKernel(Index1 index, ArrayView<byte> results, ArrayView<int> o1, ArrayView<int> o2, ArrayView<int> positions, ArrayView2D<int> permutations)
+        {
+            var isValidPermutation = true;
+            for (var j = 0; j < inputs; j++)
+            {
+                if ((positions[permutations[new Index2((int)index, j)]] & (1 << j)) == 0)
+                {
+                    isValidPermutation = false;
+                    break;
+                }
+            }
+
+            if (isValidPermutation)
+            {
+                results[index] = 1;
+                for (var output = 1; output < (1 << inputs); output++)
+                {
+                    if ((o2[output / 32] & (1 << (output % 32))) == 0) continue;
+
+                    var newOutput = 0;
+
+                    // permute bits
+                    for (var j = 0; j < inputs; j++)
+                    {
+                        if ((output & (1 << permutations[new Index2((int)index, j)])) != 0) newOutput |= 1 << j;
+                    }
+
+                    if ((o1[newOutput / 32] & (1 << (newOutput % 32))) != 0)
+                    {
+                        results[index] = 2;
+                        break;
+                    }
+                }
+            }
+
+            if (results[index] != 2)
+            {
+                results[index] = 1;
+            }
+        }
+
+        private static bool ApplyPermutations(int[] o1, int[]o2, IEnumerable<int>[] permutations, int[] positions)
+        {
+            for (var i = 0; i < permutations.Length; i++)
+            {
+                var permutation = permutations[i].ToArray();
+                var isValidPermutation = true;
+                for (var j = 0; j < permutation.Length; j++)
+                {
+                    if ((positions[permutation[j]] & (1 << j)) == 0)
+                    {
+                        isValidPermutation = false;
+                        break;
+                    }
+                }
+
+                if (isValidPermutation && OutputIsSubset(permutation, o1, o2))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Counts the number of bits set for each output of both input comparator networks
         /// if the number of set bits is different the n1 cannot be subsumed by n2 and vice versa.
@@ -138,7 +246,7 @@ namespace SortingNetworks
         /// <param name="n2">The comparator network 2.</param>
         /// <returns>True if subsume test should be done, False otherwise.</returns>
         private static bool ShouldCheckSubsumption(IComparatorNetwork n1, IComparatorNetwork n2)
-        {
+            {
 #if DEBUG
             if (n1.OutputsPopCount > n2.OutputsPopCount)
             {
