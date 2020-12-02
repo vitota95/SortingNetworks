@@ -1,4 +1,4 @@
-﻿//#define DUAL
+﻿#define DUAL
 
 namespace SortingNetworks
 {
@@ -103,20 +103,17 @@ namespace SortingNetworks
                 return false;
             }
 
-           
-
             var succeed = TryPermutations(positions, new int[IComparatorNetwork.Inputs], this.Outputs,  n.Outputs, 0);
 #if DUAL
-             if (!succeed)
+            if (!succeed)
             {
-                positions = GetPositions(this.Where0Dual, this.Where1Dual, n.Where0Dual, n.Where1Dual);
+                positions = GetPositions( this.Where0, this.Where1, n.Where0Dual, n.Where1Dual);
                 if (positions == null)
                 {
                     return false;
                 }
 
-                succeed = TryPermutations(positions, new int[IComparatorNetwork.Inputs], this.OutputsDual,
-                    n.OutputsDual, 0);
+                succeed = TryPermutations(positions, new int[IComparatorNetwork.Inputs], n.OutputsDual, this.Outputs, 0);
             }
 #endif
 

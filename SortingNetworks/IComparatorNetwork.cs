@@ -1,4 +1,4 @@
-﻿//#define DUAL
+﻿#define DUAL
 
 namespace SortingNetworks
 {
