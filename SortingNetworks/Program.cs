@@ -83,7 +83,8 @@ namespace SortingNetworks
             var comparators = comparatorsGenerator.GenerateComparators(Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray());
             var stopWatch = Stopwatch.StartNew();
 
-            comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[0]) };
+            comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[2]{new Comparator(0, 1), new Comparator(7, 8) }), 
+                new ComparatorNetwork(new Comparator[2] { new Comparator(0, 1), new Comparator(0, 8) }) };
             var numComparators = comparatorNets[0].Comparators.Length;
 
             for (var i = numComparators; i < k; i++)
@@ -115,6 +116,14 @@ namespace SortingNetworks
 
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
+#if DEBUG
+                Trace.WriteLine($"Is subset: {IComparatorNetwork.IsSubset}");
+                Trace.WriteLine($"Is subset dual: {IComparatorNetwork.IsSubsetDual}");
+                Trace.WriteLine($"Try permutations call: {IComparatorNetwork.TryPermutationCall:N}");
+                IComparatorNetwork.IsSubset = 0;
+                IComparatorNetwork.IsSubsetDual = 0;
+                IComparatorNetwork.TryPermutationCall = 0;
+#endif
                 Trace.WriteLine(string.Empty);
 
                 if (pause != 0 && i + 1 == pause)

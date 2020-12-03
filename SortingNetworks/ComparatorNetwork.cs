@@ -176,6 +176,9 @@ namespace SortingNetworks
 
         private static bool TryPermutations(int[] positions, int[] positionsDual, int[] permutation, int[] o1,  int[] o2, int[] o2Dual, bool pIsPossible=true, bool dualPIsPossible=true, int index=0)
         {
+#if DEBUG
+            IComparatorNetwork.TryPermutationCall++;
+#endif
             if (index == IComparatorNetwork.Inputs)
             {
                 return false;
@@ -183,10 +186,11 @@ namespace SortingNetworks
 
             for (var j = 0; j < IComparatorNetwork.Inputs; j++)
             {
-                pIsPossible = pIsPossible && (positions[j] & (1 << index)) != 0;
-                dualPIsPossible = dualPIsPossible && (positionsDual[j] & (1 << index)) != 0;
+                //pIsPossible = pIsPossible && (positions[j] & (1 << index)) != 0;
+                //dualPIsPossible = dualPIsPossible && (positionsDual[j] & (1 << index)) != 0;
 
-                if (!pIsPossible && !dualPIsPossible) continue;
+                //if (!pIsPossible && !dualPIsPossible) continue;
+                if ((positionsDual[j] & (1 << index)) <= 0) continue;
                 if (IsAlreadyAdded(permutation, j, index-1)) continue;
                 permutation[index] = j;
                 var result = TryPermutations(positions, positionsDual, permutation, o1, o2, o2Dual, pIsPossible, dualPIsPossible, index+1);
@@ -199,17 +203,28 @@ namespace SortingNetworks
                 permutation = ResetPositions(index + 1, permutation);
             }
 
-            if (index == IComparatorNetwork.Inputs - 1)
-            {
-                return false;
-            }
+            //if (index != IComparatorNetwork.Inputs - 1)
+            //{
+            //    return false;
+            //}
 
-            if (pIsPossible && OutputIsSubset(permutation, o1, o2))
+//            if (pIsPossible && OutputIsSubset(permutation, o1, o2))
+//            {
+//#if DEBUG
+//                IComparatorNetwork.IsSubset++;
+//#endif
+//                return true;
+//            }    
+            
+            if (OutputIsSubset(permutation, o2Dual, o1))
             {
+#if DEBUG
+                IComparatorNetwork.IsSubsetDual++;
+#endif
                 return true;
             }
 
-            return dualPIsPossible && OutputIsSubset(permutation, o2Dual, o1);
+            return false;
         }
 
         private static int[] ResetPositions(int start, int[] arr)

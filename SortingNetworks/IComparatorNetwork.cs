@@ -17,6 +17,9 @@ namespace SortingNetworks
         static long PermutationsWalk { get; set; }
         static long SubsumeNumber { get; set; }
         static long SubsumeSucceed{ get; set; }
+        static long IsSubset { get; set; }
+        static long IsSubsetDual { get; set; }
+        static long TryPermutationCall { get; set; }
 #endif
 
 #if DUAL
