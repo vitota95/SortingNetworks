@@ -1,4 +1,4 @@
-﻿#define DUAL
+﻿//#define DUAL
 
 namespace SortingNetworks
 {
@@ -202,7 +202,8 @@ namespace SortingNetworks
                 permutation = ResetPositions(index + 1, permutation);
             }
 
-            return index == IComparatorNetwork.Inputs - 1 && OutputIsSubset(permutation, o1, o2);
+            //return index == IComparatorNetwork.Inputs - 1 && OutputIsSubset(permutation, o1, o2);
+            return OutputIsSubset(permutation, o1, o2);
         }
 
         private static int[] ResetPositions(int start, int[] arr)
