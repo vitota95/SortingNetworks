@@ -73,7 +73,7 @@ namespace SortingNetworks
                         Trace.WriteLine("-l log file path");
                         Trace.WriteLine("-p pause step");
                         Trace.WriteLine("-r resume from binary file");
-                        Trace.WriteLine("-c create copy file each c steps");
+                        Trace.WriteLine("-c create copy file at c step comma separated");
                         break;
                 }
             }
@@ -83,8 +83,7 @@ namespace SortingNetworks
             var comparators = comparatorsGenerator.GenerateComparators(Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray());
             var stopWatch = Stopwatch.StartNew();
 
-            comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[2]{new Comparator(0, 1), new Comparator(7, 8) }), 
-                new ComparatorNetwork(new Comparator[2] { new Comparator(0, 1), new Comparator(0, 8) }) };
+            comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[0])};
             var numComparators = comparatorNets[0].Comparators.Length;
 
             for (var i = numComparators; i < k; i++)

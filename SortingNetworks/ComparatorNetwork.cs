@@ -1,5 +1,7 @@
 ﻿#define DUAL
 
+using System.Runtime.CompilerServices;
+
 namespace SortingNetworks
 {
     using System;
@@ -108,7 +110,7 @@ namespace SortingNetworks
             {
                 return false;
             }
-            var succeed = TryPermutations(positions, positionsDual, new int[IComparatorNetwork.Inputs], this.Outputs, n.Outputs, n.OutputsDual);
+            var succeed = TryPermutations(positions, positionsDual, new int[IComparatorNetwork.Inputs], this.Outputs, n.Outputs, n.OutputsDual, this.Comparators.Length);
 #endif
 
 #if DEBUG
@@ -174,7 +176,7 @@ namespace SortingNetworks
             return true;
         }
 
-        private static bool TryPermutations(int[] positions, int[] positionsDual, int[] permutation, int[] o1,  int[] o2, int[] o2Dual, bool pIsPossible=true, bool dualPIsPossible=true, int index=0)
+        private static bool TryPermutations(int[] positions, int[] positionsDual, int[] permutation, int[] o1,  int[] o2, int[] o2Dual, int numComparators, bool pIsPossible=true, bool dualPIsPossible=true, int index=0)
         {
 #if DEBUG
             IComparatorNetwork.TryPermutationCall++;
@@ -190,10 +192,18 @@ namespace SortingNetworks
                 //dualPIsPossible = dualPIsPossible && (positionsDual[j] & (1 << index)) != 0;
 
                 //if (!pIsPossible && !dualPIsPossible) continue;
-                if ((positionsDual[j] & (1 << index)) <= 0) continue;
+                if (numComparators < 17)
+                {
+                    if ((positions[j] & (1 << index)) == 0) continue;
+                }
+                else
+                { 
+                    if ((positionsDual[j] & (1 << index)) == 0) continue;
+                }
+
                 if (IsAlreadyAdded(permutation, j, index-1)) continue;
                 permutation[index] = j;
-                var result = TryPermutations(positions, positionsDual, permutation, o1, o2, o2Dual, pIsPossible, dualPIsPossible, index+1);
+                var result = TryPermutations(positions, positionsDual, permutation, o1, o2, o2Dual, numComparators, pIsPossible, dualPIsPossible, index+1);
                 if (result)
                 {
                     return true;
@@ -208,14 +218,14 @@ namespace SortingNetworks
             //    return false;
             //}
 
-//            if (pIsPossible && OutputIsSubset(permutation, o1, o2))
-//            {
-//#if DEBUG
-//                IComparatorNetwork.IsSubset++;
-//#endif
-//                return true;
-//            }    
-            
+            if (OutputIsSubset(permutation, o1, o2))
+            {
+#if DEBUG
+                IComparatorNetwork.IsSubset++;
+#endif
+                return true;
+            }
+
             if (OutputIsSubset(permutation, o2Dual, o1))
             {
 #if DEBUG
