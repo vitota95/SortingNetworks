@@ -50,7 +50,6 @@ namespace SortingNetworks
 
         public int[] Where1 { get; private set; }
 
-
         public int[] SequencesWithOnes { get; private set; }
 
         /// <inheritdoc/>
@@ -192,12 +191,14 @@ namespace SortingNetworks
                 //dualPIsPossible = dualPIsPossible && (positionsDual[j] & (1 << index)) != 0;
 
                 //if (!pIsPossible && !dualPIsPossible) continue;
-                if (numComparators < 17)
+                //if ((positions[j] & (1 << index)) == 0) continue;
+
+                if (numComparators < IComparatorNetwork.NumComparators/2)
                 {
                     if ((positions[j] & (1 << index)) == 0) continue;
                 }
                 else
-                { 
+                {
                     if ((positionsDual[j] & (1 << index)) == 0) continue;
                 }
 
@@ -378,11 +379,6 @@ namespace SortingNetworks
                     dual.SetBit(i);
                 }
             }
-
-            //for (var i = 0; i < where.Length; i++)
-            //{
-            //    dual[i] = ~where[i];
-            //}
 
             return dual;
         }

@@ -23,7 +23,6 @@ namespace SortingNetworks
                 binarySerializer.Serialize(readOnlyList);
             }
 
-            ushort k = 0;
             ushort pause = 0;
             var copySteps = new List<ushort>();
             IReadOnlyList<IComparatorNetwork> comparatorNets = null;
@@ -40,7 +39,7 @@ namespace SortingNetworks
                         break;
                     case "-k":
                         // comparators
-                        k = Convert.ToUInt16(arg.Substring(3));
+                        IComparatorNetwork.NumComparators = Convert.ToUInt16(arg.Substring(3));
                         break;
                     case "-l":
                         // log file
@@ -83,14 +82,14 @@ namespace SortingNetworks
             var comparators = comparatorsGenerator.GenerateComparators(Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray());
             var stopWatch = Stopwatch.StartNew();
 
-            comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[0])};
-            var numComparators = comparatorNets[0].Comparators.Length;
+            comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[1]{new Comparator(0,1)})};
+            var currentComparator = comparatorNets[0].Comparators.Length;
 
-            for (var i = numComparators; i < k; i++)
+            for (var i = currentComparator; i < IComparatorNetwork.NumComparators; i++)
             {
                 if (copySteps.Contains((ushort) i))
                 {
-                    SaveNetworks(k, i, comparatorNets);
+                    SaveNetworks(IComparatorNetwork.Inputs, i, comparatorNets);
                 }
 
                 Trace.WriteLine($"Adding Comparator {i + 1}");
@@ -127,7 +126,7 @@ namespace SortingNetworks
 
                 if (pause != 0 && i + 1 == pause)
                 {
-                    SaveNetworks(k, i + 1, comparatorNets);
+                    SaveNetworks(IComparatorNetwork.Inputs, i + 1, comparatorNets);
                     Trace.WriteLine($"Stopped execution at step: {i + 1}");
                     break;
                 }
@@ -152,7 +151,7 @@ namespace SortingNetworks
 
             Trace.WriteLine(string.Empty);
 
-            PrintSortingNetworks(comparatorNets, IComparatorNetwork.Inputs, k);
+            PrintSortingNetworks(comparatorNets, IComparatorNetwork.Inputs, IComparatorNetwork.NumComparators);
         }
 
 #if DEBUG

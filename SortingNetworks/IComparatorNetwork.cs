@@ -23,6 +23,8 @@ namespace SortingNetworks
 #endif
 
 #if DUAL
+        static ushort NumComparators { get; set; }
+
         int[] OutputsDual { get; }
 
         int[] Where0Dual { get; }
@@ -41,13 +43,11 @@ namespace SortingNetworks
 
         int[] Where0 { get; }
 
-
         int[] Where0SetCount { get; }
 
         int[] SequencesWithOnes { get; }
 
         int[] Where1 { get; }
-
 
         bool IsSubsumed(IComparatorNetwork n);
 
