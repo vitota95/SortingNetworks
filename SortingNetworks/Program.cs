@@ -104,7 +104,7 @@ namespace SortingNetworks
                 var pruneWatch = Stopwatch.StartNew();
                 if (IPruner.Threads > 1)
                 {
-                    var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 2000)).ToList();
+                    var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 0)).ToList();
                     comparatorNets = pruner.Prune(splitNets);
                 }
                 else
