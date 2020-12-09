@@ -100,6 +100,34 @@
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 8"), Times.Once);
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 4"), Times.Once);
             listenerMock.Verify(x => x.WriteLine($"1 Sorting Networks found with {inputs} inputs and {k} comparators"));
+        } 
+        
+        [TestMethod]
+        public void Main_With6InputsAnd12Comparators_GivesCorrectResult()
+        {
+            // Arrange
+            var inputs = "6";
+            var k = "12";
+
+            // Act
+            SortingNetworks.Program.Main(new[] { $"-s:{inputs}", $"-k:{k}"});
+
+            // Assert
+            listenerMock.Verify(x => x.WriteLine($"1 Sorting Networks found with {inputs} inputs and {k} comparators"));
+        }
+        
+        [TestMethod]
+        public void Main_With7InputsAnd16Comparators_GivesCorrectResult()
+        {
+            // Arrange
+            var inputs = "7";
+            var k = "16";
+
+            // Act
+            SortingNetworks.Program.Main(new[] { $"-s:{inputs}", $"-k:{k}"});
+
+            // Assert
+            listenerMock.Verify(x => x.WriteLine($"1 Sorting Networks found with {inputs} inputs and {k} comparators"));
         }
     }
 }
