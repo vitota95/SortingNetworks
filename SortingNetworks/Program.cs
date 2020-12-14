@@ -25,6 +25,7 @@ namespace SortingNetworks
 
             ushort pause = 0;
             var copySteps = new List<ushort>();
+            var batchSize = 10000;
             IReadOnlyList<IComparatorNetwork> comparatorNets = null;
             IPruner pruner = new Pruner();
 
@@ -65,6 +66,9 @@ namespace SortingNetworks
                             pruner = new ParallelPruner();
                         }
                         break;
+                    case "-b":
+                        batchSize = Convert.ToInt32(arg.Substring(3));
+                        break;
                     default:
                         Trace.WriteLine("Usage:");
                         Trace.WriteLine("-s input size");
@@ -80,6 +84,7 @@ namespace SortingNetworks
             var comparatorsGenerator = new ComparatorsGenerator();
             var sortingNetworksGenerator = new Generator();
             var comparators = comparatorsGenerator.GenerateComparators(Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray());
+            var generatorPruner = new GeneratePruneInBatches(batchSize);
             var stopWatch = Stopwatch.StartNew();
 
             comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[1]{new Comparator(0,1)})};
@@ -93,24 +98,27 @@ namespace SortingNetworks
                 }
 
                 Trace.WriteLine($"Adding Comparator {i + 1}");
-                Trace.WriteLine($"Generate--------------");
-                var generateWatch = Stopwatch.StartNew();
-                comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
-                Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
-                Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
-                var count = double.Parse(comparatorNets.Count.ToString());
+                //Trace.WriteLine($"Generate--------------");
+                //var generateWatch = Stopwatch.StartNew();
+                //comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
+                //Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
+                //Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
+                //var count = double.Parse(comparatorNets.Count.ToString());
 
-                Trace.WriteLine($"Prune--------------");
+                //Trace.WriteLine($"Prune--------------");
+                //var pruneWatch = Stopwatch.StartNew();
+                //if (IPruner.Threads > 1)
+                //{
+                //    var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 0)).ToList();
+                //    comparatorNets = pruner.Prune(splitNets);
+                //}
+                //else
+                //{
+                //    comparatorNets = pruner.Prune(comparatorNets);
+                //}
+                Trace.WriteLine($"Generate and prune--------------");
                 var pruneWatch = Stopwatch.StartNew();
-                if (IPruner.Threads > 1)
-                {
-                    var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 0)).ToList();
-                    comparatorNets = pruner.Prune(splitNets);
-                }
-                else
-                {
-                    comparatorNets = pruner.Prune(comparatorNets);
-                }
+                comparatorNets = generatorPruner.GeneratePrune(comparatorNets, comparators);
 
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");

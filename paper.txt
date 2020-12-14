@@ -14,4 +14,6 @@ Subsume implementation:
 Skip permutations:
 
 
-Dual outputs reduce mid sets by 1-2%, not worth it. Defined precompile variable DUAL in ComparatorNetwork 
+Dual outputs reduces the sets a lot
+
+ForeachBatchExample -> https://github.com/dotnet/spark/blob/a0cc7dc979abb5466a2829591726a1c54454ada7/src/csharp/Microsoft.Spark.E2ETest/IpcTests/Sql/Streaming/DataStreamWriterTests.cs
