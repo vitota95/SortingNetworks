@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace SortingNetworks
@@ -23,6 +24,12 @@ namespace SortingNetworks
                     }
                 }
             });
+
+            if (newSet.IsEmpty && nets.Any(x => x.IsSortingNetwork()))
+            {
+                Trace.WriteLine("Set already contains a sorting network!");
+                return nets;
+            }
           
             return newSet.ToArray();
         }    

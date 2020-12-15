@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SortingNetworks.Parallel
 {
@@ -24,22 +22,24 @@ namespace SortingNetworks.Parallel
             if (nets.Count > this.BatchSize)
             {
                 var batches = nets.SplitList(this.BatchSize).ToList();
-
+                List<IReadOnlyList<IComparatorNetwork>> splitNets;
                 foreach (var batch in batches)
                 { 
                     var generatedNets = generator.Generate(batch, comparators);
                     // use all threads in split, size is supposed to be big enough at this point
-                    var splitNets = generatedNets.SplitList((generatedNets.Count / IPruner.Threads) + 1).ToList();
+                    splitNets = generatedNets.SplitList((generatedNets.Count / IPruner.Threads) + 1).ToList();
                     result.AddRange(pruner.Prune(splitNets));
                 }
 
-                result = pruner.Prune(result).ToList();
+                // shuffle result??
+                result = result.OrderBy(c => Guid.NewGuid()).ToList();
+                splitNets = result.SplitList((result.Count / IPruner.Threads) + 1).ToList();
+                result = pruner.Prune(splitNets).ToList();
             }
             else
             {
                 var generatedNets = generator.Generate(nets, comparators);
-                // use at least 2000 nets per thread
-                var splitNets = generatedNets.SplitList(Math.Max(generatedNets.Count / Math.Max(IPruner.Threads, (short)1) + 1, 2000)).ToList();
+                var splitNets = generatedNets.SplitList((generatedNets.Count / IPruner.Threads) + 1).ToList();
                 result.AddRange(pruner.Prune(splitNets));
             }
 

@@ -12,6 +12,9 @@ namespace SortingNetworks
 
     public class Program
     {
+        // It's five million nets a lot to have in memory?
+        private static int MAX_GENERATE_WITHOUT_BATCHES = 5000000;
+
         public static void Main(string[] args)
         {
             void SaveNetworks(ushort size, int i, IReadOnlyList<IComparatorNetwork> readOnlyList)
@@ -25,9 +28,10 @@ namespace SortingNetworks
 
             ushort pause = 0;
             var copySteps = new List<ushort>();
-            var batchSize = 10000;
+            var batchSize = MAX_GENERATE_WITHOUT_BATCHES/2;
             IReadOnlyList<IComparatorNetwork> comparatorNets = null;
             IPruner pruner = new Pruner();
+            IPruner.Threads = 1;
 
             foreach (var arg in args)
             {
@@ -98,30 +102,39 @@ namespace SortingNetworks
                 }
 
                 Trace.WriteLine($"Adding Comparator {i + 1}");
-                //Trace.WriteLine($"Generate--------------");
-                //var generateWatch = Stopwatch.StartNew();
-                //comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
-                //Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
-                //Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
-                //var count = double.Parse(comparatorNets.Count.ToString());
 
-                //Trace.WriteLine($"Prune--------------");
-                //var pruneWatch = Stopwatch.StartNew();
-                //if (IPruner.Threads > 1)
-                //{
-                //    var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 0)).ToList();
-                //    comparatorNets = pruner.Prune(splitNets);
-                //}
-                //else
-                //{
-                //    comparatorNets = pruner.Prune(comparatorNets);
-                //}
-                Trace.WriteLine($"Generate and prune--------------");
-                var pruneWatch = Stopwatch.StartNew();
-                comparatorNets = generatorPruner.GeneratePrune(comparatorNets, comparators);
+                if (comparatorNets.Count >= MAX_GENERATE_WITHOUT_BATCHES)
+                {
+                    Trace.WriteLine($"Generate and prune--------------");
+                    var generatePruneWatch = Stopwatch.StartNew();
+                    comparatorNets = generatorPruner.GeneratePrune(comparatorNets, comparators);
+                    Trace.WriteLine($"Length after Generate and Prune: {comparatorNets.Count}");
+                    Trace.WriteLine($"Prune time  {generatePruneWatch.Elapsed}");
+                }
+                else
+                {
+                    Trace.WriteLine($"Generate--------------");
+                    var generateWatch = Stopwatch.StartNew();
+                    comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
+                    Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
+                    Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
+                    var count = double.Parse(comparatorNets.Count.ToString());
 
-                Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
-                Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
+                    Trace.WriteLine($"Prune--------------");
+                    var pruneWatch = Stopwatch.StartNew();
+                    if (IPruner.Threads > 1)
+                    {
+                        var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 0)).ToList();
+                        comparatorNets = pruner.Prune(splitNets);
+                    }
+                    else
+                    {
+                        comparatorNets = pruner.Prune(comparatorNets);
+                    }
+
+                    Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
+                    Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
+                }
 #if DEBUG
                 Trace.WriteLine($"Is subset: {IComparatorNetwork.IsSubset}");
                 Trace.WriteLine($"Is subset dual: {IComparatorNetwork.IsSubsetDual}");
@@ -159,7 +172,7 @@ namespace SortingNetworks
 
             Trace.WriteLine(string.Empty);
 
-            PrintSortingNetworks(comparatorNets, IComparatorNetwork.Inputs, IComparatorNetwork.NumComparators);
+            PrintSortingNetworks(comparatorNets.Where(x => x.IsSortingNetwork()).ToList());
         }
 
 #if DEBUG
@@ -199,10 +212,10 @@ namespace SortingNetworks
             return new TraceListener[] { twtl, ctl };
         }
 
-        private static void PrintSortingNetworks(IReadOnlyList<IComparatorNetwork> nets, int inputs, int k)
+        private static void PrintSortingNetworks(IReadOnlyList<IComparatorNetwork> nets)
         {
             var sortingNets = nets.Where(x => x.IsSortingNetwork()).ToList();
-            Trace.WriteLine($"{sortingNets.Count} Sorting Networks found with {inputs} inputs and {k} comparators");
+            Trace.WriteLine($"{sortingNets.Count} Sorting Networks found with {IComparatorNetwork.Inputs} inputs and {nets[0].Comparators.Length} comparators");
             foreach (var n in sortingNets)
             {
                 PrintComparatorNet(n);
