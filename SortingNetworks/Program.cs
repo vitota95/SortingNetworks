@@ -119,19 +119,25 @@ namespace SortingNetworks
                 //    SaveNetworks(IComparatorNetwork.Inputs, i, comparatorNets);
                 //}
 
-                if (comparatorNets.Count >= MAX_GENERATE_WITHOUT_BATCHES)
-                {
-                    Trace.WriteLine($"Generate and prune--------------");
-                    var generatePruneWatch = Stopwatch.StartNew();
-                    comparatorNets = generatorPruner.GeneratePrune(comparatorNets, comparators);
-                    Trace.WriteLine($"Length after Generate and Prune: {comparatorNets.Count}");
-                    Trace.WriteLine($"Prune time  {generatePruneWatch.Elapsed}");
-                }
-                else
-                {
+                //if (comparatorNets.Count >= MAX_GENERATE_WITHOUT_BATCHES)
+                //{
+                //    Trace.WriteLine($"Generate and prune--------------");
+                //    var generatePruneWatch = Stopwatch.StartNew();
+                //    comparatorNets = generatorPruner.GeneratePrune(comparatorNets, comparators);
+                //    Trace.WriteLine($"Length after Generate and Prune: {comparatorNets.Count}");
+                //    Trace.WriteLine($"Prune time  {generatePruneWatch.Elapsed}");
+                //}
+                //else
+                //{
                     Trace.WriteLine($"Generate--------------");
                     var generateWatch = Stopwatch.StartNew();
                     comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
+
+                    if (comparatorNets.Count > 15000)
+                    {
+                        comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets);
+                    }
+
                     Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
                     Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
                     var count = double.Parse(comparatorNets.Count.ToString());
@@ -155,7 +161,7 @@ namespace SortingNetworks
 
                     Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                     Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
-                }
+                //}
 #if DEBUG
                 Trace.WriteLine($"Is subset: {IComparatorNetwork.IsSubset}");
                 Trace.WriteLine($"Is subset dual: {IComparatorNetwork.IsSubsetDual}");
