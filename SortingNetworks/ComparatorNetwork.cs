@@ -1,6 +1,7 @@
 ﻿#define DUAL
 
 using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 
 namespace SortingNetworks
 {
@@ -34,25 +35,35 @@ namespace SortingNetworks
 #endif
         }
 
+        [JsonInclude]
         public int[] Outputs { get; private set; }
 #if DUAL
+
+        [JsonInclude]
         public int[] OutputsDual { get; }
 
+        [JsonInclude]
         public int[] Where0Dual { get; private set; }
 
+        [JsonInclude]
         public int[] Where1Dual { get; }
 #endif
         public int OutputsPopCount { get; private set; }
 
+        [JsonInclude]
         public int[] Where0 { get; private set; }
 
+        [JsonInclude]
         public int[] Where0SetCount { get; private set; }
 
+        [JsonInclude]
         public int[] Where1 { get; private set; }
 
+        [JsonInclude]
         public int[] SequencesWithOnes { get; private set; }
 
         /// <inheritdoc/>
+        [JsonInclude]
         public Comparator[] Comparators { get;  set; }
 
         /// <inheritdoc/>

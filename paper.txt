@@ -1,8 +1,18 @@
+Introduction:
+A Sorting network is a formal representation of a sorting algorithm that for any inputs it generates
+monotically increasing outputs. A sorting network is formed by n channels each of them carrying one input,
+which are connected pairwise by comparators. A comparator compares the inputs from it's 2 channels and 
+outputs them sorted to this same 2 channels. A comparator network is a sorting network if for any 
+input sequence the output is always the sorted input sequence.
+
 Comparator Network representation: The comparator network is composed by the following items:
-	- 
+	- Comparator array
+	- Output array
+	- 0 positions array
+	- 1 positions array
 
 
-Generate implementation:
+Generate implementation: The generate algorithm consists in for each net in the set clone it with a new comparator in all possible postions
 
 
 Prune implementation:

@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.IO;
+using System.Runtime.InteropServices;
+using System.Text.Json;
 using SortingNetworks.Parallel;
 
 namespace SortingNetworks
@@ -21,9 +23,24 @@ namespace SortingNetworks
             {
                 Trace.WriteLine($"Save Network for step {i}");
                 System.IO.Directory.CreateDirectory("SavedNetworks");
-                var binarySerializer =
-                    new BinarySerializer($"SavedNetworks/nets_{size}_{i}_{DateTime.Now:yyyyMMddHHmmssfff}.dat");
-                binarySerializer.Serialize(readOnlyList);
+                //var binarySerializer =
+                //    new BinarySerializer($"SavedNetworks/nets_{size}_{i}_{DateTime.Now:yyyyMMddHHmmssfff}.dat");
+                //binarySerializer.Serialize(readOnlyList);
+
+                var jsonOptions = new JsonSerializerOptions()
+                {
+                    IncludeFields = true
+                };
+
+                var path = $"SavedNetworks/nets_{size}_{i}_{DateTime.Now:yyyyMMddHHmmssfff}.json";
+                using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    stream.Write(JsonSerializer.SerializeToUtf8Bytes(readOnlyList, jsonOptions));
+                }
+
+                Trace.WriteLine($"Saved network in {path}");
+
+                //var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
             }
 
             ushort pause = 0;
@@ -96,12 +113,11 @@ namespace SortingNetworks
 
             for (var i = currentComparator; i < IComparatorNetwork.NumComparators; i++)
             {
-                if (copySteps.Contains((ushort) i))
-                {
-                    SaveNetworks(IComparatorNetwork.Inputs, i, comparatorNets);
-                }
-
                 Trace.WriteLine($"Adding Comparator {i + 1}");
+                //if (copySteps.Contains((ushort)i))
+                //{
+                //    SaveNetworks(IComparatorNetwork.Inputs, i, comparatorNets);
+                //}
 
                 if (comparatorNets.Count >= MAX_GENERATE_WITHOUT_BATCHES)
                 {
@@ -119,6 +135,11 @@ namespace SortingNetworks
                     Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
                     Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
                     var count = double.Parse(comparatorNets.Count.ToString());
+
+                    if (copySteps.Contains((ushort)i))
+                    {
+                        SaveNetworks(IComparatorNetwork.Inputs, i, comparatorNets);
+                    }
 
                     Trace.WriteLine($"Prune--------------");
                     var pruneWatch = Stopwatch.StartNew();
