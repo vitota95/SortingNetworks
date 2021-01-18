@@ -43,12 +43,16 @@ namespace SortingNetworks
                 //var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
             }
 
+            //Trace.WriteLine(PythonExecutor.ExecuteFile($"C:\\Users\\javig\\OneDrive\\Escritorio\\master\\master thesis\\perfect_matching\\bipartitematching.py"));
+            //return;
             ushort pause = 0;
             var copySteps = new List<ushort>();
             var batchSize = MAX_GENERATE_WITHOUT_BATCHES/2;
             IReadOnlyList<IComparatorNetwork> comparatorNets = null;
             IPruner pruner = new Pruner();
             IPruner.Threads = 1;
+
+            //nets_14_2_20210118025050657.json
 
             foreach (var arg in args)
             {
@@ -75,7 +79,15 @@ namespace SortingNetworks
                     case "-r":
                         var path = arg.Substring(3);
                         var serializer = new BinarySerializer(path);
-                        comparatorNets = serializer.Deserialize<IReadOnlyList<IComparatorNetwork>>();
+                        //var jsonOptions = new JsonSerializerOptions()
+                        //{
+                        //    IncludeFields = true
+                        //};
+                        using (StreamReader file = File.OpenText(path))
+                        {
+                            comparatorNets = JsonSerializer.Deserialize<IReadOnlyList<ComparatorNetwork>>(file.ReadToEnd());
+                        }
+
                         break;
                     case "-c":
                         copySteps.AddRange(arg.Substring(3).Split(",").Select(step => Convert.ToUInt16(step)));
@@ -111,56 +123,43 @@ namespace SortingNetworks
             comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[1]{new Comparator(0,1)})};
             var currentComparator = comparatorNets[0].Comparators.Length;
 
+            var rand = new Random();
+
             for (var i = currentComparator; i < IComparatorNetwork.NumComparators; i++)
             {
                 Trace.WriteLine($"Adding Comparator {i + 1}");
-                //if (copySteps.Contains((ushort)i))
-                //{
-                //    SaveNetworks(IComparatorNetwork.Inputs, i, comparatorNets);
-                //}
+                Trace.WriteLine($"Generate--------------");
+                var generateWatch = Stopwatch.StartNew();
+                comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators).OrderBy(x => rand.Next()).ToList();
 
-                //if (comparatorNets.Count >= MAX_GENERATE_WITHOUT_BATCHES)
-                //{
-                //    Trace.WriteLine($"Generate and prune--------------");
-                //    var generatePruneWatch = Stopwatch.StartNew();
-                //    comparatorNets = generatorPruner.GeneratePrune(comparatorNets, comparators);
-                //    Trace.WriteLine($"Length after Generate and Prune: {comparatorNets.Count}");
-                //    Trace.WriteLine($"Prune time  {generatePruneWatch.Elapsed}");
-                //}
-                //else
-                //{
-                    Trace.WriteLine($"Generate--------------");
-                    var generateWatch = Stopwatch.StartNew();
-                    comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
+                Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
+                Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
+                var count = double.Parse(comparatorNets.Count.ToString());
 
-                    if (comparatorNets.Count > 15000)
-                    {
-                        comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets);
-                    }
+                Trace.WriteLine($"Prune--------------");
+                var pruneWatch = Stopwatch.StartNew();
+                if (IPruner.Threads > 1)
+                {
+                    var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 100)).ToList();
+                    comparatorNets = pruner.Prune(splitNets);
+                }
+                else
+                {
+                    comparatorNets = pruner.Prune(comparatorNets);
+                }
 
-                    Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
-                    Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
-                    var count = double.Parse(comparatorNets.Count.ToString());
+                if (comparatorNets.Count > 15000)
+                {
+                    comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets);
+                }
 
-                    if (copySteps.Contains((ushort)i))
-                    {
-                        SaveNetworks(IComparatorNetwork.Inputs, i, comparatorNets);
-                    }
+                if (copySteps.Contains((ushort)i))
+                {
+                    SaveNetworks(IComparatorNetwork.Inputs, i, comparatorNets);
+                }
 
-                    Trace.WriteLine($"Prune--------------");
-                    var pruneWatch = Stopwatch.StartNew();
-                    if (IPruner.Threads > 1)
-                    {
-                        var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 0)).ToList();
-                        comparatorNets = pruner.Prune(splitNets);
-                    }
-                    else
-                    {
-                        comparatorNets = pruner.Prune(comparatorNets);
-                    }
-
-                    Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
-                    Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
+                Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
+                Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
                 //}
 #if DEBUG
                 Trace.WriteLine($"Is subset: {IComparatorNetwork.IsSubset}");

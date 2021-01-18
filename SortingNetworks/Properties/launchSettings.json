@@ -2,7 +2,7 @@
   "profiles": {
     "SortingNetworks": {
       "commandName": "Project",
-      "commandLineArgs": "-s:14 -k:51 -l:log.txt -t:12 -c:6"
+      "commandLineArgs": "-s:11 -k:35 -l:log.txt -t:12 -c:2,3,4,5,6"
     }
   }
 }
