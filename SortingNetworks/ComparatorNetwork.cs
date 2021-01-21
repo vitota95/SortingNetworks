@@ -1,7 +1,9 @@
 ﻿#define DUAL
 
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
+using SortingNetworks.Graphs;
 
 namespace SortingNetworks
 {
@@ -114,6 +116,22 @@ namespace SortingNetworks
             {
                 return false;
             }
+
+            //if (this.Comparators.Length < 4)
+            //{
+                var permutation = BipartiteGraphMatching.GetHopcroftKarpMatching(positions);
+                if (permutation == null)
+                {
+                    //Trace.WriteLine("discard hopcroft");
+                    return false;
+                }
+
+                if (OutputIsSubset(permutation.ToArray(), this.Outputs, n.Outputs))
+                {
+                    //Trace.WriteLine("subsumes hopcroft");
+                    return true;
+                }
+            //}
 #if DUAL
             var positionsDual = GetPositions(this.Where0, this.Where1, n.Where0Dual, n.Where1Dual);
             if (positionsDual == null)

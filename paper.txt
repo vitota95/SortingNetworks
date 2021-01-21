@@ -29,5 +29,8 @@ Dual outputs reduces the sets a lot
 ForeachBatchExample -> https://github.com/dotnet/spark/blob/a0cc7dc979abb5466a2829591726a1c54454ada7/src/csharp/Microsoft.Spark.E2ETest/IpcTests/Sql/Streaming/DataStreamWriterTests.cs
 
 Heuristics:
-	1. Fewer outputs better.
-	2. 
+	1. Fewer outputs better. 
+		Results -> For 9 inputs I find the net with population of 25 that is 30 times smaller than the biggest set without heuristic. 
+				   For 10 inputs I find the net with population of 350 that is 24 times smaller than the biggest set without heuristic. 
+
+

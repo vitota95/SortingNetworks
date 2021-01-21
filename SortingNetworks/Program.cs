@@ -78,11 +78,6 @@ namespace SortingNetworks
                         break;
                     case "-r":
                         var path = arg.Substring(3);
-                        var serializer = new BinarySerializer(path);
-                        //var jsonOptions = new JsonSerializerOptions()
-                        //{
-                        //    IncludeFields = true
-                        //};
                         using (StreamReader file = File.OpenText(path))
                         {
                             comparatorNets = JsonSerializer.Deserialize<IReadOnlyList<ComparatorNetwork>>(file.ReadToEnd());
@@ -121,6 +116,11 @@ namespace SortingNetworks
             var stopWatch = Stopwatch.StartNew();
 
             comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[1]{new Comparator(0,1)})};
+
+            Trace.WriteLine($"Prune with {comparatorNets.Count} size");
+            var split = comparatorNets.SplitList(Math.Max((int)Math.Ceiling((decimal) (comparatorNets.Count / IPruner.Threads) + 1), 100)).ToList();
+            comparatorNets = pruner.Prune(split);
+
             var currentComparator = comparatorNets[0].Comparators.Length;
 
             var rand = new Random();
@@ -150,13 +150,15 @@ namespace SortingNetworks
 
                 if (comparatorNets.Count > 15000)
                 {
-                    comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets);
+                    comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets, 15000);
                 }
 
-                if (copySteps.Contains((ushort)i))
-                {
-                    SaveNetworks(IComparatorNetwork.Inputs, i, comparatorNets);
-                }
+                //if (copySteps.Contains((ushort)i))
+                //{
+                //    SaveNetworks(IComparatorNetwork.Inputs, i, comparatorNets);
+                //}
+
+                SaveNetworks(IComparatorNetwork.Inputs, i + 1, comparatorNets);
 
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
