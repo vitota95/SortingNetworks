@@ -127,6 +127,14 @@ namespace SortingNetworks
                 Trace.WriteLine($"Adding Comparator {i + 1}");
                 Trace.WriteLine($"Generate--------------");
                 var generateWatch = Stopwatch.StartNew();
+
+                if (comparatorNets.Count > batchSize)
+                {
+                    comparatorNets = generatorPruner.GeneratePrune(comparatorNets, comparators);
+                    Trace.WriteLine($"Length after prune: {comparatorNets.Count}");
+                    continue;
+                }
+
                 comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators).OrderBy(x => rand.Next()).ToList();
 
                 Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
