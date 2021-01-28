@@ -117,8 +117,8 @@ namespace SortingNetworks
                 return false;
             }
 
-            //if (this.Comparators.Length < 4)
-            //{
+            if (this.Comparators.Length < 6)
+            {
                 var permutation = BipartiteGraphMatching.GetHopcroftKarpMatching(positions);
                 if (permutation == null)
                 {
@@ -131,7 +131,7 @@ namespace SortingNetworks
                     //Trace.WriteLine("subsumes hopcroft");
                     return true;
                 }
-            //}
+            }
 #if DUAL
             var positionsDual = GetPositions(this.Where0, this.Where1, n.Where0Dual, n.Where1Dual);
             if (positionsDual == null)
