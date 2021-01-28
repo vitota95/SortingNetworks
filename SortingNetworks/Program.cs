@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿#define SAVEALL
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using SortingNetworks.Parallel;
@@ -23,9 +24,6 @@ namespace SortingNetworks
             {
                 Trace.WriteLine($"Save Network for step {i}");
                 System.IO.Directory.CreateDirectory("SavedNetworks");
-                //var binarySerializer =
-                //    new BinarySerializer($"SavedNetworks/nets_{size}_{i}_{DateTime.Now:yyyyMMddHHmmssfff}.dat");
-                //binarySerializer.Serialize(readOnlyList);
 
                 var jsonOptions = new JsonSerializerOptions()
                 {
@@ -40,11 +38,8 @@ namespace SortingNetworks
 
                 Trace.WriteLine($"Saved network in {path}");
 
-                //var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
             }
 
-            //Trace.WriteLine(PythonExecutor.ExecuteFile($"C:\\Users\\javig\\OneDrive\\Escritorio\\master\\master thesis\\perfect_matching\\bipartitematching.py"));
-            //return;
             ushort pause = 0;
             var copySteps = new List<ushort>();
             var batchSize = MAX_GENERATE_WITHOUT_BATCHES/2;
@@ -52,7 +47,6 @@ namespace SortingNetworks
             IPruner pruner = new Pruner();
             IPruner.Threads = 1;
 
-            //nets_14_2_20210118025050657.json
 
             foreach (var arg in args)
             {
@@ -153,16 +147,15 @@ namespace SortingNetworks
                     comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets, 15000);
                 }
 
-                //if (copySteps.Contains((ushort)i))
-                //{
-                //    SaveNetworks(IComparatorNetwork.Inputs, i, comparatorNets);
-                //}
-
+                if (copySteps.Contains((ushort)i))
+                {
+                    SaveNetworks(IComparatorNetwork.Inputs, i, comparatorNets);
+                }
+#if SAVEALL
                 SaveNetworks(IComparatorNetwork.Inputs, i + 1, comparatorNets);
-
+#endif
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
-                //}
 #if DEBUG
                 Trace.WriteLine($"Is subset: {IComparatorNetwork.IsSubset}");
                 Trace.WriteLine($"Is subset dual: {IComparatorNetwork.IsSubsetDual}");

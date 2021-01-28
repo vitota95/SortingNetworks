@@ -18,9 +18,9 @@ namespace SortingNetworksTests
         }
 
         [TestMethod]
-        public void GetCycle_test()
+        public void GetAllPerfectMatchings_test()
         {
-            BipartiteGraphMatching.GetCycle(new[] {6, 7, 6, 24, 24});
+            BipartiteGraphMatching.GetAllPerfectMatchings(new[] {6, 7, 6, 24, 24});
         }
     }
 }
