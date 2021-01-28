@@ -43,6 +43,7 @@ namespace SortingNetworks
             ushort pause = 0;
             var copySteps = new List<ushort>();
             var batchSize = MAX_GENERATE_WITHOUT_BATCHES/2;
+            var heuristicPopulation = 0;
             IReadOnlyList<IComparatorNetwork> comparatorNets = null;
             IPruner pruner = new Pruner();
             IPruner.Threads = 1;
@@ -52,25 +53,25 @@ namespace SortingNetworks
             {
                 switch (arg.Substring(0, 2).ToLower())
                 {
-                    case "-s":
+                    case @"\s":
                         // size
                         var size = Convert.ToUInt16(arg.Substring(3));
                         IComparatorNetwork.Inputs = size;
                         break;
-                    case "-k":
+                    case @"\k":
                         // comparators
                         IComparatorNetwork.NumComparators = Convert.ToUInt16(arg.Substring(3));
                         break;
-                    case "-l":
+                    case @"\l":
                         // log file
                         var traceFile = arg.Substring(3);
                         InitiateTracer(CreateDefaultListeners(traceFile));
                         break;
-                    case "-p":
+                    case @"\p":
                         // step for pause
                         pause = Convert.ToUInt16(arg.Substring(3));
                         break;
-                    case "-r":
+                    case @"\r":
                         var path = arg.Substring(3);
                         using (StreamReader file = File.OpenText(path))
                         {
@@ -88,17 +89,23 @@ namespace SortingNetworks
                             pruner = new ParallelPruner();
                         }
                         break;
-                    case "-b":
+                    case @"\b":
                         batchSize = Convert.ToInt32(arg.Substring(3));
+                        break;  
+                    case @"\h":
+                        heuristicPopulation = Convert.ToInt32(arg.Substring(3));
                         break;
                     default:
                         Trace.WriteLine("Usage:");
-                        Trace.WriteLine("-s input size");
-                        Trace.WriteLine("-k comparators number");
-                        Trace.WriteLine("-l log file path");
-                        Trace.WriteLine("-p pause step");
-                        Trace.WriteLine("-r resume from binary file");
-                        Trace.WriteLine("-c create copy file at c step comma separated");
+                        Trace.WriteLine(@"\s input size");
+                        Trace.WriteLine(@"\k comparators number");
+                        Trace.WriteLine(@"\l log file path");
+                        Trace.WriteLine(@"\p pause step");
+                        Trace.WriteLine(@"\r resume from binary file");
+                        Trace.WriteLine(@"\c create copy file at c step comma separated");
+                        Trace.WriteLine(@"\t number of threads");
+                        Trace.WriteLine(@"\b batch size (for very large sets)");
+                        Trace.WriteLine(@"\h heuristic maximum population size");
                         break;
                 }
             }
@@ -110,10 +117,6 @@ namespace SortingNetworks
             var stopWatch = Stopwatch.StartNew();
 
             comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[1]{new Comparator(0,1)})};
-
-            Trace.WriteLine($"Prune with {comparatorNets.Count} size");
-            var split = comparatorNets.SplitList(Math.Max((int)Math.Ceiling((decimal) (comparatorNets.Count / IPruner.Threads) + 1), 100)).ToList();
-            comparatorNets = pruner.Prune(split);
 
             var currentComparator = comparatorNets[0].Comparators.Length;
 
@@ -142,9 +145,9 @@ namespace SortingNetworks
                     comparatorNets = pruner.Prune(comparatorNets);
                 }
 
-                if (comparatorNets.Count > 15000)
+                if (heuristicPopulation > 0 && comparatorNets.Count > heuristicPopulation)
                 {
-                    comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets, 15000);
+                    comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets, heuristicPopulation);
                 }
 
                 if (copySteps.Contains((ushort)i))
