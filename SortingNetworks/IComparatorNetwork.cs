@@ -1,5 +1,7 @@
 ﻿#define DUAL
 
+using System.Text.Json.Serialization;
+
 namespace SortingNetworks
 {
     using System;
@@ -52,6 +54,7 @@ namespace SortingNetworks
         bool IsSubsumed(IComparatorNetwork n);
 
         bool IsRedundant(IComparatorNetwork n);
+
         bool IsSortingNetwork();
 
         IComparatorNetwork CloneWithNewComparator(Comparator comparator);
@@ -60,7 +63,10 @@ namespace SortingNetworks
     [Serializable]
     public struct Comparator
     {
+        [JsonInclude]
         public ushort X;
+
+        [JsonInclude]
         public ushort Y;
 
         public Comparator(ushort x, ushort y) 

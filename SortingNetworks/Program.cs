@@ -2,17 +2,16 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Threading.Tasks;
+using SortingNetworks.Extensions;
 using SortingNetworks.Parallel;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace SortingNetworks
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.Linq;
-
-    using SortingNetworks.Utils;
-
     public class Program
     {
         // It's five million nets a lot to have in memory?
@@ -20,26 +19,6 @@ namespace SortingNetworks
 
         public static void Main(string[] args)
         {
-            void SaveNetworks(ushort size, int i, IReadOnlyList<IComparatorNetwork> readOnlyList)
-            {
-                Trace.WriteLine($"Save Network for step {i}");
-                System.IO.Directory.CreateDirectory("SavedNetworks");
-
-                var jsonOptions = new JsonSerializerOptions()
-                {
-                    IncludeFields = true
-                };
-
-                var path = $"SavedNetworks/nets_{size}_{i}_{DateTime.Now:yyyyMMddHHmmssfff}.json";
-                using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None))
-                {
-                    stream.Write(JsonSerializer.SerializeToUtf8Bytes(readOnlyList, jsonOptions));
-                }
-
-                Trace.WriteLine($"Saved network in {path}");
-
-            }
-
             ushort pause = 0;
             var copySteps = new List<ushort>();
             var batchSize = MAX_GENERATE_WITHOUT_BATCHES/2;
@@ -53,25 +32,25 @@ namespace SortingNetworks
             {
                 switch (arg.Substring(0, 2).ToLower())
                 {
-                    case @"\s":
+                    case "-s":
                         // size
                         var size = Convert.ToUInt16(arg.Substring(3));
                         IComparatorNetwork.Inputs = size;
                         break;
-                    case @"\k":
+                    case "-k":
                         // comparators
                         IComparatorNetwork.NumComparators = Convert.ToUInt16(arg.Substring(3));
                         break;
-                    case @"\l":
+                    case @"-l":
                         // log file
                         var traceFile = arg.Substring(3);
                         InitiateTracer(CreateDefaultListeners(traceFile));
                         break;
-                    case @"\p":
+                    case "-p":
                         // step for pause
                         pause = Convert.ToUInt16(arg.Substring(3));
                         break;
-                    case @"\r":
+                    case "-r":
                         var path = arg.Substring(3);
                         using (StreamReader file = File.OpenText(path))
                         {
@@ -89,23 +68,23 @@ namespace SortingNetworks
                             pruner = new ParallelPruner();
                         }
                         break;
-                    case @"\b":
+                    case "-b":
                         batchSize = Convert.ToInt32(arg.Substring(3));
                         break;  
-                    case @"\h":
+                    case "-h":
                         heuristicPopulation = Convert.ToInt32(arg.Substring(3));
                         break;
                     default:
                         Trace.WriteLine("Usage:");
-                        Trace.WriteLine(@"\s input size");
-                        Trace.WriteLine(@"\k comparators number");
-                        Trace.WriteLine(@"\l log file path");
-                        Trace.WriteLine(@"\p pause step");
-                        Trace.WriteLine(@"\r resume from binary file");
-                        Trace.WriteLine(@"\c create copy file at c step comma separated");
-                        Trace.WriteLine(@"\t number of threads");
-                        Trace.WriteLine(@"\b batch size (for very large sets)");
-                        Trace.WriteLine(@"\h heuristic maximum population size");
+                        Trace.WriteLine(@"-s input size");
+                        Trace.WriteLine(@"-k comparators number");
+                        Trace.WriteLine(@"-l log file path");
+                        Trace.WriteLine(@"-p pause step");
+                        Trace.WriteLine(@"-r resume from binary file");
+                        Trace.WriteLine(@"-c create copy file at c step comma separated");
+                        Trace.WriteLine(@"-t number of threads");
+                        Trace.WriteLine(@"-b batch size (for very large sets)");
+                        Trace.WriteLine(@"-h heuristic maximum population size");
                         break;
                 }
             }
@@ -160,10 +139,13 @@ namespace SortingNetworks
 
                 if (copySteps.Contains((ushort)i))
                 {
-                    SaveNetworks(IComparatorNetwork.Inputs, i, comparatorNets);
+                    //SaveNetworks(IComparatorNetwork.Inputs, i, comparatorNets);
                 }
 #if SAVEALL
-                SaveNetworks(IComparatorNetwork.Inputs, i + 1, comparatorNets);
+                // TODO: wait for all the tasks at the end, now if the program finish before nets will not be saved
+                var nets = comparatorNets;
+                var path = $"SavedNetworks/nets_{IComparatorNetwork.Inputs}_{nets[0].Comparators.Length}_{DateTime.Now:yyyyMMddHHmmssfff}.json";
+                Task.Run(() => nets.SaveToFile(path));
 #endif
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
@@ -179,7 +161,7 @@ namespace SortingNetworks
 
                 if (pause != 0 && i + 1 == pause)
                 {
-                    SaveNetworks(IComparatorNetwork.Inputs, i + 1, comparatorNets);
+                    //SaveNetworks(IComparatorNetwork.Inputs, i + 1, comparatorNets);
                     Trace.WriteLine($"Stopped execution at step: {i + 1}");
                     break;
                 }

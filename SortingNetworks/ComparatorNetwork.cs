@@ -50,6 +50,7 @@ namespace SortingNetworks
         [JsonInclude]
         public int[] Where1Dual { get; }
 #endif
+        [JsonInclude]
         public int OutputsPopCount { get; private set; }
 
         [JsonInclude]
@@ -57,7 +58,7 @@ namespace SortingNetworks
 
         [JsonInclude]
         public int[] Where0SetCount { get; private set; }
-
+        
         [JsonInclude]
         public int[] Where1 { get; private set; }
 
