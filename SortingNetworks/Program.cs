@@ -46,10 +46,6 @@ namespace SortingNetworks
                         var traceFile = arg.Substring(3);
                         InitiateTracer(CreateDefaultListeners(traceFile));
                         break;
-                    case "-p":
-                        // step for pause
-                        pause = Convert.ToUInt16(arg.Substring(3));
-                        break;
                     case "-r":
                         var path = arg.Substring(3);
                         using (StreamReader file = File.OpenText(path))
@@ -79,7 +75,6 @@ namespace SortingNetworks
                         Trace.WriteLine(@"-s input size");
                         Trace.WriteLine(@"-k comparators number");
                         Trace.WriteLine(@"-l log file path");
-                        Trace.WriteLine(@"-p pause step");
                         Trace.WriteLine(@"-r resume from binary file");
                         Trace.WriteLine(@"-c create copy file at c step comma separated");
                         Trace.WriteLine(@"-t number of threads");
@@ -104,7 +99,7 @@ namespace SortingNetworks
             for (var i = currentComparator; i < IComparatorNetwork.NumComparators; i++)
             {
                 Trace.WriteLine($"Adding Comparator {i + 1}");
-                Trace.WriteLine($"Generate--------------");
+                Trace.TraceInformation($"Generate");
                 var generateWatch = Stopwatch.StartNew();
 
                 if (comparatorNets.Count > batchSize)
@@ -120,11 +115,11 @@ namespace SortingNetworks
                 Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
                 var count = double.Parse(comparatorNets.Count.ToString());
 
-                Trace.WriteLine($"Prune--------------");
+                Trace.TraceInformation($"Prune");
                 var pruneWatch = Stopwatch.StartNew();
                 if (IPruner.Threads > 1)
                 {
-                    var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 100)).ToList();
+                    var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 10000)).ToList();
                     comparatorNets = pruner.Prune(splitNets);
                 }
                 else
@@ -137,16 +132,6 @@ namespace SortingNetworks
                     comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets, heuristicPopulation);
                 }
 
-                if (copySteps.Contains((ushort)i))
-                {
-                    //SaveNetworks(IComparatorNetwork.Inputs, i, comparatorNets);
-                }
-#if SAVEALL
-                // TODO: wait for all the tasks at the end, now if the program finish before nets will not be saved
-                var nets = comparatorNets;
-                var path = $"SavedNetworks/nets_{IComparatorNetwork.Inputs}_{nets[0].Comparators.Length}_{DateTime.Now:yyyyMMddHHmmssfff}.json";
-                Task.Run(() => nets.SaveToFile(path));
-#endif
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
 #if DEBUG
@@ -157,14 +142,18 @@ namespace SortingNetworks
                 IComparatorNetwork.IsSubsetDual = 0;
                 IComparatorNetwork.TryPermutationCall = 0;
 #endif
-                Trace.WriteLine(string.Empty);
-
-                if (pause != 0 && i + 1 == pause)
+                
+                Trace.TraceInformation($"Saving Nets");
+                var path = $"SavedNetworks/nets_{IComparatorNetwork.Inputs}_{comparatorNets[0].Comparators.Length}_{DateTime.Now:yyyyMMddHHmmssfff}.json";
+#if SAVEALL
+                comparatorNets.SaveToFile(path);
+#endif
+                if (copySteps.Contains((ushort)i))
                 {
-                    //SaveNetworks(IComparatorNetwork.Inputs, i + 1, comparatorNets);
-                    Trace.WriteLine($"Stopped execution at step: {i + 1}");
-                    break;
+                    comparatorNets.SaveToFile(path);
                 }
+
+                Trace.WriteLine(string.Empty);
             }
 
             // Trace.WriteLine($"Subsume no check: {IComparatorNetwork.SubsumeNoCheck} ");
@@ -219,7 +208,7 @@ namespace SortingNetworks
             var twtl = new TextWriterTraceListener(traceFile)
             {
                 Name = "TextLogger",
-                TraceOutputOptions = TraceOptions.ThreadId | TraceOptions.DateTime
+                TraceOutputOptions = TraceOptions.DateTime
             };
             var ctl = new ConsoleTraceListener(false) { TraceOutputOptions = TraceOptions.DateTime };
 
