@@ -23,6 +23,7 @@ namespace SortingNetworks
             var copySteps = new List<ushort>();
             var batchSize = MAX_GENERATE_WITHOUT_BATCHES/2;
             var heuristicPopulation = 0;
+            var traceFile = string.Empty;
             IReadOnlyList<IComparatorNetwork> comparatorNets = null;
             IPruner pruner = new Pruner();
             IPruner.Threads = 1;
@@ -43,7 +44,7 @@ namespace SortingNetworks
                         break;
                     case @"-l":
                         // log file
-                        var traceFile = arg.Substring(3);
+                        traceFile = arg.Substring(3);
                         InitiateTracer(CreateDefaultListeners(traceFile));
                         break;
                     case "-r":
@@ -82,6 +83,12 @@ namespace SortingNetworks
                         Trace.WriteLine(@"-h heuristic maximum population size");
                         break;
                 }
+            }
+
+            if (traceFile == string.Empty)
+            {
+                traceFile = $"log_{IComparatorNetwork.Inputs}_{IComparatorNetwork.NumComparators}_{DateTime.Now:yyyyMMddHHmmssfff}.txt";
+                InitiateTracer(CreateDefaultListeners(traceFile));
             }
 
             var comparatorsGenerator = new ComparatorsGenerator();
