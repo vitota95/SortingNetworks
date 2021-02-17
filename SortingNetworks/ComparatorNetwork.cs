@@ -118,9 +118,10 @@ namespace SortingNetworks
                 return false;
             }
 
-            if (this.Comparators.Length < 6)
-            {
-                var permutation = BipartiteGraphMatching.GetHopcroftKarpMatching(positions);
+            //if (this.Comparators.Length < 6)
+            //{
+                var graphMatcher = new BipartiteGraphMatching();
+                var permutation = graphMatcher.GetHopcroftKarpMatching(positions);
                 if (permutation == null)
                 {
                     //Trace.WriteLine("discard hopcroft");
@@ -132,7 +133,7 @@ namespace SortingNetworks
                     //Trace.WriteLine("subsumes hopcroft");
                     return true;
                 }
-            }
+            //}
 #if DUAL
             var positionsDual = GetPositions(this.Where0, this.Where1, n.Where0Dual, n.Where1Dual);
             if (positionsDual == null)

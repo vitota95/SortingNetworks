@@ -8,23 +8,39 @@ using System.Threading.Tasks;
 
 namespace SortingNetworks.Graphs
 {
-    public static class BipartiteGraphMatching
+    public class BipartiteGraphMatching
     {
-        public static IReadOnlyList<IReadOnlyList<int>> GetAllPerfectMatchings(IReadOnlyList<int> adjacency)
+        private List<int[]> matchings;
+
+        private int[] dist;
+
+        private int[] pairU;
+
+        private int[] pairV;
+
+        private int NIL;
+
+        public IReadOnlyList<IReadOnlyList<int>> GetAllPerfectMatchings(IReadOnlyList<int> adjacency)
         {
-            var match = GetHopcroftKarpMatching(adjacency).ToArray();
+            matchings = new List<int[]>();
+
+            var match = GetHopcroftKarpMatching(adjacency);
 
             if (match == null)
             {
                 return null;
             }
 
-            match = new [] { 1, 0, 2, 3, 4 };
+
+            if (match == null)
+            {
+                return null;
+            }
 
             var cycle = GetDirectedGraphCycle(adjacency, match);
 
-            var newMatch = new int[match.Length];
-            for (var i = 0; i < match.Length; i++)
+            var newMatch = new int[adjacency.Count];
+            for (var i = 0; i < adjacency.Count; i++)
             {
                 newMatch[i] = match[i] & ~cycle[i];
             }
@@ -32,23 +48,39 @@ namespace SortingNetworks.Graphs
             throw new NotImplementedException();
         }
 
-        public static IReadOnlyList<int> GetHopcroftKarpMatching(IReadOnlyList<int> adjacency)
+        public IReadOnlyList<int> GetHopcroftKarpMatching(IReadOnlyList<int> adjacency)
         {
-            var dimension = adjacency.Count;
-            var matchR = new int[dimension];
+            matchings = new List<int[]>();
 
-            for (var i = 0; i < dimension; ++i) matchR[i] = -1;
+            var vertexInMatching = 0;
+            var dimension = adjacency.Count + 1;
+            NIL = adjacency.Count;
+            pairU = new int[dimension];
+            pairV = new int[dimension];
+            pairU.Populate(NIL);
+            pairV.Populate(NIL);
 
-            for (var u = 0; u < dimension; u++)
+            dist = new int[dimension];
+
+            while (BFS(dimension, adjacency.ToArray()))
             {
-                var seen = new bool[dimension];
-                for (var i = 0; i < dimension; ++i)
-                    seen[i] = false;
-
-                BPM(adjacency, u, seen, matchR);
+                for (var u = 0; u < adjacency.Count; u++)
+                {
+                    if (pairU[u] == NIL && DFS(u, adjacency.ToArray()))
+                    {
+                        vertexInMatching++;
+                    }
+                }
             }
 
-            return matchR.Contains(-1) ? null : matchR;
+            if (vertexInMatching == adjacency.Count)
+            {
+                var matching = pairU.Take(adjacency.Count).ToArray();
+                matchings.Add(matching);
+                return matching;
+            }
+
+            return null;
         }
 
         public static IReadOnlyList<int> GetCycle(IReadOnlyList<int> adjacency1, IReadOnlyList<int> adjacency2)
@@ -65,7 +97,7 @@ namespace SortingNetworks.Graphs
                 }
                 
                 path = new List<Tuple<bool, int>>();
-                if (Visit(new Tuple<bool, int>(false, i), adjacency1, adjacency2, visited, ref path))
+                if (Visit(new Tuple<bool, int>(false, i), adjacency2, adjacency1, visited, ref path))
                 {
                     return GetBipartiteAdjacency(adjacency2, adjacency1);
                 }
@@ -80,7 +112,7 @@ namespace SortingNetworks.Graphs
 
             for (var i = 0; i < adj1.Count; i++)
             {
-                for (int j = 0; j < adj1.Count; j++)
+                for (var j = 0; j < adj1.Count; j++)
                 {
                     if ((adj2[i] & (1 << j)) == 1)
                     {
@@ -91,31 +123,70 @@ namespace SortingNetworks.Graphs
 
             return result;
         }
-
-        private static bool BPM(IReadOnlyList<int> bpGraph, int u, bool[] seen, int[] matchR)
+         
+        private bool BFS(int dimension, int[] adjacency)
         {
-            for (var v = 0; v < bpGraph.Count; v++)
+            var queue = new Queue<int>();
+
+            for(var i = 0; i < adjacency.Length; i++)
             {
-                if ((bpGraph[u] & (1 << v)) == 0 || seen[v]) continue;
-
-                seen[v] = true;
-
-                if (matchR[v] < 0 || BPM(bpGraph, matchR[v], seen, matchR))
+                if (pairU[i] == NIL)
                 {
-                    matchR[v] = u;
-                    return true;
+                    dist[i] = 0;
+                    queue.Enqueue(i);
+                }
+                else
+                {
+                    dist[i] = int.MaxValue;
                 }
             }
-            return false;
-        }
 
-        private static void EnumMaximumMatchingIter(IReadOnlyList<int> adjacency, IReadOnlyList<int> matchAdjacency,
-            IReadOnlyList<IReadOnlyList<int>> allMatches, IReadOnlyList<Tuple<int, int>> subProblems, bool checkCycle=true)
-        {
-            if (checkCycle)
+            dist[NIL] = int.MaxValue;
+
+            while (queue.TryDequeue(out var u))
             {
-                
+                if (dist[u] < dist[NIL])
+                {
+                    for (int i = 0; i < IComparatorNetwork.Inputs; i++)
+                    {
+                        // Get all adjacent vertices of dequeued vertex u
+                        if ((adjacency[u] & (1 << i)) == 0) continue;
+                        var v = i;
+
+                        if (dist[pairV[v]] == int.MaxValue)
+                        {
+                            dist[pairV[v]] = dist[u] + 1;
+                            queue.Enqueue(pairV[v]);
+                        }
+                    }
+                }
             }
+
+            return dist[NIL] != int.MaxValue;
+        } 
+        
+        private bool DFS(int u, int[] adjacency)
+        {
+            if (u == NIL) return true;
+
+            for (var i = 0; i < IComparatorNetwork.Inputs; i++)
+            {
+                if ((adjacency[u] & (1 << i)) == 0) continue;
+                var v = i;
+
+                if (dist[pairV[v]] == dist[u] + 1)
+                {
+                    if (DFS(pairV[v], adjacency))
+                    {
+                        pairV[v] = u;
+                        pairU[u] = v;
+                        return true;
+                    }
+                }
+            }
+
+            dist[u] = int.MaxValue;
+            return false;
         }
 
         private static bool Visit(Tuple<bool, int> v, IReadOnlyList<int> adjacency1, IReadOnlyList<int> adjacency2, HashSet<Tuple<bool, int>> visited, ref List<Tuple<bool, int>> path)
@@ -158,7 +229,7 @@ namespace SortingNetworks.Graphs
                 // set difference
                 bipartitePosition &= ~(1 << matching[i]);
 
-                // edges in E (all edges) - matching directed to V
+                // edges in E (all edges) - pairU directed to V
                 uAdj[i] = bipartitePosition;
             }
 
