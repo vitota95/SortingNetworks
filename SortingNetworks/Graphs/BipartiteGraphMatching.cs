@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,6 +21,12 @@ namespace SortingNetworks.Graphs
 
         private int NIL;
 
+        private int[] cycleAdj;
+
+        private int[] match1Adj;
+
+        private int[] match2Adj;
+
         public IReadOnlyList<IReadOnlyList<int>> GetAllPerfectMatchings(IReadOnlyList<int> adjacency)
         {
             matchings = new List<int[]>();
@@ -31,21 +38,47 @@ namespace SortingNetworks.Graphs
                 return null;
             }
 
+            this.matchings.Add(match.ToArray());
 
-            if (match == null)
+            var newMatch = GetNextMatching(adjacency, match).ToArray();
+            this.matchings.Add(newMatch);
+
+            Tuple<int,int> edge = null;
+            for (var i = 0; i < match2Adj.Length; i++)
             {
-                return null;
+                // take an edge in M1 - M2
+                if ((this.match1Adj[i] & (1 << i)) != 0 && (this.match2Adj[i] & (1 << i)) == 0)
+                {
+                    edge = new Tuple<int, int>(i, 1 << i);
+                    break;
+                }
             }
 
-            var cycle = GetDirectedGraphCycle(adjacency, match);
+            var gPlus = adjacency.ToArray();
+            var gMinus = adjacency.ToArray();
 
-            var newMatch = new int[adjacency.Count];
-            for (var i = 0; i < adjacency.Count; i++)
+            if (edge != null)
             {
-                newMatch[i] = match[i] & ~cycle[i];
+                // remove all edges of vertex contained in E
+                gPlus[edge.Item1] = 0;
+
+                for (int i = 0; i < gPlus.Length; i++)
+                {
+                    gPlus[i] &= ~(edge.Item2);
+                }
+
+                // add E again
+                gPlus[edge.Item1] &= edge.Item2;
+
+                gMinus[edge.Item1] &= ~(edge.Item2);
             }
-            
-            throw new NotImplementedException();
+
+            var newMatch3 = GetNextMatching(gPlus, match);
+
+            var newMatch4 = GetNextMatching(gMinus, newMatch);
+
+
+            return matchings;
         }
 
         public IReadOnlyList<int> GetHopcroftKarpMatching(IReadOnlyList<int> adjacency)
@@ -83,47 +116,122 @@ namespace SortingNetworks.Graphs
             return null;
         }
 
-        public static IReadOnlyList<int> GetCycle(IReadOnlyList<int> adjacency1, IReadOnlyList<int> adjacency2)
+        private IReadOnlyList<int> GetNextMatching(IReadOnlyList<int> bipartite, IReadOnlyList<int> matching)
         {
-            for (var i = 0; i < adjacency1.Count; i++)
+            var uAdj = new int[bipartite.Count];
+            var vAdj = new int[bipartite.Count];
+            var matchingAdj = new int[bipartite.Count];
+
+            for (var i = 0; i < matching.Count;  i++)
+            {
+                var bipartitePosition = bipartite[i];
+
+                // set difference
+                bipartitePosition &= ~(1 << matching[i]);
+
+                // edges in E (all edges) - match directed to V
+                uAdj[i] = bipartitePosition;
+
+                // direct edges in the match from V to U
+                vAdj[matching[i]] = 1 << i;
+                matchingAdj[i] = 1 << matching[i];
+            }
+
+            this.match1Adj = vAdj;
+
+            // find cycle in directed graph
+            return GetMatchingFromCycle(uAdj, vAdj, matchingAdj);
+        }
+
+        public IReadOnlyList<int> GetMatchingFromCycle(IReadOnlyList<int> uAdj, IReadOnlyList<int> vAdj, IReadOnlyList<int> matchingAdj)
+        {
+            for (var i = 0; i < uAdj.Count; i++)
             {
                 var visited = new HashSet<Tuple<bool, int>>();
                 var path = new List<Tuple<bool, int>>();
-
-                if (Visit(new Tuple<bool, int>(true, i), adjacency1, adjacency2, visited, ref path))
+                var next = new Tuple<bool, int>(true, i);
+                if (Visit(ref next, uAdj, vAdj, visited, ref path))
                 {
-                    // here I should create a new adjacency matrix by fusion of this 2 with a bipartite graph????
-                    return GetBipartiteAdjacency(adjacency1, adjacency2);
+                    path.Add(next);
+                    return GetMatching(matchingAdj, path);
                 }
                 
+                visited = new HashSet<Tuple<bool, int>>();
                 path = new List<Tuple<bool, int>>();
-                if (Visit(new Tuple<bool, int>(false, i), adjacency2, adjacency1, visited, ref path))
+                next = new Tuple<bool, int>(false, i);
+
+                if (Visit(ref next, uAdj, vAdj, visited, ref path))
                 {
-                    return GetBipartiteAdjacency(adjacency2, adjacency1);
+                    path.Add(next);
+                    return GetMatching(matchingAdj, path);
                 }
             }
 
             return null;
         }
 
-        private static IReadOnlyList<int> GetBipartiteAdjacency(IReadOnlyList<int> adj1, IReadOnlyList<int> adj2)
+        private IReadOnlyList<int> GetMatching(IReadOnlyList<int> vAdj, List<Tuple<bool, int>> path)
         {
-            var result = adj1.ToArray();
+            var cycleAdj = new int[vAdj.Count];
 
+            // Remove edges in the cycle
+            for (var i = 0; i < path.Count - 1; i++)
+            {
+                var v1 = path[i].Item2;
+                var v2 = path[i+1].Item2;
+
+                if (path[i].Item1)
+                {
+                    cycleAdj[v1] |= 1 << v2;
+                }
+                else
+                {
+                    cycleAdj[v2] |= 1 << v1;
+                }
+            }
+
+            var newMatchAdj = SymmetricDifference(vAdj, cycleAdj);
+
+            this.match2Adj = new int[newMatchAdj.Length];
+            Array.Copy(newMatchAdj, this.match2Adj, newMatchAdj.Length);
+
+            // convert adj matrix to match
+            var newMatch = new int[vAdj.Count];
+            for (var i = 0; i < newMatchAdj.Length; i++)
+            {
+                var exponent = 0;
+                while ((newMatchAdj[i] >>= 1) != 0)
+                {
+                    exponent++;
+                }
+
+                newMatch[i] = exponent;
+            }
+
+            return newMatch;
+        }
+
+        private static int[] SymmetricDifference(IReadOnlyList<int> adj1, int[] adj2)
+        {
+            var newMatchAdj = new int[adj1.Count];
             for (var i = 0; i < adj1.Count; i++)
             {
-                for (var j = 0; j < adj1.Count; j++)
+                for (var j = 0; j < adj2.Length; j++)
                 {
-                    if ((adj2[i] & (1 << j)) == 1)
+                    if ((adj2[i] & (1 << j)) != 0 && (adj1[i] & (1 << j)) == 0)
                     {
-                        result[j] |= 1 << i;
+                        newMatchAdj[i] |= 1 << j;
+                    }
+                    else if ((adj2[i] & (1 << j)) == 0 && (adj1[i] & (1 << j)) != 0)
+                    {
+                        newMatchAdj[i] |= 1 << j;
                     }
                 }
             }
 
-            return result;
+            return newMatchAdj;
         }
-         
+
         private bool BFS(int dimension, int[] adjacency)
         {
             var queue = new Queue<int>();
@@ -163,8 +271,8 @@ namespace SortingNetworks.Graphs
             }
 
             return dist[NIL] != int.MaxValue;
-        } 
-        
+        }
+
         private bool DFS(int u, int[] adjacency)
         {
             if (u == NIL) return true;
@@ -189,7 +297,7 @@ namespace SortingNetworks.Graphs
             return false;
         }
 
-        private static bool Visit(Tuple<bool, int> v, IReadOnlyList<int> adjacency1, IReadOnlyList<int> adjacency2, HashSet<Tuple<bool, int>> visited, ref List<Tuple<bool, int>> path)
+        private bool Visit(ref Tuple<bool, int> v, IReadOnlyList<int> adjacency1, IReadOnlyList<int> adjacency2, HashSet<Tuple<bool, int>> visited, ref List<Tuple<bool, int>> path)
         {
             if (visited.Contains(v))
             {
@@ -207,7 +315,7 @@ namespace SortingNetworks.Graphs
                 if (!position.GetBitValue(i)) continue;
 
                 var next = new Tuple<bool, int>(!v.Item1, i);
-                if (path.Contains(next) || Visit(next, adjacency1, adjacency2, visited, ref path))
+                if (path.Contains(next) || Visit(ref next, adjacency1, adjacency2, visited, ref path))
                 {
                     return true;
                 }
@@ -216,25 +324,6 @@ namespace SortingNetworks.Graphs
             path.Remove(v);
 
             return false;
-        }
-
-        private static IReadOnlyList<int> GetDirectedGraphCycle(IReadOnlyList<int> bipartite, IReadOnlyList<int> matching)
-        {
-            var uAdj = new int[bipartite.Count];
-
-            for (var i = 0; i < matching.Count;  i++)
-            {
-                var bipartitePosition = bipartite[i];
-
-                // set difference
-                bipartitePosition &= ~(1 << matching[i]);
-
-                // edges in E (all edges) - pairU directed to V
-                uAdj[i] = bipartitePosition;
-            }
-
-            // find cycle in directed graph
-            return GetCycle(uAdj, matching);
         }
     }
 }
