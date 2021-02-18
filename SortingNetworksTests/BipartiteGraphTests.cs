@@ -13,21 +13,18 @@ namespace SortingNetworksTests
     public class BipartiteGraphTests
     {
         [TestMethod]
-        public void FindPerfectMatch_test()
-        {
-            IComparatorNetwork.Inputs = 5;
-            var graphMatcher = new BipartiteGraphMatching();
-
-            graphMatcher.GetHopcroftKarpMatching(new[] {6, 7, 6, 24, 24});
-        }
-
-        [TestMethod]
         public void GetAllPerfectMatchings_test()
         {
             IComparatorNetwork.Inputs = 5;
             var graphMatcher = new BipartiteGraphMatching();
 
-            graphMatcher.GetAllPerfectMatchings(new[] {6, 7, 6, 24, 24});
+            var result = graphMatcher.GetAllPerfectMatchings(new[] {6, 7, 6, 24, 24}).ToArray();
+            
+            Assert.AreEqual(4, result.Length);
+            CollectionAssert.AreEqual(new [] {1, 0, 2, 3, 4}, result[0].ToArray());
+            CollectionAssert.AreEqual(new [] {2, 0, 1, 3, 4}, result[1].ToArray());
+            CollectionAssert.AreEqual(new [] {1, 0, 2, 4, 3}, result[2].ToArray());
+            CollectionAssert.AreEqual(new [] {2, 0, 1, 4, 3}, result[3].ToArray());
         }
     }
 }

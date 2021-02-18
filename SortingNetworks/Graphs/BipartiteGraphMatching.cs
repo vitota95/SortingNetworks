@@ -21,8 +21,6 @@ namespace SortingNetworks.Graphs
 
         private int NIL;
 
-        private int[] cycleAdj;
-
         private int[] match1Adj;
 
         private int[] match2Adj;
@@ -38,50 +36,10 @@ namespace SortingNetworks.Graphs
                 return null;
             }
 
-            this.matchings.Add(match.ToArray());
-
-            var newMatch = GetNextMatching(adjacency, match).ToArray();
-            this.matchings.Add(newMatch);
-
-            Tuple<int,int> edge = null;
-            for (var i = 0; i < match2Adj.Length; i++)
-            {
-                // take an edge in M1 - M2
-                if ((this.match1Adj[i] & (1 << i)) != 0 && (this.match2Adj[i] & (1 << i)) == 0)
-                {
-                    edge = new Tuple<int, int>(i, 1 << i);
-                    break;
-                }
-            }
-
-            var gPlus = adjacency.ToArray();
-            var gMinus = adjacency.ToArray();
-
-            if (edge != null)
-            {
-                // remove all edges of vertex contained in E
-                gPlus[edge.Item1] = 0;
-
-                for (int i = 0; i < gPlus.Length; i++)
-                {
-                    gPlus[i] &= ~(edge.Item2);
-                }
-
-                // add E again
-                gPlus[edge.Item1] &= edge.Item2;
-
-                gMinus[edge.Item1] &= ~(edge.Item2);
-            }
-
-            var newMatch3 = GetNextMatching(gPlus, match);
-
-            var newMatch4 = GetNextMatching(gMinus, newMatch);
-
-
-            return matchings;
+            return this.GetAllPerfectMatchingsIter(adjacency, match);
         }
 
-        public IReadOnlyList<int> GetHopcroftKarpMatching(IReadOnlyList<int> adjacency)
+        private IReadOnlyList<int> GetHopcroftKarpMatching(IReadOnlyList<int> adjacency)
         {
             matchings = new List<int[]>();
 
@@ -95,7 +53,7 @@ namespace SortingNetworks.Graphs
 
             dist = new int[dimension];
 
-            while (BFS(dimension, adjacency.ToArray()))
+            while (BFS(adjacency.ToArray()))
             {
                 for (var u = 0; u < adjacency.Count; u++)
                 {
@@ -114,6 +72,55 @@ namespace SortingNetworks.Graphs
             }
 
             return null;
+        }
+
+        private IReadOnlyList<int[]> GetAllPerfectMatchingsIter(IReadOnlyList<int> adjacency, IReadOnlyList<int> match)
+        {
+            var newMatch = GetNextMatching(adjacency, match);
+
+            if (newMatch == null)
+            {
+                return this.matchings;
+            }
+
+            this.matchings.Add(newMatch.ToArray());
+
+            Tuple<int, int> edge = null;
+            for (var i = 0; i < match2Adj.Length; i++)
+            {
+                // take an edge in M1 - M2
+                if ((this.match1Adj[i] & (1 << i)) != 0 && (this.match2Adj[i] & (1 << i)) == 0)
+                {
+                    edge = new Tuple<int, int>(i, 1 << i);
+                    break;
+                }
+            }
+
+            var gPlus = adjacency.ToArray();
+            var gMinus = adjacency.ToArray();
+
+            if (edge == null)
+            {
+                return this.matchings;
+            }
+
+            // remove all edges of vertex contained in E
+            gPlus[edge.Item1] = 0;
+
+            for (int i = 0; i < gPlus.Length; i++)
+            {
+                gPlus[i] &= ~(edge.Item2);
+            }
+
+            // add E again
+            gPlus[edge.Item1] &= edge.Item2;
+
+            gMinus[edge.Item1] &= ~(edge.Item2);
+
+            GetAllPerfectMatchingsIter(gPlus, match);
+            GetAllPerfectMatchingsIter(gMinus, newMatch);
+
+            return this.matchings;
         }
 
         private IReadOnlyList<int> GetNextMatching(IReadOnlyList<int> bipartite, IReadOnlyList<int> matching)
@@ -232,7 +239,7 @@ namespace SortingNetworks.Graphs
             return newMatchAdj;
         }
 
-        private bool BFS(int dimension, int[] adjacency)
+        private bool BFS(int[] adjacency)
         {
             var queue = new Queue<int>();
 
