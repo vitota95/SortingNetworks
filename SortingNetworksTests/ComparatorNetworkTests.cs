@@ -160,5 +160,22 @@ namespace SortingNetworksTests
             //Assert.AreEqual(4, n.Outputs.Count);
             //Assert.IsTrue(n.Outputs.SetEquals(new HashSet<ushort> { 1, 4, 5, 6 }));
         }
+
+        [TestMethod]
+        public void SubsumePositiveTest()
+        {
+            // Arrange, Act
+            ushort size = 4;
+            IComparatorNetwork.Inputs = size;
+            var c1 = new Comparator[3] { new Comparator(0, 1), new Comparator(0, 3), new Comparator(1,2)  };
+            var c2 = new Comparator[3] { new Comparator(0, 1), new Comparator(0, 3), new Comparator(2,3) };
+
+            var n1 = new ComparatorNetwork(c1);
+            var n2 = new ComparatorNetwork(c2);
+
+            var result = n1.IsSubsumed(n2);
+
+            Assert.IsTrue(result);
+        }
     }
 }

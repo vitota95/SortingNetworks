@@ -34,7 +34,7 @@
             SortingNetworks.Program.Main(new[] { $"-s:{inputs}", $"-k:{k}" });
 
             // Assert
-            listenerMock.Verify(x => x.WriteLine("Length after Prune: 1"), Times.Exactly(2));
+            listenerMock.Verify(x => x.WriteLine("Length after Prune: 1"), Times.Once);
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 2"), Times.Once);
             listenerMock.Verify(x => x.WriteLine($"1 Sorting Networks found with {inputs} inputs and {k} comparators"), Times.Once);
         }
@@ -50,7 +50,7 @@
             SortingNetworks.Program.Main(new[] { $"-s:{inputs}", $"-k:{k}" });
 
             // Assert
-            listenerMock.Verify(x => x.WriteLine("Length after Prune: 1"), Times.Exactly(2));
+            listenerMock.Verify(x => x.WriteLine("Length after Prune: 1"), Times.Once);
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 3"), Times.Once);
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 4"), Times.Once);
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 2"), Times.Once);
@@ -68,7 +68,7 @@
             SortingNetworks.Program.Main(new[] { $"-s:{inputs}", $"-k:{k}" });
 
             // Assert
-            listenerMock.Verify(x => x.WriteLine("Length after Prune: 1"), Times.Exactly(2));
+            listenerMock.Verify(x => x.WriteLine("Length after Prune: 1"), Times.Once);
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 3"), Times.Once);
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 6"), Times.Exactly(2));
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 11"), Times.Once);
@@ -89,7 +89,7 @@
             SortingNetworks.Program.Main(new[] { $"-s:{inputs}", $"-k:{k}"});
 
             // Assert
-            listenerMock.Verify(x => x.WriteLine("Length after Prune: 1"), Times.Exactly(2));
+            listenerMock.Verify(x => x.WriteLine("Length after Prune: 1"), Times.Once);
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 3"), Times.Once);
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 7"), Times.Once);
             listenerMock.Verify(x => x.WriteLine("Length after Prune: 17"), Times.Once);

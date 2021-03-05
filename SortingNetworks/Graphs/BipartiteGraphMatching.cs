@@ -1,18 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SortingNetworks.Graphs
 {
     public class BipartiteGraphMatching
     {
-        private List<int[]> matchings;
-
         private int[] dist;
 
         private int[] pairU;
@@ -25,24 +19,32 @@ namespace SortingNetworks.Graphs
 
         private int[] match2Adj;
 
-        public IReadOnlyList<IReadOnlyList<int>> GetAllPerfectMatchings(IReadOnlyList<int> adjacency)
+        public bool GetAllPerfectMatchings(IReadOnlyList<int> adjacency, int[] output1, int[] output2, int[] output2Dual)
         {
-            matchings = new List<int[]>();
-
             var match = GetHopcroftKarpMatching(adjacency);
 
             if (match == null)
             {
-                return null;
+                //Trace.WriteLine($"Result: False");
+                return false;
             }
 
-            return this.GetAllPerfectMatchingsIter(adjacency, match);
+            //if (ComparatorNetwork.OutputIsSubset(match, output1, output2) ||
+            //    ComparatorNetwork.OutputIsSubset(match, output2Dual, output1)) 
+            //Trace.WriteLine($"Found match {string.Join(", ", match)}");
+            if (ComparatorNetwork.OutputIsSubsetBipartite(match, output1, output2))
+            {
+                //Trace.WriteLine($"Result: True");
+                return true;
+            }
+
+            var result = this.GetAllPerfectMatchingsIter(adjacency, match, output1, output2, output2Dual);
+            //Trace.WriteLine($"Result: {result}");
+            return result;
         }
 
-        private IReadOnlyList<int> GetHopcroftKarpMatching(IReadOnlyList<int> adjacency)
+        public int[] GetHopcroftKarpMatching(IReadOnlyList<int> adjacency)
         {
-            matchings = new List<int[]>();
-
             var vertexInMatching = 0;
             var dimension = adjacency.Count + 1;
             NIL = adjacency.Count;
@@ -67,31 +69,67 @@ namespace SortingNetworks.Graphs
             if (vertexInMatching == adjacency.Count)
             {
                 var matching = pairU.Take(adjacency.Count).ToArray();
-                matchings.Add(matching);
                 return matching;
             }
 
             return null;
         }
 
-        private IReadOnlyList<int[]> GetAllPerfectMatchingsIter(IReadOnlyList<int> adjacency, IReadOnlyList<int> match)
+        private bool GetAllPerfectMatchingsIter(IReadOnlyList<int> adjacency, IReadOnlyList<int> match, int[] output1, int[] output2, int[] output2Dual)
         {
             var newMatch = GetNextMatching(adjacency, match);
 
             if (newMatch == null)
             {
-                return this.matchings;
+                return false;
             }
 
-            this.matchings.Add(newMatch.ToArray());
+            var queue = new Queue<Tuple<IReadOnlyList<int>, IReadOnlyList<int>>>();
+            AddSubproblemsToQueue(adjacency, match, newMatch, ref queue);
 
-            Tuple<int, int> edge = null;
-            for (var i = 0; i < match2Adj.Length; i++)
+            while (queue.TryDequeue(out Tuple<IReadOnlyList<int>, IReadOnlyList<int>> subproblem))
             {
-                // take an edge in M1 - M2
-                if ((this.match1Adj[i] & (1 << i)) != 0 && (this.match2Adj[i] & (1 << i)) == 0)
+                var subAdj = subproblem.Item1;
+                var subMatch = subproblem.Item2;
+                newMatch = this.GetNextMatching(subAdj, subMatch);
+
+                if (newMatch != null)
                 {
-                    edge = new Tuple<int, int>(i, 1 << i);
+                    //if (ComparatorNetwork.OutputIsSubset(newMatch, output1, output2) ||
+                    //    ComparatorNetwork.OutputIsSubset(newMatch, output2Dual, output1))
+                    //Trace.WriteLine($"Found match {string.Join(", ", newMatch)}");
+                    if (ComparatorNetwork.OutputIsSubsetBipartite( newMatch, output1, output2))
+                    {
+                        return true;
+                    }
+
+                    AddSubproblemsToQueue(subAdj, subMatch, newMatch, ref queue);
+                }
+            }
+
+            return false;
+        }
+
+        private void AddSubproblemsToQueue(IReadOnlyList<int> adjacency, IReadOnlyList<int> match, IReadOnlyList<int> newMatch,
+            ref Queue<Tuple<IReadOnlyList<int>, IReadOnlyList<int>>> queue)
+        {
+            Tuple<int, int> edge = null;
+            var i = 0;
+            var j = 0;
+            for (i = 0; i < adjacency.Count; i++)
+            {
+                for (j = 0; j < adjacency.Count; j++)
+                {
+                    // take an edge in M1 - M2
+                    if ((this.match1Adj[i] & (1 << j)) != 0 && (this.match2Adj[i] & (1 << j)) == 0)
+                    {
+                        edge = new Tuple<int, int>(i, 1 << j);
+                        break;
+                    }
+                }
+
+                if (edge != null)
+                {
                     break;
                 }
             }
@@ -101,35 +139,38 @@ namespace SortingNetworks.Graphs
 
             if (edge == null)
             {
-                return this.matchings;
+                return;
             }
 
             // remove all edges of vertex contained in E
-            gPlus[edge.Item1] = 0;
+            gPlus[i] = 0;
+            gPlus[j] = 0;
 
-            for (int i = 0; i < gPlus.Length; i++)
+            for (var k = 0; k < gPlus.Length; k++)
             {
-                gPlus[i] &= ~(edge.Item2);
+                //gPlus[i] &= ~(edge.Item2);
+                gPlus[k] &= ~(1<<i);
+                gPlus[k] &= ~(1<<j);
             }
 
             // add E again
-            gPlus[edge.Item1] &= edge.Item2;
+            gPlus[i] &= 1<<j;
+            gPlus[j] &= 1<<i;
 
-            gMinus[edge.Item1] &= ~(edge.Item2);
+            gMinus[i] &= ~(1<<j);
+            gMinus[j] &= ~(1<<i);
 
-            GetAllPerfectMatchingsIter(gPlus, match);
-            GetAllPerfectMatchingsIter(gMinus, newMatch);
-
-            return this.matchings;
+            queue.Enqueue(new Tuple<IReadOnlyList<int>, IReadOnlyList<int>>(gPlus, match));
+            queue.Enqueue(new Tuple<IReadOnlyList<int>, IReadOnlyList<int>>(gMinus, newMatch));
         }
 
-        private IReadOnlyList<int> GetNextMatching(IReadOnlyList<int> bipartite, IReadOnlyList<int> matching)
+        private int[] GetNextMatching(IReadOnlyList<int> bipartite, IReadOnlyList<int> matching)
         {
             var uAdj = new int[bipartite.Count];
             var vAdj = new int[bipartite.Count];
             var matchingAdj = new int[bipartite.Count];
 
-            for (var i = 0; i < matching.Count;  i++)
+            for (var i = 0; i < matching.Count; i++)
             {
                 var bipartitePosition = bipartite[i];
 
@@ -150,7 +191,7 @@ namespace SortingNetworks.Graphs
             return GetMatchingFromCycle(uAdj, vAdj, matchingAdj);
         }
 
-        public IReadOnlyList<int> GetMatchingFromCycle(IReadOnlyList<int> uAdj, IReadOnlyList<int> vAdj, IReadOnlyList<int> matchingAdj)
+        public int[] GetMatchingFromCycle(IReadOnlyList<int> uAdj, IReadOnlyList<int> vAdj, IReadOnlyList<int> matchingAdj)
         {
             for (var i = 0; i < uAdj.Count; i++)
             {
@@ -162,7 +203,7 @@ namespace SortingNetworks.Graphs
                     path.Add(next);
                     return GetMatching(matchingAdj, path);
                 }
-                
+
                 visited = new HashSet<Tuple<bool, int>>();
                 path = new List<Tuple<bool, int>>();
                 next = new Tuple<bool, int>(false, i);
@@ -177,7 +218,7 @@ namespace SortingNetworks.Graphs
             return null;
         }
 
-        private IReadOnlyList<int> GetMatching(IReadOnlyList<int> vAdj, List<Tuple<bool, int>> path)
+        private int[] GetMatching(IReadOnlyList<int> vAdj, List<Tuple<bool, int>> path)
         {
             var cycleAdj = new int[vAdj.Count];
 
@@ -185,7 +226,7 @@ namespace SortingNetworks.Graphs
             for (var i = 0; i < path.Count - 1; i++)
             {
                 var v1 = path[i].Item2;
-                var v2 = path[i+1].Item2;
+                var v2 = path[i + 1].Item2;
 
                 if (path[i].Item1)
                 {
@@ -243,7 +284,7 @@ namespace SortingNetworks.Graphs
         {
             var queue = new Queue<int>();
 
-            for(var i = 0; i < adjacency.Length; i++)
+            for (var i = 0; i < adjacency.Length; i++)
             {
                 if (pairU[i] == NIL)
                 {

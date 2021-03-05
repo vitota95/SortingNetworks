@@ -85,11 +85,11 @@ namespace SortingNetworks
                 }
             }
 
-            if (traceFile == string.Empty)
-            {
-                traceFile = $"log_{IComparatorNetwork.Inputs}_{IComparatorNetwork.NumComparators}_{DateTime.Now:yyyyMMddHHmmssfff}.txt";
-                InitiateTracer(CreateDefaultListeners(traceFile));
-            }
+            //if (traceFile == string.Empty)
+            //{
+            //    traceFile = $"log_{IComparatorNetwork.Inputs}_{IComparatorNetwork.NumComparators}_{DateTime.Now:yyyyMMddHHmmssfff}.txt";
+            //    InitiateTracer(CreateDefaultListeners(traceFile));
+            //}
 
             var comparatorsGenerator = new ComparatorsGenerator();
             var sortingNetworksGenerator = new Generator();
@@ -116,7 +116,8 @@ namespace SortingNetworks
                     continue;
                 }
 
-                comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators).OrderBy(x => rand.Next()).ToList();
+                //comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators).OrderBy(x => rand.Next()).ToList();
+                comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators).ToList();
 
                 Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
                 Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
