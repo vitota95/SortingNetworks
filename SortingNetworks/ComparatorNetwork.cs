@@ -143,21 +143,21 @@ namespace SortingNetworks
                 return false;
             }
 
-            var positionsDual = GetPositions(this.Where0, this.Where1, n.Where0Dual, n.Where1Dual);
-            if (positionsDual == null)
-            {
-                return false;
-            }
+            //var positionsDual = GetPositions(this.Where0, this.Where1, n.Where0Dual, n.Where1Dual);
+            //if (positionsDual == null)
+            //{
+            //    return false;
+            //}
 
 #if DEBUG
-            Trace.Write($"Comparing");
-            PrintComparatorNet(this);
-            Trace.Write("with ");
-            PrintComparatorNet(n);
+            //Trace.Write($"Comparing");
+            //PrintComparatorNet(this);
+            //Trace.Write("with ");
+            //PrintComparatorNet(n);
             IComparatorNetwork.SubsumeNumber++;
 #endif
 
-            var graphMatcher = new BipartiteGraphMatching();
+            //var graphMatcher = new BipartiteGraphMatching();
             //return graphMatcher.GetAllPerfectMatchings(positions, this.Outputs, n.Outputs, n.OutputsDual);
             //var suceed = graphMatcher.GetHopcroftKarpMatching(positionsDual, this.Outputs, n.Outputs, n.OutputsDual);
 
@@ -166,7 +166,7 @@ namespace SortingNetworks
             permutation.Populate(-1);
             //var succeed = TryPermutationsIteratively(positions, positionsDual, permutation, this.Outputs, n.Outputs, n.OutputsDual, this.Comparators.Length);
             //var succeed = TryPermutations(positions, positionsDual, permutation, this.Outputs, n.Outputs, n.OutputsDual, this.Comparators.Length);
-            var succeed = TryOnlyOneIndexPerPermutation(positions, positionsDual, permutation, this.Outputs, n.Outputs, n.OutputsDual, this.Comparators.Length);
+            var succeed = TryOnlyOneIndexPerPermutation(positions, permutation, this.Outputs, n.Outputs, n.OutputsDual, this.Comparators.Length);
 #endif
 
 #if DEBUG
@@ -295,7 +295,7 @@ namespace SortingNetworks
             return false;
         }
 
-        private static bool TryOnlyOneIndexPerPermutation(int[] positions, int[] positionsDual, int[] permutation, int[] o1,
+        private static bool TryOnlyOneIndexPerPermutation(int[] positions, int[] permutation, int[] o1,
             int[] o2, int[] o2Dual, int numComparators)
         {
             for (var i = 0; i < IComparatorNetwork.Inputs; i++)
