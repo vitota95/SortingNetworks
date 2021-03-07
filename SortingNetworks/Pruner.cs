@@ -23,14 +23,14 @@ namespace SortingNetworks
                     var n2 = result[index];
                     if (n1.IsSubsumed(n2))
                     {
-                        Trace.WriteLine("Subsumed");
+                        //Trace.WriteLine("Subsumed");
                         isSubsumed = true;
                         break;
                     }
 
                     if (n2.IsSubsumed(n1))
                     {
-                        Trace.WriteLine("Subsumed2");
+                        //Trace.WriteLine("Subsumed2");
                         result.Remove(n2);
                     }
                 }

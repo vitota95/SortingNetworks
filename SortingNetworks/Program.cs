@@ -19,8 +19,8 @@ namespace SortingNetworks
 
         public static void Main(string[] args)
         {
-            ushort pause = 0;
-            var copySteps = new List<ushort>();
+            int pause = 0;
+            var copySteps = new List<int>();
             var batchSize = MAX_GENERATE_WITHOUT_BATCHES/2;
             var heuristicPopulation = 0;
             var traceFile = string.Empty;
@@ -54,9 +54,6 @@ namespace SortingNetworks
                             comparatorNets = JsonSerializer.Deserialize<IReadOnlyList<ComparatorNetwork>>(file.ReadToEnd());
                         }
 
-                        break;
-                    case "-c":
-                        copySteps.AddRange(arg.Substring(3).Split(",").Select(step => Convert.ToUInt16(step)));
                         break;
                     case "-t":
                         IPruner.Threads = Convert.ToUInt16(arg.Substring(3));
@@ -156,7 +153,7 @@ namespace SortingNetworks
 #if SAVEALL
                 comparatorNets.SaveToFile(path);
 #endif
-                if (copySteps.Contains((ushort)i))
+                if (copySteps.Contains((int)i))
                 {
                     comparatorNets.SaveToFile(path);
                 }
@@ -183,7 +180,7 @@ namespace SortingNetworks
 
             Trace.WriteLine(string.Empty);
 
-            PrintSortingNetworks(comparatorNets.Where(x => x.IsSortingNetwork()).ToList());
+            PrintSortingNetworks(comparatorNets.Where(x => x.IsSortingNetwork2N()).ToList());
         }
 
 #if DEBUG

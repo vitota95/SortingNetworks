@@ -129,5 +129,14 @@
             // Assert
             listenerMock.Verify(x => x.WriteLine($"1 Sorting Networks found with {inputs} inputs and {k} comparators"));
         }
+
+        [TestMethod]
+        public void TestBitOperation()
+        {
+            for (int i = 0; i < 1<<8; i++)
+            {
+                Assert.IsTrue((i & -2147483648) == 0);
+            }
+        }
     }
 }

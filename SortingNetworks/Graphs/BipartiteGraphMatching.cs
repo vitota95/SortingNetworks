@@ -144,24 +144,21 @@ namespace SortingNetworks.Graphs
 
             // remove all edges of vertex contained in E
             gPlus[i] = 0;
-            gPlus[j] = 0;
 
             for (var k = 0; k < gPlus.Length; k++)
             {
                 //gPlus[i] &= ~(edge.Item2);
-                gPlus[k] &= ~(1<<i);
                 gPlus[k] &= ~(1<<j);
             }
 
             // add E again
-            gPlus[i] &= 1<<j;
-            gPlus[j] &= 1<<i;
+            gPlus[i] = 1<<j;
 
+            // remove (i,j) edge from gMinus
             gMinus[i] &= ~(1<<j);
-            gMinus[j] &= ~(1<<i);
 
             queue.Enqueue(new Tuple<IReadOnlyList<int>, IReadOnlyList<int>>(gPlus, match));
-            queue.Enqueue(new Tuple<IReadOnlyList<int>, IReadOnlyList<int>>(gMinus, newMatch));
+            queue.Enqueue(new Tuple<IReadOnlyList<int>, IReadOnlyList<int>>(gMinus, match));
         }
 
         private int[] GetNextMatching(IReadOnlyList<int> bipartite, IReadOnlyList<int> matching)

@@ -25,7 +25,7 @@ namespace SortingNetworks
 #endif
 
 #if DUAL
-        static ushort NumComparators { get; set; }
+        static int NumComparators { get; set; }
 
         int[] OutputsDual { get; }
 
@@ -33,9 +33,9 @@ namespace SortingNetworks
 
         int[] Where1Dual { get; }
 #endif
-        static ushort Inputs { get; set; }
+        static int Inputs { get; set; }
 
-        static ushort OutputSize => (ushort) Math.Max((1 << Inputs) / 32, 1);
+        static int OutputSize => (int) Math.Max((1 << Inputs) / 32, 1);
 
         Comparator[] Comparators { get; set; }
 
@@ -58,18 +58,20 @@ namespace SortingNetworks
         bool IsSortingNetwork();
 
         IComparatorNetwork CloneWithNewComparator(Comparator comparator);
+
+        bool IsSortingNetwork2N();
     }
 
     [Serializable]
     public struct Comparator
     {
         [JsonInclude]
-        public ushort X;
+        public int X;
 
         [JsonInclude]
-        public ushort Y;
+        public int Y;
 
-        public Comparator(ushort x, ushort y) 
+        public Comparator(int x, int y) 
         {
             this.X = x;
             this.Y = y;
