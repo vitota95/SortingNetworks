@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SortingNetworks
 {
@@ -10,8 +11,9 @@ namespace SortingNetworks
         public IReadOnlyList<IComparatorNetwork> Generate(IReadOnlyList<IComparatorNetwork> nets, IList<Comparator> comparators)
         {
             var newSet = new ConcurrentBag<IComparatorNetwork>();
-
-            nets.AsParallel().ForAll(net =>
+            nets.AsParallel()
+                .WithDegreeOfParallelism(126)
+                .ForAll(net =>
             {
                 for (var j = 0; j < comparators.Count; j++)
                 {

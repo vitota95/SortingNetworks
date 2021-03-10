@@ -143,12 +143,6 @@ namespace SortingNetworks
                 return false;
             }
 
-            //var positionsDual = GetPositions(this.Where0, this.Where1, n.Where0Dual, n.Where1Dual);
-            //if (positionsDual == null)
-            //{
-            //    return false;
-            //}
-
 #if DEBUG
             //Trace.Write($"Comparing");
             //PrintComparatorNet(this);
@@ -165,7 +159,7 @@ namespace SortingNetworks
             var permutation = new int[IComparatorNetwork.Inputs];
             permutation.Populate(-1);
             //var succeed = TryPermutationsIteratively(positions, positionsDual, permutation, this.Outputs, n.Outputs, n.OutputsDual, this.Comparators.Length);
-            //var succeed = TryPermutations(positions, positionsDual, permutation, this.Outputs, n.Outputs, n.OutputsDual, this.Comparators.Length);
+            //var succeed = TryPermutations(positions, permutation, this.Outputs, n.Outputs, n.OutputsDual, this.Comparators.Length);
             var succeed = TryOnlyOneIndexPerPermutation(positions, permutation, this.Outputs, n.Outputs, n.OutputsDual, this.Comparators.Length);
 #endif
 
@@ -177,7 +171,7 @@ namespace SortingNetworks
 
             Trace.WriteLine($"Result: {succeed}");
 #endif
-            
+
             return succeed;
         }
 
@@ -243,7 +237,7 @@ namespace SortingNetworks
             return true;
         }
 
-        private bool TryPermutations(int[] positions, int[] positionsDual, int[] permutation, int[] o1, int[] o2, int[] o2Dual, int numComparators, bool pIsPossible = true, bool dualPIsPossible = true, int index = 0)
+        private bool TryPermutations(int[] positions, int[] permutation, int[] o1, int[] o2, int[] o2Dual, int numComparators, bool pIsPossible = true, bool dualPIsPossible = true, int index = 0)
         {
 #if DEBUG
             IComparatorNetwork.TryPermutationCall++;
@@ -260,7 +254,7 @@ namespace SortingNetworks
                 if (IsAlreadyAdded(permutation, j, index - 1)) continue;
 
                 permutation[index] = j;
-                var result = TryPermutations(positions, positionsDual, permutation, o1, o2, o2Dual, numComparators, pIsPossible, dualPIsPossible, index + 1);
+                var result = TryPermutations(positions, permutation, o1, o2, o2Dual, numComparators, pIsPossible, dualPIsPossible, index + 1);
                 if (result)
                 {
                     return true;

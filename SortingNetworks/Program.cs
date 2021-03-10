@@ -110,6 +110,11 @@ namespace SortingNetworks
                 {
                     comparatorNets = generatorPruner.GeneratePrune(comparatorNets, comparators);
                     Trace.WriteLine($"Length after prune: {comparatorNets.Count}");
+                    // Sorting network found
+                    if (comparatorNets.Count == 1) 
+                    {
+                        break;
+                    }
                     continue;
                 }
 
@@ -137,6 +142,7 @@ namespace SortingNetworks
                     comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets, heuristicPopulation);
                 }
 
+
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
 #if DEBUG
@@ -159,6 +165,12 @@ namespace SortingNetworks
                 }
 
                 Trace.WriteLine(string.Empty);
+
+                // Sorting network found
+                if (comparatorNets.Count == 1)
+                {
+                    break;
+                }
             }
 
             // Trace.WriteLine($"Subsume no check: {IComparatorNetwork.SubsumeNoCheck} ");
@@ -180,7 +192,7 @@ namespace SortingNetworks
 
             Trace.WriteLine(string.Empty);
 
-            PrintSortingNetworks(comparatorNets.Where(x => x.IsSortingNetwork2N()).ToList());
+            PrintSortingNetworks(comparatorNets.Where(x => x.IsSortingNetwork2N())?.ToList());
         }
 
 #if DEBUG
@@ -222,12 +234,25 @@ namespace SortingNetworks
 
         private static void PrintSortingNetworks(IReadOnlyList<IComparatorNetwork> nets)
         {
-            var sortingNets = nets.Where(x => x.IsSortingNetwork()).ToList();
-            Trace.WriteLine($"{sortingNets.Count} Sorting Networks found with {IComparatorNetwork.Inputs} inputs and {nets[0].Comparators.Length} comparators");
-            foreach (var n in sortingNets)
+            if (nets == null)
             {
-                PrintComparatorNet(n);
+                Trace.WriteLine("--------No Sorting networks found.");
+                return;
             }
+
+            var sortingNets = nets.Where(x => x.IsSortingNetwork()).ToList();
+
+            if (sortingNets.Count > 0)
+            {
+                Trace.WriteLine($"{sortingNets.Count} Sorting Networks found with {IComparatorNetwork.Inputs} inputs and {nets[0]?.Comparators.Length} comparators");
+                foreach (var n in sortingNets)
+                {
+                    PrintComparatorNet(n);
+                }
+                return;
+            }
+
+            Trace.WriteLine("No Sorting networks found");
         }
 
         private static void PrintComparatorNet(IComparatorNetwork net)
