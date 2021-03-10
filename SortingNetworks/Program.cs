@@ -167,7 +167,7 @@ namespace SortingNetworks
                 Trace.WriteLine(string.Empty);
 
                 // Sorting network found
-                if (comparatorNets.Count == 1)
+                if (comparatorNets.Count == 1 && comparatorNets[0].IsSortingNetwork())
                 {
                     break;
                 }

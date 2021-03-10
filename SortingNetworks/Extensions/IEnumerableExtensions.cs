@@ -18,6 +18,11 @@ namespace SortingNetworks
         public static void UnsetBit(this int[] array, int position)
         {
             array[position / 32] &= ~(1 << (position % 32));
+        }  
+        
+        public static void ToggleBit(this int[] array, int position)
+        {
+            array[position / 32] ^= 1 << (position % 32);
         }
         
         public static bool GetBitValue(this int[] array, int position)

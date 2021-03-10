@@ -23,15 +23,11 @@ namespace SortingNetworks
         static long IsSubsetDual { get; set; }
         static long TryPermutationCall { get; set; }
 #endif
-
-#if DUAL
         static int NumComparators { get; set; }
 
-        int[] OutputsDual { get; }
+#if DUAL
 
-        int[] Where0Dual { get; }
-
-        int[] Where1Dual { get; }
+        //int[] OutputsDual { get; }
 #endif
         static int Inputs { get; set; }
 
