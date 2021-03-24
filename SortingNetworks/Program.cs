@@ -1,33 +1,33 @@
-﻿using System.Runtime.InteropServices;
+﻿#define SAVEALL
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text.Json;
+using System.Threading.Tasks;
+using SortingNetworks.Extensions;
 using SortingNetworks.Parallel;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace SortingNetworks
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.Linq;
-
-    using SortingNetworks.Utils;
-
     public class Program
     {
+        // It's five million nets a lot to have in memory?
+        private static int MAX_GENERATE_WITHOUT_BATCHES = 5000000;
+
         public static void Main(string[] args)
         {
-            void SaveNetworks(ushort size, int i, IReadOnlyList<IComparatorNetwork> readOnlyList)
-            {
-                Trace.WriteLine($"Save Network for step {i}");
-                System.IO.Directory.CreateDirectory("SavedNetworks");
-                var binarySerializer =
-                    new BinarySerializer($"SavedNetworks/nets_{size}_{i}_{DateTime.Now:yyyyMMddHHmmssfff}.dat");
-                binarySerializer.Serialize(readOnlyList);
-            }
-
-            ushort k = 0;
-            ushort pause = 0;
-            var copySteps = new List<ushort>();
+            int pause = 0;
+            var copySteps = new List<int>();
+            var batchSize = MAX_GENERATE_WITHOUT_BATCHES/2;
+            var heuristicPopulation = 0;
+            var traceFile = string.Empty;
             IReadOnlyList<IComparatorNetwork> comparatorNets = null;
             IPruner pruner = new Pruner();
+            IPruner.Threads = 1;
+
 
             foreach (var arg in args)
             {
@@ -40,24 +40,20 @@ namespace SortingNetworks
                         break;
                     case "-k":
                         // comparators
-                        k = Convert.ToUInt16(arg.Substring(3));
+                        IComparatorNetwork.NumComparators = Convert.ToUInt16(arg.Substring(3));
                         break;
-                    case "-l":
+                    case @"-l":
                         // log file
-                        var traceFile = arg.Substring(3);
+                        traceFile = arg.Substring(3);
                         InitiateTracer(CreateDefaultListeners(traceFile));
-                        break;
-                    case "-p":
-                        // step for pause
-                        pause = Convert.ToUInt16(arg.Substring(3));
                         break;
                     case "-r":
                         var path = arg.Substring(3);
-                        var serializer = new BinarySerializer(path);
-                        comparatorNets = serializer.Deserialize<IReadOnlyList<IComparatorNetwork>>();
-                        break;
-                    case "-c":
-                        copySteps.AddRange(arg.Substring(3).Split(",").Select(step => Convert.ToUInt16(step)));
+                        using (StreamReader file = File.OpenText(path))
+                        {
+                            comparatorNets = JsonSerializer.Deserialize<IReadOnlyList<ComparatorNetwork>>(file.ReadToEnd());
+                        }
+
                         break;
                     case "-t":
                         IPruner.Threads = Convert.ToUInt16(arg.Substring(3));
@@ -66,46 +62,74 @@ namespace SortingNetworks
                             pruner = new ParallelPruner();
                         }
                         break;
+                    case "-b":
+                        batchSize = Convert.ToInt32(arg.Substring(3));
+                        break;  
+                    case "-h":
+                        heuristicPopulation = Convert.ToInt32(arg.Substring(3));
+                        break;
                     default:
                         Trace.WriteLine("Usage:");
-                        Trace.WriteLine("-s input size");
-                        Trace.WriteLine("-k comparators number");
-                        Trace.WriteLine("-l log file path");
-                        Trace.WriteLine("-p pause step");
-                        Trace.WriteLine("-r resume from binary file");
-                        Trace.WriteLine("-c create copy file each c steps");
+                        Trace.WriteLine(@"-s input size");
+                        Trace.WriteLine(@"-k comparators number");
+                        Trace.WriteLine(@"-l log file path");
+                        Trace.WriteLine(@"-r resume from binary file");
+                        Trace.WriteLine(@"-c create copy file at c step comma separated");
+                        Trace.WriteLine(@"-t number of threads");
+                        Trace.WriteLine(@"-b batch size (for very large sets)");
+                        Trace.WriteLine(@"-h heuristic maximum population size");
                         break;
                 }
             }
 
+            //if (traceFile == string.Empty)
+            //{
+            //    traceFile = $"log_{IComparatorNetwork.Inputs}_{IComparatorNetwork.NumComparators}_{DateTime.Now:yyyyMMddHHmmssfff}.txt";
+            //    InitiateTracer(CreateDefaultListeners(traceFile));
+            //}
+
             var comparatorsGenerator = new ComparatorsGenerator();
             var sortingNetworksGenerator = new Generator();
             var comparators = comparatorsGenerator.GenerateComparators(Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray());
+            var generatorPruner = new GeneratePruneInBatches(batchSize);
             var stopWatch = Stopwatch.StartNew();
 
-            comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[0]) };
-            var numComparators = comparatorNets[0].Comparators.Length;
+            comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[1]{new Comparator(0,1)})};
 
-            for (var i = numComparators; i < k; i++)
+            var currentComparator = comparatorNets[0].Comparators.Length;
+
+            var rand = new Random();
+
+            for (var i = currentComparator; i < IComparatorNetwork.NumComparators; i++)
             {
-                if (copySteps.Contains((ushort) i))
+                Trace.WriteLine($"Adding Comparator {i + 1}");
+                Trace.TraceInformation($"Generate");
+                var generateWatch = Stopwatch.StartNew();
+
+                if (comparatorNets.Count > batchSize)
                 {
-                    SaveNetworks(k, i, comparatorNets);
+                    comparatorNets = generatorPruner.GeneratePrune(comparatorNets, comparators);
+                    Trace.WriteLine($"Length after prune: {comparatorNets.Count}");
+                    // Sorting network found
+                    if (comparatorNets.Count == 1) 
+                    {
+                        break;
+                    }
+                    continue;
                 }
 
-                Trace.WriteLine($"Adding Comparator {i + 1}");
-                Trace.WriteLine($"Generate--------------");
-                var generateWatch = Stopwatch.StartNew();
-                comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
+                //comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators).OrderBy(x => rand.Next()).ToList();
+                comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators).ToList();
+
                 Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
                 Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
                 var count = double.Parse(comparatorNets.Count.ToString());
 
-                Trace.WriteLine($"Prune--------------");
+                Trace.TraceInformation($"Prune");
                 var pruneWatch = Stopwatch.StartNew();
                 if (IPruner.Threads > 1)
                 {
-                    var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 0)).ToList();
+                    var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 10000)).ToList();
                     comparatorNets = pruner.Prune(splitNets);
                 }
                 else
@@ -113,14 +137,39 @@ namespace SortingNetworks
                     comparatorNets = pruner.Prune(comparatorNets);
                 }
 
+                if (heuristicPopulation > 0 && comparatorNets.Count > heuristicPopulation)
+                {
+                    //comparatorNets = HeuristicRemover.RemoveNetsWithMoreBadZeroes(comparatorNets, heuristicPopulation);
+                    comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets, heuristicPopulation);
+                }
+
+
                 Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                 Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
+#if DEBUG
+                Trace.WriteLine($"Is subset: {IComparatorNetwork.IsSubset}");
+                Trace.WriteLine($"Is subset dual: {IComparatorNetwork.IsSubsetDual}");
+                Trace.WriteLine($"Try permutations call: {IComparatorNetwork.TryPermutationCall:N}");
+                IComparatorNetwork.IsSubset = 0;
+                IComparatorNetwork.IsSubsetDual = 0;
+                IComparatorNetwork.TryPermutationCall = 0;
+#endif
+                
+                Trace.TraceInformation($"Saving Nets");
+                var path = $"SavedNetworks/nets_{IComparatorNetwork.Inputs}_{comparatorNets[0].Comparators.Length}_{DateTime.Now:yyyyMMddHHmmssfff}.json";
+#if SAVEALL
+                comparatorNets.SaveToFile(path);
+#endif
+                if (copySteps.Contains((int)i))
+                {
+                    comparatorNets.SaveToFile(path);
+                }
+
                 Trace.WriteLine(string.Empty);
 
-                if (pause != 0 && i + 1 == pause)
+                // Sorting network found
+                if (comparatorNets.Count == 1 && comparatorNets[0].IsSortingNetwork())
                 {
-                    SaveNetworks(k, i + 1, comparatorNets);
-                    Trace.WriteLine($"Stopped execution at step: {i + 1}");
                     break;
                 }
             }
@@ -144,7 +193,7 @@ namespace SortingNetworks
 
             Trace.WriteLine(string.Empty);
 
-            PrintSortingNetworks(comparatorNets, IComparatorNetwork.Inputs, k);
+            PrintSortingNetworks(comparatorNets.Where(x => x.IsSortingNetwork2N())?.ToList());
         }
 
 #if DEBUG
@@ -177,21 +226,34 @@ namespace SortingNetworks
             var twtl = new TextWriterTraceListener(traceFile)
             {
                 Name = "TextLogger",
-                TraceOutputOptions = TraceOptions.ThreadId | TraceOptions.DateTime
+                TraceOutputOptions = TraceOptions.DateTime
             };
             var ctl = new ConsoleTraceListener(false) { TraceOutputOptions = TraceOptions.DateTime };
 
             return new TraceListener[] { twtl, ctl };
         }
 
-        private static void PrintSortingNetworks(IReadOnlyList<IComparatorNetwork> nets, int inputs, int k)
+        private static void PrintSortingNetworks(IReadOnlyList<IComparatorNetwork> nets)
         {
-            var sortingNets = nets.Where(x => x.IsSortingNetwork()).ToList();
-            Trace.WriteLine($"{sortingNets.Count} Sorting Networks found with {inputs} inputs and {k} comparators");
-            foreach (var n in sortingNets)
+            if (nets == null)
             {
-                PrintComparatorNet(n);
+                Trace.WriteLine("--------No Sorting networks found.");
+                return;
             }
+
+            var sortingNets = nets.Where(x => x.IsSortingNetwork()).ToList();
+
+            if (sortingNets.Count > 0)
+            {
+                Trace.WriteLine($"{sortingNets.Count} Sorting Networks found with {IComparatorNetwork.Inputs} inputs and {nets[0]?.Comparators.Length} comparators");
+                foreach (var n in sortingNets)
+                {
+                    PrintComparatorNet(n);
+                }
+                return;
+            }
+
+            Trace.WriteLine("No Sorting networks found");
         }
 
         private static void PrintComparatorNet(IComparatorNetwork net)

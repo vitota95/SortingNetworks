@@ -13,7 +13,7 @@ namespace SortingNetworks
     /// </summary>
     public interface IPruner
     {
-        static ushort Threads { get; set; }
+        static int Threads { get; set; }
         /// <summary>
         /// The prune.
         /// </summary>

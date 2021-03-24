@@ -1,6 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SortingNetworks
 {
@@ -10,10 +12,11 @@ namespace SortingNetworks
         {
             var newSet = new ConcurrentBag<IComparatorNetwork>();
 
-            nets.AsParallel().ForAll(net =>
+            System.Threading.Tasks.Parallel.For(0, nets.Count, index =>
             {
                 for (var j = 0; j < comparators.Count; j++)
                 {
+                    var net = nets[index];
                     var newNet = net.CloneWithNewComparator(comparators[j]);
                     var isRedundant = newNet.IsRedundant(net);
 
@@ -23,6 +26,12 @@ namespace SortingNetworks
                     }
                 }
             });
+
+            if (newSet.IsEmpty && nets.Any(x => x.IsSortingNetwork()))
+            {
+                Trace.WriteLine("Set already contains a sorting network!");
+                return nets;
+            }
           
             return newSet.ToArray();
         }    

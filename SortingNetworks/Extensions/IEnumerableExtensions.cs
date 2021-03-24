@@ -13,16 +13,26 @@ namespace SortingNetworks
         public static void SetBit(this int[] array, int position)
         {
             array[position / 32] |= 1 << (position % 32);
-        } 
+        }
         
         public static void UnsetBit(this int[] array, int position)
         {
             array[position / 32] &= ~(1 << (position % 32));
+        }  
+        
+        public static void ToggleBit(this int[] array, int position)
+        {
+            array[position / 32] ^= 1 << (position % 32);
         }
         
         public static bool GetBitValue(this int[] array, int position)
         {
             return (array[position / 32] & (1 << (position % 32))) != 0;
+        }
+        
+        public static bool GetBitValue(this int num, int position)
+        {
+            return (num & (1 << (position % 32))) != 0;
         }
 
         public static IEnumerable<IReadOnlyList<T>> SplitList<T>(this IEnumerable<T> source, int nSize = 1000)

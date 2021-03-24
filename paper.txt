@@ -1,8 +1,18 @@
+Introduction:
+A Sorting network is a formal representation of a sorting algorithm that for any inputs it generates
+monotically increasing outputs. A sorting network is formed by n channels each of them carrying one input,
+which are connected pairwise by comparators. A comparator compares the inputs from it's 2 channels and 
+outputs them sorted to this same 2 channels. A comparator network is a sorting network if for any 
+input sequence the output is always the sorted input sequence.
+
 Comparator Network representation: The comparator network is composed by the following items:
-	- 
+	- Comparator array
+	- Output array
+	- 0 positions array
+	- 1 positions array
 
 
-Generate implementation:
+Generate implementation: The generate algorithm consists in for each net in the set clone it with a new comparator in all possible postions
 
 
 Prune implementation:
@@ -14,4 +24,17 @@ Subsume implementation:
 Skip permutations:
 
 
-Dual outputs reduce mid sets by 1-2%, not worth it. Defined precompile variable DUAL in ComparatorNetwork 
+Dual outputs reduces the sets a lot
+
+ForeachBatchExample -> https://github.com/dotnet/spark/blob/a0cc7dc979abb5466a2829591726a1c54454ada7/src/csharp/Microsoft.Spark.E2ETest/IpcTests/Sql/Streaming/DataStreamWriterTests.cs
+
+Heuristics:
+	1. Fewer outputs better. 
+		Results -> For 9 inputs I find the net with population of 25 that is 30 times smaller than the biggest set without heuristic. 
+				   For 10 inputs I find the net with population of 350 that is 24 times smaller than the biggest set without heuristic. 
+	2. Try only change one input n^2 complexity and keep Fewer outputs.
+		Population of 50.000 -> Finds state of art best known for 15 and 16 in around 7 hours, also with 10k
+
+If we check all the permutations after prune we have always 1 net. Only nets that we don't check survive?
+
+Tried Heuristic of greedy best first paper (bad zeroes), seems to have worse results than keeping nets with less outputs.
