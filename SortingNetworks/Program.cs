@@ -139,6 +139,7 @@ namespace SortingNetworks
 
                 if (heuristicPopulation > 0 && comparatorNets.Count > heuristicPopulation)
                 {
+                    //comparatorNets = HeuristicRemover.RemoveNetsWithMoreBadZeroes(comparatorNets, heuristicPopulation);
                     comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets, heuristicPopulation);
                 }
 

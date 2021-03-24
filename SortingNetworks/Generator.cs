@@ -18,30 +18,14 @@ namespace SortingNetworks
                 {
                     var net = nets[index];
                     var newNet = net.CloneWithNewComparator(comparators[j]);
-                    //var isRedundant = newNet.IsRedundant(net);
+                    var isRedundant = newNet.IsRedundant(net);
 
-                    //if (!isRedundant)
-                    //{
+                    if (!isRedundant)
+                    {
                         newSet.Add(newNet);
-                    //}
+                    }
                 }
             });
-
-            //nets.AsParallel()
-            //    .WithDegreeOfParallelism(126)
-            //    .ForAll(net =>
-            //{
-            //    for (var j = 0; j < comparators.Count; j++)
-            //    {
-            //        var newNet = net.CloneWithNewComparator(comparators[j]);
-            //        var isRedundant = newNet.IsRedundant(net);
-
-            //        if (!isRedundant)
-            //        {
-            //            newSet.Add(newNet);
-            //        }
-            //    }
-            //});
 
             if (newSet.IsEmpty && nets.Any(x => x.IsSortingNetwork()))
             {

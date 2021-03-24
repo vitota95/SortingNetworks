@@ -1,6 +1,4 @@
-﻿#define DUAL
-
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace SortingNetworks
 {
@@ -24,34 +22,33 @@ namespace SortingNetworks
         static long TryPermutationCall { get; set; }
 #endif
         static int NumComparators { get; set; }
-
-#if DUAL
-
-        //int[] OutputsDual { get; }
-#endif
         static int Inputs { get; set; }
 
-        static int OutputSize => (int) Math.Max((1 << Inputs) / 32, 1);
-
-        Comparator[] Comparators { get; set; }
+        static int OutputSize => (int)Math.Max((1 << Inputs) / 32, 1);
 
         int[] Outputs { get; }
 
-        int OutputsPopCount { get; }
-
-        int[] Where0 { get; }
+        int[] OutputsDual { get; }
 
         int[] Where0SetCount { get; }
 
         int[] SequencesWithOnes { get; }
 
+        int[] Where0 { get; }
+
         int[] Where1 { get; }
+
+        Comparator[] Comparators { get; set; }
+
+        int OutputsPopCount { get; }
 
         bool IsSubsumed(IComparatorNetwork n);
 
         bool IsRedundant(IComparatorNetwork n);
 
         bool IsSortingNetwork();
+
+        float BadZeroesHeuristic();
 
         IComparatorNetwork CloneWithNewComparator(Comparator comparator);
 

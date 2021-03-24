@@ -32,5 +32,9 @@ Heuristics:
 	1. Fewer outputs better. 
 		Results -> For 9 inputs I find the net with population of 25 that is 30 times smaller than the biggest set without heuristic. 
 				   For 10 inputs I find the net with population of 350 that is 24 times smaller than the biggest set without heuristic. 
+	2. Try only change one input n^2 complexity and keep Fewer outputs.
+		Population of 50.000 -> Finds state of art best known for 15 and 16 in around 7 hours, also with 10k
 
+If we check all the permutations after prune we have always 1 net. Only nets that we don't check survive?
 
+Tried Heuristic of greedy best first paper (bad zeroes), seems to have worse results than keeping nets with less outputs.

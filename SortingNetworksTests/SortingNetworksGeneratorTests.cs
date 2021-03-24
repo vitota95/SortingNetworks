@@ -17,10 +17,10 @@
         public void Generate_WithRedundantComparator_NotAddNewNet()
         {
             // Arrange
-            const int Size = 2;
+            const int size = 3;
             var comparators = new Comparator[] { new Comparator(0, 1), new Comparator(0, 1) };
             var generator = new Generator();
-            IComparatorNetwork.Inputs = Size;
+            IComparatorNetwork.Inputs = size;
             IComparatorNetwork[] nets = { new ComparatorNetwork(comparators) };
 
             // Act

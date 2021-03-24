@@ -117,7 +117,7 @@
         }
         
         [TestMethod]
-        public void Main_With7InputsAnd16Comparators_GivesCorrectResult()
+        public void Main_With7InputsAnd16Comparators()
         {
             // Arrange
             var inputs = "7";
