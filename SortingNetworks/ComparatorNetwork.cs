@@ -90,9 +90,11 @@ namespace SortingNetworks
         {
             var comparatorsSize = this.Comparators.Length + 1;
             var newComparators = new Comparator[comparatorsSize];
+            var newOutputs = new int[this.Outputs.Length];
             Array.Copy(this.Comparators, newComparators, this.Comparators.Length);
+            Array.Copy(this.Outputs, newOutputs, this.Outputs.Length);
             newComparators[comparatorsSize - 1] = comparator;
-
+            
             return new ComparatorNetwork(newComparators);
         }
 
@@ -461,17 +463,35 @@ namespace SortingNetworks
             //var outputsDual = new int[IComparatorNetwork.OutputSize];
             //outputsDual.Populate(~0);
 
-            for (var i = 1; i < total; i++)
+            if (this.Outputs != null)
             {
-                var position = this.ComputeOutput(i, out var setBits);
-
-                if (!outputs.GetBitValue(position))
+                var newOutputs = new int[this.Outputs.Length];
+                for (var output = 0; output < (1 << IComparatorNetwork.Inputs); output++)
                 {
-                    this.SequencesWithOnes[setBits]++;
-                }
+                    if (!this.Outputs.GetBitValue(output)) continue;
 
-                outputs.SetBit(position);
-                //outputsDual.SetBit(position);
+                    var newOutput = SortInputWithLastComparator(output);
+
+                    newOutputs.SetBit(newOutput);
+                    var setBits = PopCount((uint)newOutput);
+                    this.Where1[setBits] |= newOutput;
+                    this.Where0[setBits] &= newOutput;
+                }
+            }
+            else
+            {
+                for (var i = 1; i < total; i++)
+                {
+                    var position = this.ComputeOutput(i, out var setBits);
+
+                    if (!outputs.GetBitValue(position))
+                    {
+                        this.SequencesWithOnes[setBits]++;
+                    }
+
+                    outputs.SetBit(position);
+                    //outputsDual.SetBit(position);
+                }
             }
 
             for (var i = 0; i < outputs.Length; i++)
@@ -509,7 +529,6 @@ namespace SortingNetworks
         private int ComputeOutput(int value, out int setBits)
         {
             value = SortInput(value);
-
             setBits = PopCount((uint) value);
             this.Where1[setBits] |= value;
             this.Where0[setBits] &= value;
@@ -534,6 +553,23 @@ namespace SortingNetworks
             }
 
             return value;
+        }
+
+        private int SortInputWithLastComparator(int output)
+        {
+            var lastCompartorId = this.Comparators.Length - 1;
+            var pos1 = IComparatorNetwork.Inputs - this.Comparators[lastCompartorId].X - 1;
+            var pos2 = IComparatorNetwork.Inputs - this.Comparators[lastCompartorId].Y - 1;
+            var bit1 = (output >> pos1) & 1;
+            var bit2 = (output >> pos2) & 1;
+
+            if ((~bit1 & bit2) != 0)
+            {
+                output = output & ~(1 << pos2);
+                output = output | (1 << pos1);
+            }
+
+            return output;
         }
     }
 }
