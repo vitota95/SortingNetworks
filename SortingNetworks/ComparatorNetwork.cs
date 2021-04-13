@@ -13,7 +13,7 @@ namespace SortingNetworks
     using System.Linq;
     using static System.Numerics.BitOperations;
 
-    /// <inheritdoc cref="ICcalcuomparatorNetwork"/>
+    /// <inheritdoc cref="IComparatorNetwork"/>
     [Serializable]
     public class ComparatorNetwork : IComparatorNetwork
     {
