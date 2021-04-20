@@ -1,4 +1,4 @@
-﻿#define SAVEALL
+﻿//#define SAVEALL
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -19,15 +19,13 @@ namespace SortingNetworks
 
         public static void Main(string[] args)
         {
-            int pause = 0;
             var copySteps = new List<int>();
             var batchSize = MAX_GENERATE_WITHOUT_BATCHES/2;
             var heuristicPopulation = 0;
-            var traceFile = string.Empty;
             IReadOnlyList<IComparatorNetwork> comparatorNets = null;
             IPruner pruner = new Pruner();
             IPruner.Threads = 1;
-
+            bool heuristicTest = false;
 
             foreach (var arg in args)
             {
@@ -44,7 +42,7 @@ namespace SortingNetworks
                         break;
                     case @"-l":
                         // log file
-                        traceFile = arg.Substring(3);
+                        var traceFile = arg.Substring(3);
                         InitiateTracer(CreateDefaultListeners(traceFile));
                         break;
                     case "-r":
@@ -68,6 +66,10 @@ namespace SortingNetworks
                     case "-h":
                         heuristicPopulation = Convert.ToInt32(arg.Substring(3));
                         break;
+                    case "-p":
+                        heuristicPopulation = Convert.ToInt32(arg.Substring(3));
+                        heuristicTest = true;
+                        break;
                     default:
                         Trace.WriteLine("Usage:");
                         Trace.WriteLine(@"-s input size");
@@ -82,19 +84,34 @@ namespace SortingNetworks
                 }
             }
 
-            //if (traceFile == string.Empty)
-            //{
-            //    traceFile = $"log_{IComparatorNetwork.Inputs}_{IComparatorNetwork.NumComparators}_{DateTime.Now:yyyyMMddHHmmssfff}.txt";
-            //    InitiateTracer(CreateDefaultListeners(traceFile));
-            //}
+            if (heuristicTest)
+            {
+                for (var i = heuristicPopulation; i > 1; i--)
+                {
+                    if (!FindSortingNetwork(batchSize, comparatorNets, pruner, i, copySteps))
+                    {
+                        Console.WriteLine($"The minimum heuristic population is: {i+1}");
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                FindSortingNetwork(batchSize, comparatorNets, pruner, heuristicPopulation, copySteps);
+            }
+        }
 
+        private static bool FindSortingNetwork(int batchSize, IReadOnlyList<IComparatorNetwork> comparatorNets, IPruner pruner,
+            int heuristicPopulation, List<int> copySteps)
+        {
             var comparatorsGenerator = new ComparatorsGenerator();
             var sortingNetworksGenerator = new Generator();
-            var comparators = comparatorsGenerator.GenerateComparators(Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray());
+            var comparators =
+                comparatorsGenerator.GenerateComparators(Enumerable.Range(0, IComparatorNetwork.Inputs).ToArray());
             var generatorPruner = new GeneratePruneInBatches(batchSize);
             var stopWatch = Stopwatch.StartNew();
 
-            comparatorNets ??= new List<IComparatorNetwork> { new ComparatorNetwork(new Comparator[1]{new Comparator(0,1)})};
+            comparatorNets ??= new List<IComparatorNetwork> {new ComparatorNetwork(new Comparator[1] {new Comparator(0, 1)})};
 
             var currentComparator = comparatorNets[0].Comparators.Length;
 
@@ -111,10 +128,11 @@ namespace SortingNetworks
                     comparatorNets = generatorPruner.GeneratePrune(comparatorNets, comparators);
                     Trace.WriteLine($"Length after prune: {comparatorNets.Count}");
                     // Sorting network found
-                    if (comparatorNets.Count == 1) 
+                    if (comparatorNets.Count == 1)
                     {
                         break;
                     }
+
                     continue;
                 }
 
@@ -129,7 +147,8 @@ namespace SortingNetworks
                 var pruneWatch = Stopwatch.StartNew();
                 if (IPruner.Threads > 1)
                 {
-                    var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 10000)).ToList();
+                    var splitNets = comparatorNets.SplitList(Math.Max((int) Math.Ceiling(count / IPruner.Threads), 10000))
+                        .ToList();
                     comparatorNets = pruner.Prune(splitNets);
                 }
                 else
@@ -154,13 +173,14 @@ namespace SortingNetworks
                 IComparatorNetwork.IsSubsetDual = 0;
                 IComparatorNetwork.TryPermutationCall = 0;
 #endif
-                
+
                 Trace.TraceInformation($"Saving Nets");
-                var path = $"SavedNetworks/nets_{IComparatorNetwork.Inputs}_{comparatorNets[0].Comparators.Length}_{DateTime.Now:yyyyMMddHHmmssfff}.json";
+                var path =
+                    $"SavedNetworks/nets_{IComparatorNetwork.Inputs}_{comparatorNets[0].Comparators.Length}_{DateTime.Now:yyyyMMddHHmmssfff}.json";
 #if SAVEALL
                 comparatorNets.SaveToFile(path);
 #endif
-                if (copySteps.Contains((int)i))
+                if (copySteps.Contains((int) i))
                 {
                     comparatorNets.SaveToFile(path);
                 }
@@ -189,11 +209,11 @@ namespace SortingNetworks
             Debug.WriteLine($"Permutations performed:{IComparatorNetwork.PermutationsNumber:N}");
             Debug.WriteLine($"Permutations walk:{IComparatorNetwork.PermutationsWalk:N}");
 #endif
-
-
             Trace.WriteLine(string.Empty);
 
-            PrintSortingNetworks(comparatorNets.Where(x => x.IsSortingNetwork2N())?.ToList());
+            PrintSortingNetworks(comparatorNets.Where(x => x.IsSortingNetwork2N()).ToList());
+
+            return comparatorNets.Any(x => x.IsSortingNetwork2N());
         }
 
 #if DEBUG

@@ -1,5 +1,5 @@
-﻿#define DUAL
-#define PERMUTE
+﻿//#define DUAL
+//#define PERMUTE
 //#define PRUNE_GRAPH_MATCHING
 //#define DONT_SAVE_OUTPUTS
 

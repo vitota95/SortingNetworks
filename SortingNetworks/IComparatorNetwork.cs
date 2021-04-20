@@ -27,9 +27,9 @@ namespace SortingNetworks
         static int OutputSize => (int)Math.Max((1 << Inputs) / 32, 1);
 
         int[] Outputs { get; }
-
+#if DUAL
         int[] OutputsDual { get; }
-
+#endif
         int[] Where0SetCount { get; }
 
         int[] SequencesWithOnes { get; }
