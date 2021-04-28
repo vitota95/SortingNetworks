@@ -17,7 +17,7 @@ namespace SortingNetworks
         // It's five million nets a lot to have in memory?
         private static int MAX_GENERATE_WITHOUT_BATCHES = 5000000;
 
-        private static int[] stateOfTheArtBestSizes = {0, 1, 3, 5, 9, 12, 16, 19, 26, 29, 35, 39, 45, 51, 56, 60, 71, 77, 85, 91, 100, 107, 115, 120, 132, 139, 150, 155, 165, 172, 180, 185 };
+        private static int[] stateOfTheArtBestSizes = {0, 1, 3, 5, 9, 12, 16, 19, 25, 29, 35, 39, 45, 51, 56, 60, 71, 77, 85, 91, 100, 107, 115, 120, 132, 139, 150, 155, 165, 172, 180, 185 };
 
         public static void Main(string[] args)
         {
