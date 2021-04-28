@@ -17,6 +17,8 @@ namespace SortingNetworks
         // It's five million nets a lot to have in memory?
         private static int MAX_GENERATE_WITHOUT_BATCHES = 5000000;
 
+        private static int[] stateOfTheArtBestSizes = {0, 1, 3, 5, 9, 12, 16, 19, 26, 29, 35, 39, 45, 51, 56, 60, 71, 77, 85, 91, 100, 107, 115, 120, 132, 139, 150, 155, 165, 172, 180, 185 };
+
         public static void Main(string[] args)
         {
             var copySteps = new List<int>();
@@ -111,9 +113,21 @@ namespace SortingNetworks
             var generatorPruner = new GeneratePruneInBatches(batchSize);
             var stopWatch = Stopwatch.StartNew();
 
-            comparatorNets ??= new List<IComparatorNetwork> {new ComparatorNetwork(new Comparator[1] {new Comparator(0, 1)})};
+            //comparatorNets ??= new List<IComparatorNetwork> {new ComparatorNetwork(new Comparator[1] {new Comparator(0, 1)})};
+            comparatorNets ??= new List<IComparatorNetwork>();
 
-            var currentComparator = comparatorNets[0].Comparators.Length;
+            if (comparatorNets.Count == 0)
+            {
+                var firstNets = new List<IComparatorNetwork>();
+                for (var i = 0; i < comparators.Count; i++)
+                {
+                    firstNets.Add(new ComparatorNetwork(new[] {comparators[i]}));
+                }
+
+                comparatorNets = firstNets;
+            }
+
+            var currentComparator = comparatorNets.Count > 0 ? comparatorNets[0].Comparators.Length : 0;
 
             var rand = new Random();
 
@@ -136,8 +150,9 @@ namespace SortingNetworks
                     continue;
                 }
 
-                //comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators).OrderBy(x => rand.Next()).ToList();
-                comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators).ToList();
+                comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators).OrderBy(x => rand.Next()).ToList();
+                //var newNets = sortingNetworksGenerator.Generate(comparatorNets, comparators).ToList();
+                //comparatorNets = newNets;
 
                 Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
                 Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
@@ -192,6 +207,9 @@ namespace SortingNetworks
                 {
                     break;
                 }
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
             }
 
             // Trace.WriteLine($"Subsume no check: {IComparatorNetwork.SubsumeNoCheck} ");
@@ -211,7 +229,7 @@ namespace SortingNetworks
 #endif
             Trace.WriteLine(string.Empty);
 
-            PrintSortingNetworks(comparatorNets.Where(x => x.IsSortingNetwork2N()).ToList());
+            PrintSortingNetworks(comparatorNets.Where(x => x.IsSortingNetwork2N()).ToList(), IComparatorNetwork.Inputs);
 
             return comparatorNets.Any(x => x.IsSortingNetwork2N());
         }
@@ -253,7 +271,7 @@ namespace SortingNetworks
             return new TraceListener[] { twtl, ctl };
         }
 
-        private static void PrintSortingNetworks(IReadOnlyList<IComparatorNetwork> nets)
+        private static void PrintSortingNetworks(IReadOnlyList<IComparatorNetwork> nets, int size)
         {
             if (nets == null)
             {
@@ -265,6 +283,23 @@ namespace SortingNetworks
 
             if (sortingNets.Count > 0)
             {
+
+                if (sortingNets[0].Comparators.Length < stateOfTheArtBestSizes[size - 1])
+                {
+                    Trace.WriteLine($"NEW SORTING NETWORK SIZE BOUND {sortingNets[0].Comparators.Length}");
+                    var text = $"New Sorting network found with size {size} and {sortingNets[0].Comparators.Length} comparators: ";
+
+                    foreach (var c in sortingNets[0].Comparators)
+                    {
+                        text += $"({c.X},{c.Y}) ";
+
+                    }
+
+                    text += "\n";
+
+                    File.AppendAllText("NewSortingNetworksFound.txt", text);
+                }
+
                 Trace.WriteLine($"{sortingNets.Count} Sorting Networks found with {IComparatorNetwork.Inputs} inputs and {nets[0]?.Comparators.Length} comparators");
                 foreach (var n in sortingNets)
                 {
