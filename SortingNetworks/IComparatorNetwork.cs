@@ -20,6 +20,8 @@ namespace SortingNetworks
         static long IsSubset { get; set; }
         static long IsSubsetDual { get; set; }
         static long TryPermutationCall { get; set; }
+
+        static long RedundantNumber { get; set; }
 #endif
         static int NumComparators { get; set; }
         static int Inputs { get; set; }

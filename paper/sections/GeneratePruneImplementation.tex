@@ -2,7 +2,7 @@
 \graphicspath{{\subfix{images/}}}
 
 \begin{document}
-	\section{Generate and Prune Implementation}
+	\section{Generate, prune and subsume test implementation}
 	In this section we explain how to implement the generate and prune methods and some optimizations that can be applied to these algorithms and the subsumption tests.
 	
 	\subsection{Representation of comparator networks}
@@ -45,26 +45,31 @@
 
 	To improve the memory usage as much as possible and make it more computationally efficient, the outputs array is implemented as an array of $2^n$ bits where a position is set to 1 if the output is set and 0 otherwise. This allows to represent the outputs with only 512 bits in the case of $n=9$. This also allows to generate the outputs very fast by the use of bitwise operations that are way faster in modern programming languages.
 	
-	\subsection{Generate and Prune}
-		\begin{algorithm}[H]
+	\subsection{Generate implementation}
+	The generate and prune algorithms are very simple but they run in massive datasets that make their implementation details crucial to be able to handle the problem for inputs sizes in $n \geq 8$. 
+	
+	\subsubsection{Generate}
+	The generate algorithm takes the set $N{_n^k}$ containing the comparator networks with k comparators and extends it to $R{_n^{k+1}}$ by adding a comparator in every possible positions for each element on $N{_n^k}$. 
+	\begin{algorithm}[H]
 		\caption{Generate} 
 		\begin{algorithmic}
-			\STATE $result \leftarrow \emptyset$
+			\STATE $R{_n^{k+1}} \leftarrow \emptyset$
 			\STATE $N \leftarrow networks$
 			\STATE $C \leftarrow comparators$
 			\FOR{$n$ in $N$}
 			\FOR{$c$ in $C$}
 			\STATE $n' \leftarrow n\bigcup c$
 			\IF {$n'$ is not redundant}
-			\STATE $result \leftarrow result \bigcup n'$
+			\STATE $R{_n^{k+1}} \leftarrow R{_n^{k+1}} \bigcup n'$
 			\ENDIF
 			\ENDFOR
 			\STATE $n' \leftarrow $
 			\ENDFOR
-			\RETURN $result$
+			\RETURN $R{_n^{k+1}}$
 		\end{algorithmic}
 	\end{algorithm}
-	
+
+	\subsubsection{Prune}	
 	\begin{algorithm}[H]
 		\caption{Prune} 
 		\begin{algorithmic}
@@ -89,6 +94,7 @@
 		\end{algorithmic}
 	\end{algorithm}
 	
+	\subsubsection{Parallel implementation}
 	\begin{algorithm}[H]
 		\caption{Parallel Prune} 
 		\begin{algorithmic}

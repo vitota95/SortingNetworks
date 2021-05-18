@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SortingNetworks;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace SortingNetworksTests
 {
@@ -176,6 +177,46 @@ namespace SortingNetworksTests
             var result = n1.IsSubsumed(n2);
 
             Assert.IsTrue(result);
+        }
+
+        [TestMethod]
+        public void GenerateOutputs()
+        {
+            // Arrange, Act
+            int size = 4;
+            IComparatorNetwork.Inputs = size;
+            var c1 = new Comparator[3] { new Comparator(0, 1), new Comparator(0, 2), new Comparator(2, 3) };
+            var c2 = new Comparator[3] { new Comparator(0, 1), new Comparator(0, 3), new Comparator(1, 3) };
+            var c3 = new Comparator[3] { new Comparator(1, 2), new Comparator(2, 3), new Comparator(0, 3) };
+
+            Console.WriteLine("c1 outputs");
+            var n1 = new ComparatorNetwork(c1);
+            Console.WriteLine("c2 outputs");
+            var n2 = new ComparatorNetwork(c2);
+            Console.WriteLine("c3 outputs");
+            var n3 = new ComparatorNetwork(c3);
+
+            Assert.IsTrue(true);
+        }
+
+        [TestMethod]
+        public void PrintWhereMatrix()
+        {
+            // Arrange, Act
+            int size = 4;
+            IComparatorNetwork.Inputs = size;
+            var c1 = new Comparator[3] { new Comparator(2, 4), new Comparator(2, 3), new Comparator(1, 3) };
+            var c2 = new Comparator[3] { new Comparator(1, 4), new Comparator(3, 4), new Comparator(1, 3) };
+
+            Trace.WriteLine("c1 outputs");
+            var n1 = new ComparatorNetwork(c1);
+            Trace.WriteLine("c2 outputs");
+            var n2 = new ComparatorNetwork(c2);
+
+            n1.PrintWhereMatrix(n2);
+            n2.PrintWhereMatrix(n1);
+
+            Assert.IsTrue(true);
         }
     }
 }

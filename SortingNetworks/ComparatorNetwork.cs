@@ -1,5 +1,5 @@
 ﻿//#define DUAL
-//#define PERMUTE
+#define PERMUTE
 //#define PRUNE_GRAPH_MATCHING
 //#define DONT_SAVE_OUTPUTS
 
@@ -17,7 +17,7 @@ namespace SortingNetworks
     [Serializable]
     public class ComparatorNetwork : IComparatorNetwork
     {
-        public ComparatorNetwork(Comparator[] comparators)
+        public ComparatorNetwork(Comparator[] comparators, int[] outputs = null)
         {
             this.Where0 = new int[IComparatorNetwork.Inputs];
             for (var i = 0; i < IComparatorNetwork.Inputs; i++)
@@ -30,7 +30,7 @@ namespace SortingNetworks
             this.SequencesWithOnes = new int[IComparatorNetwork.Inputs];
 
             this.Comparators = comparators;
-            this.Outputs = this.CalculateOutput();
+            this.CalculateOutput(outputs);
 
 #if DONT_SAVE_OUTPUTS
             this.Outputs = null;
@@ -68,6 +68,8 @@ namespace SortingNetworks
         [JsonInclude]
         public Comparator[] Comparators { get; set; }
 
+        private bool isRedundant = true;
+
         /// <inheritdoc/>
         public bool IsSortingNetwork()
         {
@@ -77,8 +79,12 @@ namespace SortingNetworks
         /// <inheritdoc/>
         public bool IsRedundant(IComparatorNetwork n)
         {
-            if (this.Outputs.SequenceEqual(n.Outputs))
-            {
+            //if (this.Outputs.SequenceEqual(n.Outputs))
+                if (this.isRedundant)
+                {
+#if DEBUG
+                IComparatorNetwork.RedundantNumber++;
+#endif
                 return true;
             }
 
@@ -94,8 +100,7 @@ namespace SortingNetworks
             Array.Copy(this.Comparators, newComparators, this.Comparators.Length);
             Array.Copy(this.Outputs, newOutputs, this.Outputs.Length);
             newComparators[comparatorsSize - 1] = comparator;
-            
-            return new ComparatorNetwork(newComparators);
+            return new ComparatorNetwork(newComparators, newOutputs);
         }
 
         public bool IsSortingNetwork2N()
@@ -109,7 +114,7 @@ namespace SortingNetworks
                     expectedOutput |= 1<<j;
                 }
 
-                var output = this.SortInput(i);
+                var output = this.SortInputs(i);
 
                 if (output != expectedOutput)
                 {
@@ -154,7 +159,7 @@ namespace SortingNetworks
 
             var permutation = new int[IComparatorNetwork.Inputs];
             permutation.Populate(-1);
-            var succeed = TryPermutations(positions, permutation, this.Outputs, n.Outputs, n.OutputsDual, this.Comparators.Length);
+            var succeed = TryPermutations(positions, permutation, this.Outputs, n.Outputs, this.Comparators.Length);
             //var succeed = TryPermutationsIteratively(positions, positionsDual, permutation, this.Outputs, n.Outputs, n.OutputsDual, this.Comparators.Length);
 #if DEBUG
             if (succeed)
@@ -166,6 +171,26 @@ namespace SortingNetworks
             return succeed;
 #endif
             return true;
+        }
+
+        public void PrintWhereMatrix(ComparatorNetwork n)
+        {
+            var positions = GetPositions(this.Where0, this.Where1, n.Where0, n.Where1);
+
+            Trace.WriteLine("Where0 1");
+            Trace.WriteLine(string.Join(',', this.Where0.Select(x => Convert.ToString(x, 2).PadLeft(IComparatorNetwork.Inputs, '0'))));
+            Trace.WriteLine("Where1 1");
+            Trace.WriteLine(string.Join(',', this.Where1.Select(x => Convert.ToString(x, 2).PadLeft(IComparatorNetwork.Inputs, '0'))));   
+            Trace.WriteLine("Where0 2");
+            Trace.WriteLine(string.Join(',', n.Where0.Select(x => Convert.ToString(x, 2).PadLeft(IComparatorNetwork.Inputs, '0'))));
+            Trace.WriteLine("Where1 2");
+            Trace.WriteLine(string.Join(',', n.Where1.Select(x => Convert.ToString(x, 2).PadLeft(IComparatorNetwork.Inputs, '0'))));
+
+            for (int i = 0; i < positions.Length; i++)
+            {
+                var row = Convert.ToString(positions[i], 2).PadLeft(IComparatorNetwork.Inputs, '0');
+                Trace.WriteLine(row);
+            }
         }
 
         private static void PrintComparatorNet(IComparatorNetwork net)
@@ -230,7 +255,7 @@ namespace SortingNetworks
             return true;
         }
 
-        private bool TryPermutations(int[] positions, int[] permutation, int[] o1, int[] o2, int[] o2Dual, int numComparators, bool pIsPossible = true, bool dualPIsPossible = true, int index = 0)
+        private bool TryPermutations(int[] positions, int[] permutation, int[] o1, int[] o2, int numComparators, bool pIsPossible = true, bool dualPIsPossible = true, int index = 0)
         {
 #if DEBUG
             IComparatorNetwork.TryPermutationCall++;
@@ -247,14 +272,17 @@ namespace SortingNetworks
                 if (IsAlreadyAdded(permutation, j, index - 1)) continue;
 
                 permutation[index] = j;
-                var result = TryPermutations(positions, permutation, o1, o2, o2Dual, numComparators, pIsPossible, dualPIsPossible, index + 1);
+                var result = TryPermutations(positions, permutation, o1, o2, numComparators, pIsPossible, dualPIsPossible, index + 1);
                 if (result)
                 {
                     return true;
                 }
                 // As permutation is passed by reference, when it returns from recursion we need to reset the values after index.
                 // This is quicker and consumes less memory than cloning the array.
-                permutation = ResetPositions(index + 1, permutation);
+                for (var i = index + 1; i < permutation.Length; i++)
+                {
+                    permutation[i] = -1;
+                }
             }
 
             if (index < IComparatorNetwork.Inputs - 1)
@@ -448,6 +476,7 @@ namespace SortingNetworks
                 prod *= PopCount((uint)(positions[pos] & ((1 << IComparatorNetwork.Inputs) - 1)));
             }
 
+
             if (prod == 0)
             {
                 return null;
@@ -456,47 +485,43 @@ namespace SortingNetworks
             return positions;
         }
 
-        private int[] CalculateOutput()
+        private void CalculateOutput(int [] parentOutputs)
         {
             var total = (1 << IComparatorNetwork.Inputs) - 1;
-            var outputs = new int[IComparatorNetwork.OutputSize];
             //var outputsDual = new int[IComparatorNetwork.OutputSize];
             //outputsDual.Populate(~0);
+            this.Outputs = new int[IComparatorNetwork.OutputSize];
 
-            if (this.Outputs != null)
+            if (parentOutputs != null)
             {
-                var newOutputs = new int[this.Outputs.Length];
-                for (var output = 0; output < (1 << IComparatorNetwork.Inputs); output++)
+                for (var output = 1; output < (1 << IComparatorNetwork.Inputs); output++)
                 {
-                    if (!this.Outputs.GetBitValue(output)) continue;
+                    if (!parentOutputs.GetBitValue(output)) continue;
 
                     var newOutput = SortInputWithLastComparator(output);
 
-                    newOutputs.SetBit(newOutput);
-                    var setBits = PopCount((uint)newOutput);
-                    this.Where1[setBits] |= newOutput;
-                    this.Where0[setBits] &= newOutput;
+                    if (newOutput > output)
+                    {
+                        this.isRedundant = false;
+                    }
+
+                    this.ModifyWhereMatrices(newOutput);
+                    this.Outputs.SetBit(newOutput);
                 }
             }
             else
             {
                 for (var i = 1; i < total; i++)
                 {
-                    var position = this.ComputeOutput(i, out var setBits);
-
-                    if (!outputs.GetBitValue(position))
-                    {
-                        this.SequencesWithOnes[setBits]++;
-                    }
-
-                    outputs.SetBit(position);
-                    //outputsDual.SetBit(position);
+                    var output = this.SortInputs(i);
+                    this.ModifyWhereMatrices(output);
+                    this.Outputs.SetBit(output);
                 }
             }
 
-            for (var i = 0; i < outputs.Length; i++)
+            for (var i = 0; i < this.Outputs.Length; i++)
             {
-                this.OutputsPopCount += PopCount((uint)outputs[i]);
+                this.OutputsPopCount += PopCount((uint)this.Outputs[i]);
             }
 
             // complement where 0
@@ -510,7 +535,6 @@ namespace SortingNetworks
             }
 
             //this.OutputsDual = outputsDual;
-            return outputs;
         }
 
         private int[] DualizeOutputs(int[] outputs)
@@ -526,9 +550,21 @@ namespace SortingNetworks
             return dual;
         }
 
+        private void ModifyWhereMatrices(int output)
+        {
+            var setBits = PopCount((uint)output);
+            this.Where1[setBits] |= output;
+            this.Where0[setBits] &= output;
+
+            if (!this.Outputs.GetBitValue(output))
+            {
+                this.SequencesWithOnes[setBits]++;
+            }
+        }
+
         private int ComputeOutput(int value, out int setBits)
         {
-            value = SortInput(value);
+            value = SortInputs(value);
             setBits = PopCount((uint) value);
             this.Where1[setBits] |= value;
             this.Where0[setBits] &= value;
@@ -536,20 +572,11 @@ namespace SortingNetworks
             return value;
         }
 
-        private int SortInput(int value)
+        private int SortInputs(int value)
         {
             for (var i = 0; i < this.Comparators.Length; i++)
             {
-                var pos1 = IComparatorNetwork.Inputs - this.Comparators[i].X - 1;
-                var pos2 = IComparatorNetwork.Inputs - this.Comparators[i].Y - 1;
-                var bit1 = (value >> pos1) & 1;
-                var bit2 = (value >> pos2) & 1;
-
-                if ((~bit1 & bit2) != 0)
-                {
-                    value =  value & ~(1 << pos2);
-                    value = value | (1 << pos1);
-                }
+                value = SortInput(value, i);
             }
 
             return value;
@@ -557,19 +584,24 @@ namespace SortingNetworks
 
         private int SortInputWithLastComparator(int output)
         {
-            var lastCompartorId = this.Comparators.Length - 1;
-            var pos1 = IComparatorNetwork.Inputs - this.Comparators[lastCompartorId].X - 1;
-            var pos2 = IComparatorNetwork.Inputs - this.Comparators[lastCompartorId].Y - 1;
-            var bit1 = (output >> pos1) & 1;
-            var bit2 = (output >> pos2) & 1;
+            var lastComparatorId = this.Comparators.Length - 1;
+            return this.SortInput(output, lastComparatorId);
+        }
+
+        private int SortInput(int value, int i)
+        {
+            var pos1 = IComparatorNetwork.Inputs - this.Comparators[i].X - 1;
+            var pos2 = IComparatorNetwork.Inputs - this.Comparators[i].Y - 1;
+            var bit1 = (value >> pos1) & 1;
+            var bit2 = (value >> pos2) & 1;
 
             if ((~bit1 & bit2) != 0)
             {
-                output = output & ~(1 << pos2);
-                output = output | (1 << pos1);
+                value = value & ~(1 << pos2);
+                value = value | (1 << pos1);
             }
 
-            return output;
+            return value;
         }
     }
 }

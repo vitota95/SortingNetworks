@@ -1,4 +1,4 @@
-﻿//#define SAVEALL
+﻿#define SAVEALL
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -15,7 +15,7 @@ namespace SortingNetworks
     public class Program
     {
         // It's five million nets a lot to have in memory?
-        private static int MAX_GENERATE_WITHOUT_BATCHES = 5000000;
+        private static int MAX_GENERATE_WITHOUT_BATCHES = 5000;
 
         private static int[] stateOfTheArtBestSizes = {0, 1, 3, 5, 9, 12, 16, 19, 25, 29, 35, 39, 45, 51, 56, 60, 71, 77, 85, 91, 100, 107, 115, 120, 132, 139, 150, 155, 165, 172, 180, 185 };
 
@@ -115,71 +115,83 @@ namespace SortingNetworks
 
             //comparatorNets ??= new List<IComparatorNetwork> {new ComparatorNetwork(new Comparator[1] {new Comparator(0, 1)})};
             comparatorNets ??= new List<IComparatorNetwork>();
-
             if (comparatorNets.Count == 0)
             {
                 var firstNets = new List<IComparatorNetwork>();
-                for (var i = 0; i < comparators.Count; i++)
+                for (var j = 0; j < comparators.Count; j++)
                 {
-                    firstNets.Add(new ComparatorNetwork(new[] {comparators[i]}));
+                    firstNets.Add(new ComparatorNetwork(new[] { comparators[j] }));
                 }
 
                 comparatorNets = firstNets;
             }
 
+
             var currentComparator = comparatorNets.Count > 0 ? comparatorNets[0].Comparators.Length : 0;
 
             var rand = new Random();
 
-            for (var i = currentComparator; i < IComparatorNetwork.NumComparators; i++)
+            for (var i = currentComparator; i <= IComparatorNetwork.NumComparators; i++)
             {
-                Trace.WriteLine($"Adding Comparator {i + 1}");
+                Trace.WriteLine($"Adding Comparator {i}");
                 Trace.TraceInformation($"Generate");
                 var generateWatch = Stopwatch.StartNew();
 
                 if (comparatorNets.Count > batchSize)
                 {
+                    var generatePruneWatch = Stopwatch.StartNew();
                     comparatorNets = generatorPruner.GeneratePrune(comparatorNets, comparators);
                     Trace.WriteLine($"Length after prune: {comparatorNets.Count}");
-                    // Sorting network found
-                    if (comparatorNets.Count == 1)
+                    Trace.WriteLine($"Generate and Prune time  {generatePruneWatch.Elapsed}");
+
+                    if (heuristicPopulation > 0 && comparatorNets.Count > heuristicPopulation)
                     {
-                        break;
+                        //comparatorNets = HeuristicRemover.RemoveNetsWithMoreBadZeroes(comparatorNets, heuristicPopulation);
+                        comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets, heuristicPopulation);
                     }
-
-                    continue;
-                }
-
-                comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators).OrderBy(x => rand.Next()).ToList();
-                //var newNets = sortingNetworksGenerator.Generate(comparatorNets, comparators).ToList();
-                //comparatorNets = newNets;
-
-                Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
-                Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
-                var count = double.Parse(comparatorNets.Count.ToString());
-
-                Trace.TraceInformation($"Prune");
-                var pruneWatch = Stopwatch.StartNew();
-                if (IPruner.Threads > 1)
-                {
-                    var splitNets = comparatorNets.SplitList(Math.Max((int) Math.Ceiling(count / IPruner.Threads), 10000))
-                        .ToList();
-                    comparatorNets = pruner.Prune(splitNets);
                 }
                 else
                 {
-                    comparatorNets = pruner.Prune(comparatorNets);
+                    //var newNets = sortingNetworksGenerator.Generate(comparatorNets, comparators).ToList();
+                    //comparatorNets = newNets;
+
+                    // First nets already generated
+                    if (i != 1)
+                    {
+                        comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators).OrderBy(x => rand.Next()).ToList();
+                        //comparatorNets = sortingNetworksGenerator.Generate(comparatorNets, comparators);
+                    }
+
+#if DEBUG
+                    Trace.WriteLine($"Redundant number: {IComparatorNetwork.RedundantNumber:N}");
+                    IComparatorNetwork.RedundantNumber = 0;
+#endif
+
+                    Trace.WriteLine($"Length after Generate: {comparatorNets.Count}");
+                    Trace.WriteLine($"Generate time  {generateWatch.Elapsed}");
+                    var count = double.Parse(comparatorNets.Count.ToString());
+
+                    Trace.TraceInformation($"Prune");
+                    var pruneWatch = Stopwatch.StartNew();
+                    if (IPruner.Threads > 1)
+                    {
+                        var splitNets = comparatorNets.SplitList(Math.Max((int)Math.Ceiling(count / IPruner.Threads), 10000))
+                            .ToList();
+                        comparatorNets = pruner.Prune(splitNets);
+                    }
+                    else
+                    {
+                        comparatorNets = pruner.Prune(comparatorNets);
+                    }
+
+                    if (heuristicPopulation > 0 && comparatorNets.Count > heuristicPopulation)
+                    {
+                        //comparatorNets = HeuristicRemover.RemoveNetsWithMoreBadZeroes(comparatorNets, heuristicPopulation);
+                        comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets, heuristicPopulation);
+                    }
+                    Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
+                    Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
                 }
-
-                if (heuristicPopulation > 0 && comparatorNets.Count > heuristicPopulation)
-                {
-                    //comparatorNets = HeuristicRemover.RemoveNetsWithMoreBadZeroes(comparatorNets, heuristicPopulation);
-                    comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets, heuristicPopulation);
-                }
-
-
-                Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
-                Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
 #if DEBUG
                 Trace.WriteLine($"Is subset: {IComparatorNetwork.IsSubset}");
                 Trace.WriteLine($"Is subset dual: {IComparatorNetwork.IsSubsetDual}");
