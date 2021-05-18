@@ -3,7 +3,50 @@
 
 \begin{document}
 	\section{Generate and Prune Implementation}
-	\begin{algorithm}[H]
+	In this section we explain how to implement the generate and prune methods and some optimizations that can be applied to these algorithms and the subsumption tests.
+	
+	\subsection{Representation of comparator networks}
+	To represent a comparator network we just need an array of comparators. However, as we explained before for the subsumption operation we need to apply permutations to the outputs. So, we choose to represent the comparator network together with it's set of outputs. This allows to speed also the generation of this outputs when adding a new comparator as we will only need to apply the new comparator to the binary sequences of the previous outputs. Finally, in order to apply some optimizations that we will explain in the next subsections we need to store 2 more matrices and 1 array of size (n x n) and n respectively (take into account that the matrices can be stored as a 1 dimension array and use bit operations to access to the matrix positions).The first 2 arrays store the positions where any output contains a 0 and a 1 and we call  these 2 matrices $W^0$ and $W^1$ they are partitioned by the number of zeroes or ones. The last array contains the number of sequences with k 1s in the outputs given $k=0,1...n$ and we call it $S^{1}_k$.
+	
+	\begin{center}
+		\begin{table}[h]
+		\begin{tabularx}{\textwidth}{ |l| *{4}{Y|} }
+			\hline
+			\textbf{number of 1s} & \textbf{0} & \textbf{1} & \textbf{2} & \textbf{3} \\
+			\hline
+			\makecell{$C_1$ \begin{sortingnetwork}4{0.5}
+					\addcomparator12
+					\nextlayer
+					\addcomparator13
+					\nextlayer
+					\addcomparator34
+			\end{sortingnetwork}} & 0000 & \makecell{0001 \\ 1000} & \makecell{1010 \\ 1100} & \makecell{1011 \\ 1110} \\ 
+			\hline
+			\makecell{$C_2$ \begin{sortingnetwork}4{0.5}
+					\addcomparator12
+					\nextlayer
+					\addcomparator14
+					\nextlayer
+					\addcomparator24
+			\end{sortingnetwork}} & 0000 & \makecell{1000 \\ 0010} & \makecell{1010 \\ 1100} & \makecell{1110 \\ 1101} \\ 
+			\hline
+			\makecell{$C_3$ \begin{sortingnetwork}4{0.5}
+					\addcomparator23
+					\nextlayer
+					\addcomparator34
+					\nextlayer
+					\addcomparator14
+			\end{sortingnetwork}} & 0000 & \makecell{0010 \\ 0100 \\ 1000} & \makecell{0110 \\ 1010 \\ 1100} & 1110 \\   [1ex] 
+		\end{tabularx}
+		\caption{Comparator network outputs partitioned by number of 1s}
+		\label{table:netsPartitioned}
+	\end{table}
+	\end{center}
+
+	To improve the memory usage as much as possible and make it more computationally efficient, the outputs array is implemented as an array of $2^n$ bits where a position is set to 1 if the output is set and 0 otherwise. This allows to represent the outputs with only 512 bits in the case of $n=9$. This also allows to generate the outputs very fast by the use of bitwise operations that are way faster in modern programming languages.
+	
+	\subsection{Generate and Prune}
+		\begin{algorithm}[H]
 		\caption{Generate} 
 		\begin{algorithmic}
 			\STATE $result \leftarrow \emptyset$
@@ -52,7 +95,7 @@
 			\STATE $N \leftarrow networks$
 			\STATE $C \leftarrow Divide(N)$ \COMMENT{Divide N in as many Clusters as processor}
 			\STATE {Each processor performs:}
-			\STATE PRUNE($C_i$)
+			\STATE Prune($C_i$)
 			\FOR{$c$ in $C$}
 			\STATE Remove($c, C \setminus c$)
 			\ENDFOR
@@ -76,4 +119,98 @@
 			\RETURN $N_j$
 		\end{algorithmic}
 	\end{algorithm}
+		
+	\subsection{Subsume test implementation}
+	The subsumption test involves searching for a permutation of the outputs where $\pi(outputs(C_1) \subseteq outputs(C_2))$ that can involve in the worst case the check of n! permutations. In the case of n=9 $n! = 362880$. However, in many cases it is not necessary to test any permutation to prove that a net does not subsume other. 
+	
+	First we look at the $S^{1}_k$ array. If we take a look at the array in previous figure, we can see that the number of outputs with X 1s in $C_1$ is smaller than the one in $C_2$ given this it is clear that $C_1$ will not subsume $C_2$. Because a permutation of the outputs of $C_1$ will never be a subset of the outputs of $C_2$. More formally we can define this as the following lemma.
+	
+	\begin{lemma}
+		Given 2 comparator networks $C_a$ and $C_b$ with n channels and their arrays containing the number of sequences with k 1s $S1^{1}_k$ and $S2^{1}_k$. If for any $k\geq 0 \leq n$, $S1^{1}_k > S2^{1}_k$ $C_1$ does not subsume $C_2$.
+	\end{lemma}
+	
+	In \cite{sortingnineinputs} they state that 70\% of the subsumption tests are discarded on application of previous lemma.
+	
+	If we look again to the outputs in the figure above, in the column that contains the outputs with X number of 1s we can also notice that $C_1$ does not subsume $C_2$. That's because the digit 0 appears only in X positions in the sequences in $C_1$ while in Y positions in the sequences of $C_2$ and that will stay the same given any permutation. More formally it can be expressed in the following lemma:
+	
+	\begin{lemma}
+	Given 2 comparator networks $C_a$ and $C_b$ with n channels with their arrays $W^x$, $x \epsilon \{0,1\}$ and $0\geq k \geq n$ we denote $P{^x_k}$ to the number of positions that x appears in k partition of $W^x$. If $P^x(C_a, k) > W^x(C_b, k)$ then $C_a$ does not subsume $C_b$.
+	\end{lemma}
+
+	In \cite{sortingnineinputs} they state that 15\% of the subsumption tests that are not discarded on application of Lemma 4.1 are discarded on application of Lemma 4.2.
+	
+	If the subsumption test is not discarded in application of previous lemmas, there is no other way than trying to find a permutation that satisfies the condition of $\pi(outputs(C_a)) \subseteq outputs(C_b)$ as we stated before the running time of this is n! in the case that $C_a$ does not subsume $C_b$. However, in many cases we can avoid lots of checks by using the $W^0$ and $W^1$ arrays. Which leads to the following lemma:
+	
+	\begin{lemma}
+		Given 2 comparator networks $C_a$ and $C_b$ with n channels with their arrays $W^x$, $x \epsilon \{0,1\}$ and $0\geq k \geq n$. If it exists a permutation $\pi(outputs(C_a)) \subseteq outputs(C_b)$ then $\pi(W^x(C_a, k) \subseteq (W^x(C_b, k))$.
+	\end{lemma}
+	
+	
+	The above lemma allows us in practice to skip thousands of permutations. This way we can implement the permutation generation with a backtracking algorithm that avoids expanding branches that cannot lead to a feasible solution.
+	
+	As an example we have the next 2 Comparator networks represented by their comparators pairs $C_1 = [(2,4), (2,3), (1,3)]$ and $C_2=[(1,4), (3,4), (1,3)]$. Now we represent the outputs of these networks partitioned by their number of 1s (we discard the trivial outputs with all ones and all zeroes).
+	
+	\begin{center}
+		\begin{table}[h]
+			\begin{tabularx}{\textwidth}{ |l| *{3}{Y|} }
+				\hline
+				\textbf{number of 1s} & \textbf{1} & \textbf{2} & \textbf{3} \\
+				\hline
+				\makecell{$C_1$ \begin{sortingnetwork}4{0.5}
+						\addcomparator24
+						\nextlayer
+						\addcomparator23
+						\nextlayer
+						\addcomparator13
+					\end{sortingnetwork}} & \makecell{0010 \\ 1000} & \makecell{0110 \\ 1010 \\ 1100} & \makecell{0111 \\ 1110} \\ 
+				\hline
+				\makecell{$C_2$  \begin{sortingnetwork}4{0.5}
+					\addcomparator14
+					\nextlayer
+					\addcomparator34
+					\nextlayer
+					\addcomparator13
+				\end{sortingnetwork}}& \makecell{0010 \\ 0100 \\ 1000} & \makecell{0101 \\ 0110 \\ 1010 \\ 1100} & \makecell{0111 \\ 1101 \\ 1110 } \\  [1ex] 
+			\end{tabularx}
+			\caption{Comparator network outputs partitioned by number of 1s}
+			\label{table:permutationsExample}
+		\end{table}
+	\end{center}
+
+	With these partitioned sets we can create their $W^x$ matrices. Which allow us to know in which positions the outputs contain a zero or a 1.
+	
+	\begin{center}
+		\begin{table}[h]
+			\begin{tabularx}{\textwidth}{ |l| *{3}{Y|} }
+				\hline
+				\textbf{number of 1s or 0s} & \textbf{1} & \textbf{2} & \textbf{3} \\
+				\hline
+				$W1^0$ & \makecell{1111} & \makecell{1111} & \makecell{1001} \\ [1ex]
+				\hline
+				$W1^1$ & \makecell{1110} & \makecell{1110} & \makecell{1111} \\  [1ex] 
+				\hline
+				$W2^0$ & \makecell{1111} & \makecell{1111} & \makecell{1011} \\ [1ex]
+				\hline
+				$W2^1$ & \makecell{1110} & \makecell{1111} & \makecell{1111} \\  [1ex] 
+			\end{tabularx}
+			\caption{W matrices partitioned by number of 1s or 0s}
+			\label{table:whereMatrices}
+		\end{table}
+	\end{center}
+
+	The above matrices show the positions that $x \epsilon \{0, 1\}$ appears in the Outputs array of the comparator network. If there is a 0 in certain position it means that $x$ doesn't appear in that position in the outputs array. For example, if we look at the partition with 3 zeroes in the $W1^0$ matrix we see that 0 only appears in the positions 1 and 4.
+	
+	Combining the information of these 4 matrices we can obtain another matrix that will tell us the forbidden positions for the permutations. We call this matrix $P$, each row refers to an index $0,..n$ in the outputs, if there is a 0 in a specific position it means that the permutation cannot contain that number in that specific position. To create the positions matrix we iterate the elements in both W matrices for $C_1$. If there is a 1 in that position for any of the matrices we check if there is also a 1 in the correspondent matrices of $C_2$, in that case that position is allowed and we set it to 1. For the given comparator networks we obtain the following positions matrix.
+	
+	$$
+	\begin{bmatrix} 
+		0 & 1 & 0 & 0 \\
+		0 & 1 & 0 & 1 \\
+		1 & 1 & 0 & 0 \\
+		0 & 1 & 0 & 0 \\
+	\end{bmatrix}
+	\quad
+	$$
+	
+	If we look carefully into the matrix, we can see that the 3rd column contains only zeroes. So, no index is allowed in the third position. This way we can say that $C_1$ does not subsume $C_2$ without trying any of the permutations. This applies also to the case that a row is all zeroes, which means that the bit in that position cannot be permuted to any of the other positions. This matrix allows to speed up the subsume operation and avoid expanding permutations that will not lead to a solution.
 \end{document}

@@ -3,4 +3,22 @@
 
 \begin{document}
 	\section{Generate and Prune}
+	As we have seen before, our objective is to generate a complete set for all the comparator networks with n channels and k comparators. To do that we start in the empty net and consecutively we add a new comparator in all possible ways. We call this complete set $R^{n}_{k}$ in the naive approach adding a comparator in all possible positions deals to $n*(n-1)/2$ comparator networks, as we have to repeat this step k times we end with $(n*(n-1)/2)^k$ comparator networks. For $k=9$, $R^{9}_{25}\approx 3*10^{38}$ making this approach infeasible to compute. To reduce the search space the method Generate and Prune is introduced in \cite{sortingnineinputs} this algorithms take advantage of the symmetries in comparator networks. To explain the generate and prune approach we should introduce the next definition.
+	
+	\begin{definition}
+		Given 2 comparator networks $C_a$ and $C_b$ and a permutation of the outputs $\pi$ we say that $C_a$ subsumes $C_b$ if it exists any $\pi (outputs(C_a)) \subseteq outputs(C_b)$.
+	\end{definition}
+	
+	\begin{lemma}
+		Given 2 comparator networks $C_a$ and $C_b$ if $C_a$ subusumes $C_b$ if there is a sorting network of the type $C_b \cup C$ with size k, there is also a sorting network of the type $C_a \cup C'$ with size k.
+	\end{lemma}
+	
+	The previous lemma implies that we can create a complete set of comparator networks while discarding the nets that are subsumed by any other net in the naive complete set. This is the base of the generate and prune algorithms. Starting with the empty set $R{^n_0}$, which corresponds to a comparator network with no comparators. The algorithms generate and prune work in the following way:
+	
+	\begin{itemize}
+		\item Generate: Given the set $R{^n_k}$ extends it to the set $N{^n_k+1}$ by adding a one extra comparator to each element in the previous set in any possible way.
+		\item Prune: Given the set $N{^n_k+1}$ creates the set $R{^n_k+1}$ removing any net subsumed by those nets that are not removed.
+	\end{itemize}
+	
+	
 \end{document}

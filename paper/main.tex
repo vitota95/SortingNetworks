@@ -11,17 +11,26 @@
 \usepackage{graphicx}
 \usepackage{algorithm} 
 \usepackage{algorithmic}
-\usepackage{tikz}
 \usepackage[trim]{tokenizer} 
 \usepackage{subfiles}
+\usepackage{makecell}
+\usepackage{qtree}
+\usepackage{tabularx,booktabs}
+\usepackage{amsmath}
+\usepackage{float}
+\restylefloat{table}
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
 
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{corollary}{Corollary}[theorem]
 \newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
 
 \setlength{\parskip}{1em}
 
-\makeatletter
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata,shapes,shapes.multipart,decorations.markings,positioning}
+\usepackage{calc}
 
 \newcounter{sncolumncounter}
 \newcounter{snrowcounter}
@@ -29,34 +38,48 @@
 \def \nodelabel#1{%
 	\setcounter{snrowcounter}{1}
 	\foreach \i in {#1}{%
-		\draw (\value{sncolumncounter},\value{snrowcounter}) node[anchor=south]{\i};
+		\draw (\sncolwidth*\value{sncolumncounter},\value{snrowcounter}) node[anchor=south]{\i};
 		\addtocounter{snrowcounter}{1}
 	}
+	\addtocounter{snrowcounter}{-1}
 	\addtocounter{sncolumncounter}{1}
 }
 
-\def \nodeconnection#1{%
-	\foreach \i in {#1}{%
-		\GetTokens{nodesrc}{nodedest}{\i}
-		\draw (\value{sncolumncounter},\nodesrc) node[circle,fill=black]{}--(\value{sncolumncounter},\nodedest) node[circle,fill=black]{};
-	}
+\newcommand{\sncolwidth}{0.7} % relative to row distance
+
+\def \addcomparator#1#2{%
+	\draw (\sncolwidth*\value{sncolumncounter},#1) node[circle,fill=black,minimum size=4pt,inner sep=0pt,outer sep=0pt]{}--(\sncolwidth*\value{sncolumncounter},#2) node[circle,fill=black,minimum size=4pt,inner sep=0pt,outer sep=0pt]{};
+}
+
+\def \addredcomparator#1#2{%
+	\draw[color=red] (\sncolwidth*\value{sncolumncounter},#1) node[circle,fill=red,minimum size=4pt,inner sep=0pt,outer sep=0pt]{}--(\sncolwidth*\value{sncolumncounter},#2) node[circle,fill=red,minimum size=4pt,inner sep=0pt,outer sep=0pt]{};
+}
+
+\def \addlayer{%
 	\addtocounter{sncolumncounter}{1}
 }
 
-\newenvironment{sortingnetwork}[3]
+\def \nextlayer{%
+	\draw [dashed] (\sncolwidth*\value{sncolumncounter}+\sncolwidth,0.6)--(\sncolwidth*\value{sncolumncounter}+\sncolwidth,\value{snrowcounter}+0.6);
+	\addtocounter{sncolumncounter}{2}
+}
+
+\newenvironment{sortingnetwork}[2]
 {
 	\setcounter{sncolumncounter}{0}
+	\setcounter{snrowcounter}{#1}
 	\def \sn@fullsize{15}
-	\begin{tikzpicture}[scale=#3*\sn@fullsize/#2]
-		\foreach \i in {1, ..., #1}
-		{
-			\draw (0,\i)--(#2-1,\i);
-		}
+	\begin{tikzpicture}[scale=#2*0.7]
 	}
 	{
+		\foreach \i in {1, ..., \value{snrowcounter}}
+		{
+			\draw (-\sncolwidth,\i)--(\sncolwidth*\value{sncolumncounter}+\sncolwidth,\i);
+		}
 	\end{tikzpicture}
 }
 \makeatother
+
 
 \begin{document}
 
