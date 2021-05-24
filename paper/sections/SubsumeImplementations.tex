@@ -3,9 +3,34 @@
 
 \begin{document}
 	\section{Subsume Implementations}
-		The subsumption test involves searching for a permutation of the outputs where $\pi(outputs(C_1) \subseteq outputs(C_2))$ that can involve in the worst case the check of n! permutations. In the case of $n=9$ $n! = 362880$. However, in many cases it is not necessary to test any permutation to prove that a net does not subsume other. 
-	
-	First we look at the $S^{1}_k$ array. If we take a look at the array in previous figure, we can see that the number of outputs with X 1s in $C_1$ is smaller than the one in $C_2$ given this it is clear that $C_1$ will not subsume $C_2$. Because a permutation of the outputs of $C_1$ will never be a subset of the outputs of $C_2$. More formally we can define this as the following lemma.
+	The subsumption test involves searching for a permutation of the outputs where $\pi(outputs(C_1) \subseteq outputs(C_2))$ that can involve in the worst case the check of $n!$ permutations. In the case of $n=9$ $n! = 362880$. However, in many cases it is not necessary to test any permutation to prove that a net does not subsume other. In this section we explain the techniques used in \cite{sortingnineinputs} and discuss implementation details for creating a subsume 
+
+	\begin{table}[H]
+		\begin{tabularx}{\textwidth}{ |l| *{3}{Y|} }
+			\hline
+			\textbf{number of 1s} & \textbf{1} & \textbf{2} & \textbf{3} \\
+			\hline
+			\makecell{$C_1$ \begin{sortingnetwork}4{0.5}
+					\addcomparator24
+					\nextlayer
+					\addcomparator23
+					\nextlayer
+					\addcomparator13
+			\end{sortingnetwork}} & \makecell{0010 \\ 1000} & \makecell{0110 \\ 1010 \\ 1100} & \makecell{0111 \\ 1110} \\ 
+			\hline
+			\makecell{$C_2$  \begin{sortingnetwork}4{0.5}
+					\addcomparator14
+					\nextlayer
+					\addcomparator34
+					\nextlayer
+					\addcomparator13
+			\end{sortingnetwork}}& \makecell{0010 \\ 0100 \\ 1000} & \makecell{0101 \\ 0110 \\ 1010 \\ 1100} & \makecell{0111 \\ 1101 \\ 1110 } \\  [1ex] 
+		\end{tabularx}
+		\caption{Comparator network outputs partitioned by number of 1s}
+		\label{table:permutationsExample}
+	\end{table}
+
+	If we take a look at table \ref{table:permutationsExample}, we can see that the number of outputs with one 1s in $C_1$ is smaller than the one in $C_2$. Given this, it is clear that $C_1$ will not subsume $C_2$ because a permutation of the outputs of $C_1$, will never be a subset of the outputs of $C_2$. More formally we can define this as the following lemma.
 	
 	\begin{lemma}
 		Given 2 comparator networks $C_a$ and $C_b$ with n channels and their arrays containing the number of sequences with k 1s $S1^{1}_k$ and $S2^{1}_k$. If for any $k\geq 0 \leq n$, $S1^{1}_k > S2^{1}_k$ $C_1$ does not subsume $C_2$.
@@ -13,7 +38,7 @@
 	
 	In \cite{sortingnineinputs} they state that 70\% of the subsumption tests are discarded on application of previous lemma.
 	
-	If we look again to the outputs in the figure above, in the column that contains the outputs with X number of 1s we can also notice that $C_1$ does not subsume $C_2$. That's because the digit 0 appears only in X positions in the sequences in $C_1$ while in Y positions in the sequences of $C_2$ and that will stay the same given any permutation. More formally it can be expressed in the following lemma:
+	If we look again to the outputs in the figure above, in the column that contains the outputs with $X$ number of 1s we can also notice that $C_1$ does not subsume $C_2$. That's because the digit 0 appears only in X positions in the sequences in $C_1$ while in Y positions in the sequences of $C_2$ and that will stay the same given any permutation. More formally it can be expressed in the following lemma:
 	
 	\begin{lemma}
 		Given 2 comparator networks $C_a$ and $C_b$ with n channels with their arrays $W^x$, $x \in \{0,1\}$ and $0\geq k \geq n$ we denote $P{^x_k}$ to the number of positions that x appears in k partition of $W^x$. If $P^x(C_a, k) > W^x(C_b, k)$ then $C_a$ does not subsume $C_b$.
@@ -21,45 +46,19 @@
 	
 	In \cite{sortingnineinputs} they state that 15\% of the subsumption tests that are not discarded on application of Lemma 4.1 are discarded on application of Lemma 4.2.
 	
-	If the subsumption test is not discarded in application of previous lemmas, there is no other way than trying to find a permutation that satisfies the condition of $\pi(outputs(C_a)) \subseteq outputs(C_b)$ as we stated before the running time of this is n! in the case that $C_a$ does not subsume $C_b$. However, in many cases we can avoid lots of checks by using the $W^0$ and $W^1$ arrays. Which leads to the following lemma:
+	If the subsumption test is not discarded in application of previous lemmas, there is no other way than trying to find a permutation that satisfies the condition of $\pi(outputs(C_a)) \subseteq outputs(C_b)$ as we stated before the running time of this is $O(n!)$ in the case that $C_a$ does not subsume $C_b$. However, in many cases we can avoid lots of checks by using the $W^0$ and $W^1$ arrays. Which leads to the following lemma:
 	
 	\begin{lemma}
 		Given 2 comparator networks $C_a$ and $C_b$ with n channels with their arrays $W^x$, $x \in \{0,1\}$ and $0\geq k \geq n$. If it exists a permutation $\pi(outputs(C_a)) \subseteq outputs(C_b)$ then $\pi(W^x(C_a, k) \subseteq (W^x(C_b, k))$.
 	\end{lemma}
 	
+	The above lemma allows in practice to skip thousands of permutations and is the base for the 2 algorithms implemented in this thesis to skip permutations. The first one uses a backtracking algorithm that avoids expanding branches that cannot lead to a feasible solution. The second one is extracted from \cite{improvedSubsumption} and represents the positions matrix as a bipartite graph to find possible permutations. In the next 2 sections we will explain them in more detail.
 	
-	The above lemma allows us in practice to skip thousands of permutations. This way we can implement the permutation generation with a backtracking algorithm that avoids expanding branches that cannot lead to a feasible solution.
+	\subsection{Permutations with backtracking}
 	
 	As an example we have the next 2 Comparator networks represented by their comparators pairs $C_1 = [(2,4), (2,3), (1,3)]$ and $C_2=[(1,4), (3,4), (1,3)]$. Now we represent the outputs of these networks partitioned by their number of 1s (we discard the trivial outputs with all ones and all zeroes).
 	
-	\begin{center}
-		\begin{table}[h]
-			\begin{tabularx}{\textwidth}{ |l| *{3}{Y|} }
-				\hline
-				\textbf{number of 1s} & \textbf{1} & \textbf{2} & \textbf{3} \\
-				\hline
-				\makecell{$C_1$ \begin{sortingnetwork}4{0.5}
-						\addcomparator24
-						\nextlayer
-						\addcomparator23
-						\nextlayer
-						\addcomparator13
-				\end{sortingnetwork}} & \makecell{0010 \\ 1000} & \makecell{0110 \\ 1010 \\ 1100} & \makecell{0111 \\ 1110} \\ 
-				\hline
-				\makecell{$C_2$  \begin{sortingnetwork}4{0.5}
-						\addcomparator14
-						\nextlayer
-						\addcomparator34
-						\nextlayer
-						\addcomparator13
-				\end{sortingnetwork}}& \makecell{0010 \\ 0100 \\ 1000} & \makecell{0101 \\ 0110 \\ 1010 \\ 1100} & \makecell{0111 \\ 1101 \\ 1110 } \\  [1ex] 
-			\end{tabularx}
-			\caption{Comparator network outputs partitioned by number of 1s}
-			\label{table:permutationsExample}
-		\end{table}
-	\end{center}
-	
-	With these partitioned sets we can create their $W^x$ matrices. Which allow us to know in which positions the outputs contain a zero or a 1.
+	With the partitioned sets of \ref{table:permutationsExample} we can create their $W^x$ matrices. Which allow us to know in which positions the outputs contain a zero or a one.
 	
 	\begin{center}
 		\begin{table}[h]
@@ -94,7 +93,23 @@
 	\quad
 	$$
 	
-	If we look carefully into the matrix, we can see that the 3rd column contains only zeroes. So, no index is allowed in the third position. This way we can say that $C_1$ does not subsume $C_2$ without trying any of the permutations. This applies also to the case that a row is all zeroes, which means that the bit in that position cannot be permuted to any of the other positions. This matrix allows to speed up the subsume operation and implement it as a backtracking algorithm which skips a huge amount of permutations.
+	If we look carefully into the matrix, we can see that the 3rd column contains only zeroes. So, no index is allowed in the third position. This way we can say that $C_1$ does not subsume $C_2$ without trying any of the permutations. This applies also to the case that a row is all zeroes, which means that the bit in that position cannot be permuted to any of the other positions. This matrix allows to speed up the subsume operation and implement it as a backtracking algorithm which skips a huge amount of permutations. In table \ref{table:compareSubsume} there is a comparison between the number of permutations checked while using the positions matrix with respect to not using it for comparator networks with 6 inputs.
+	
+	\begin{table}[H]
+		\hspace*{-1.5cm}
+		\begin{tabular}{|c |c c c c c c c c c c c c|}
+			\hline
+ 			comparator & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 \\
+			\hline
+			skipping & 14 & 31 & 181 & 330 & 1031 & 1373 & 1301 & 966 & 281 & 93 & 17 & 4 \\ [1ex]
+			\hline
+			not skipping $P$ & $2.8e3$ & $4.3e3$ & $4.5e3$ & $99e3$ & $27e4$ & $54e4$ & $59e4$ & $41e4$ & $19e4$ & $9.5e3$ & 259 & 4 \\  [1ex] 
+			\hline
+		\end{tabular}
+		\caption{Permutations tested for $n=6$ with and without skipping permutations}
+		\label{table:compareSubsume}
+	\end{table}
+
 	
 	\begin{algorithm}[H]
 		\caption {Subsumes}
@@ -110,8 +125,7 @@
 			\For{$row \leftarrow 1..n$}
 			\If {$P[row][column] = 1$}
 			\State $\pi[column] \leftarrow row $
-			\State $isSubsumed\gets\textsc{TryPermutations}(a)$
-			\If{$isSubsumed = True$}
+			\If{$\textsc{TryPermutations}(\pi, column+1)$}
 			\Return TRUE
 			\EndIf
 			\EndIf
@@ -124,6 +138,5 @@
 			\EndProcedure
 		\end{algorithmic}
 	\end{algorithm}
-	\subsection{Permutations Enumeration}
-	\subsection{Bigraph Perfect Matchings}
+	\subsection{Bigraph perfect matchings}
 \end{document}

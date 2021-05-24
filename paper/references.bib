@@ -33,10 +33,9 @@
 	primaryClass={cs.DS}
 }
 @Inbook{VanVoorhis1972,
-	author="Van Voorhis, David C.",
-	editor="Miller, Raymond E.
+	author="Van Voorhis, David C.,
 	and Thatcher, James W.
-	and Bohlinger, Jean D.",
+	and Bohlinger, Jean D."",
 	title="Toward a Lower Bound for Sorting Networks",
 	bookTitle="Complexity of Computer Computations: Proceedings of a symposium on the Complexity of Computer Computations, held March 20--22, 1972, at the IBM Thomas J. Watson Research Center, Yorktown Heights, New York, and sponsored by the Office of Naval Research, Mathematics Program, IBM World Trade Corporation, and the IBM Research Mathematical Sciences Department",
 	year="1972",
@@ -47,4 +46,72 @@
 	isbn="978-1-4684-2001-2",
 	doi="10.1007/978-1-4684-2001-2_12",
 	url="https://doi.org/10.1007/978-1-4684-2001-2_12"
+}
+@InProceedings{improvedSubsumption,
+	author="Fr{\u{a}}sinaru, Cristian
+	and R{\u{a}}schip, M{\u{a}}d{\u{a}}lina",
+	editor="Rousseau, Louis-Martin
+	and Stergiou, Kostas",
+	title="An Improved Subsumption Testing Algorithm for the Optimal-Size Sorting Network Problem",
+	booktitle="Integration of Constraint Programming, Artificial Intelligence, and Operations Research",
+	year="2019",
+	publisher="Springer International Publishing",
+	address="Cham",
+	pages="292--303",
+	abstract="In this paper a new method for checking the subsumption relation for the optimal-size sorting network problem is described. The new approach is based on creating a bipartite graph and modelling the subsumption test as the problem of enumerating all perfect matchings in this graph. Experiments showed significant improvements over the previous approaches when considering the number of subsumption checks and the time needed to find optimal-size sorting networks. We were able to generate all the complete sets of filters for comparator networks with 9 channels, confirming that the 25-comparators sorting network is optimal. The running time was reduced more than 10 times, compared to the state-of-the-art result described in [6].",
+	isbn="978-3-030-19212-9"
+}
+@article{valsalam:jmlr13,
+	title={Using Symmetry and Evolutionary Search to Minimize Sorting Networks},
+	author={Vinod K. Valsalam and Risto Miikkulainen},
+	volume={14},
+	journal={Journal of Machine Learning Research},
+	number={Feb},
+	pages={303--331},
+	url="http://nn.cs.utexas.edu/?valsalam:jmlr13",
+	year={2013}
+}
+@Article{Sekanina2005,
+	author={Sekanina, Luk{\'a}{\v{s}}
+	and Bidlo, Michal},
+	title={Evolutionary Design of Arbitrarily Large Sorting Networks Using Development},
+	journal={Genetic Programming and Evolvable Machines},
+	year={2005},
+	month={Sep},
+	day={01},
+	volume={6},
+	number={3},
+	pages={319-347},
+	abstract={An evolutionary algorithm is combined with an application-specific developmental scheme in order to evolve efficient arbitrarily large sorting networks. First, a small sorting network (that we call the embryo) has to be prepared to solve the trivial instance of a problem. Then the evolved program (the constructor) is applied on the embryo to create a larger sorting network (solving a larger instance of the problem). Then the same constructor is used to create a new instance of the sorting network from the created larger sorting network and so on. The proposed approach allowed us to rediscover the conventional principle of insertion which is traditionally used for constructing large sorting networks. Furthermore, the principle was improved by means of the evolutionary technique. The evolved sorting networks exhibit a lower implementation cost and delay.},
+	issn={1573-7632},
+	doi={10.1007/s10710-005-2987-8},
+	url={https://doi.org/10.1007/s10710-005-2987-8}
+}
+@inproceedings{SortingNetworkIsomorphism,
+	author = {Choi, Sung-Soon and Moon, Byung-Ro},
+	title = {Isomorphism, Normalization, and a Genetic Algorithm for Sorting Network Optimization},
+	year = {2002},
+	isbn = {1558608788},
+	publisher = {Morgan Kaufmann Publishers Inc.},
+	address = {San Francisco, CA, USA},
+	abstract = {In this paper, we define sorting network isomorphism and examine its relationship to graph-theoretic problems. We devise the normalization technique that exploits the functional similarities of sorting networks, which in turn helps genetic algorithms avoid too much perturbation. The sorting network isomorphism provides the basis for the normalization. In addition, we developed an effective local search heuristic for the problem. Combining the local heuristic with a genetic algorithm, we found 60-comparator sorting networks in the 16-bus problem without fixing any comparators on a single-CPU PC. This result is significantly faster and more stable than the previous study conducted with a supercomputer.},
+	booktitle = {Proceedings of the 4th Annual Conference on Genetic and Evolutionary Computation},
+	pages = {327–334},
+	numpages = {8},
+	location = {New York City, New York},
+	series = {GECCO'02}
+}
+@article{FRASINARU2019447,
+	title = {Greedy Best-First Search for the Optimal-Size Sorting Network Problem},
+	journal = {Procedia Computer Science},
+	volume = {159},
+	pages = {447-454},
+	year = {2019},
+	note = {Knowledge-Based and Intelligent Information & Engineering Systems: Proceedings of the 23rd International Conference KES2019},
+	issn = {1877-0509},
+	doi = {https://doi.org/10.1016/j.procs.2019.09.199},
+	url = {https://www.sciencedirect.com/science/article/pii/S187705091931381X},
+	author = {Cristian Frăsinaru and Mădălina Răschip},
+	keywords = {Comparator networks, Optimal-size sorting networks, Subsumption relation, Greedy Best-First Search},
+	abstract = {In this paper we present an effective algorithm for creating minimal-size sorting networks. Our approach is based on incrementally constructing sets of sorting networks, starting from a specified prefix and adding gradually new comparators. At each step, in order to limit the size of these sets, only the most promising candidates are considered. We introduce a novel rule for implementing the selection of candidates, based on analyzing the structure of a network’s output, instead of simply considering its size. For 16 wires, the running time necessary to determine a sorting network was reduced up to 90 times, compared to state-of-the-art results [21].}
 }
