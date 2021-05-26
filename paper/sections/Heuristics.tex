@@ -3,20 +3,20 @@
 
 \begin{document}
 	\section{Heuristics}
-	In this section we study heuristic methods that can reduce the population size after the Generate and Prune algorithms while still leading to promising results. In particular 3 methods were used. The first 2 methods discard networks based in some characteristics in their outputs sets. And the last one sets as subsumed any network that arrives to the last phase of the subsumption test, so instead of checking the permutations of the outputs we just throw that network.
+	In this section we study heuristic methods that can reduce the population size after the Generate and Prune algorithms while still leading to promising results. In particular 3 methods were used. The first 2 methods discard networks based in some characteristics in their outputs sets. And the last one avoids the permutations check in the prune phase, setting as subsumed any network that arrives to that stage. Combinations of these heuristics have dealt promising results finding minimal sorting networks.
 	
-	\subsection{Remove big outputs heuristic}
+	\subsection{Remove networks with more outputs heuristic}
 	A sorting network of size $n$ has $n+1$ binary outputs. Consequently, we can say that networks containing less outputs order "better" than those containing more. In this Heuristic we order the set of networks by their number of outputs and remove the ones with bigger output's number until a given population size. This heuristic is one of the most common in the literature such as \cite{Sekanina2005} and \cite{SortingNetworkIsomorphism}.
 	
 	\subsection{Bad positions heuristic}
 	This heuristic is defined in \cite{FRASINARU2019447}. It takes a comparator network and gives it a score based on the number of "bad positions" that it's outputs contain. A bad zero is defined as follows:
 	
-	Let C be a comparator network of with $n$ inputs, if C is a sorting network then for any input sequence $x$ that contains $p$ zeroes the output will be the sequence that contains zeroes in the first $p$ positions and ones in the rest $n-p$ positions. We call bad position to those ones that contain a zero in a place that a 1 should be. The evaluation function is as follows:
+	Let $C$ be a comparator network of with $n$ inputs, if $C$ is a sorting network then for any input sequence $x$ that contains $p$ zeroes the output will be the sequence that contains zeroes in the first $p$ positions and ones in the rest $n-p$ positions. We call bad position to those that contain a zero in a place where a 1 should be. The evaluation function is as follows:
 	
 	$f(C)=\frac{1}{(n+1)*(2^n-1)}*(2^n * |bad(C)| + |outputs(C)| - n -1)$
 	
 	\subsection{Prune with no permutations heuristic}
-	The last heuristic that we tried is pruning every network which subsumption is not discarded based in the Lemmas of section 5. So, given $C_1$ and $C_2$ comparator networks when checking if $C_1$ subsumes $C_2$. If the subsumption is not discarded applying the Lemmas of section 5, instead of trying to find a permutation $\pi$ that $\pi(outputs(C_a)) \subset outputs(C_b)$ we directly mark $C_b$ as subsumed. When applying this rule alone, the sizes of the biggest sets are reduced up to a 1\% of those of the Generate and Prune algorithm studied before. This heuristic alone was able to find always a sorting network with the already best known sizes in the interval $2...13$ and in combination with the Remove big outputs heuristic we found networks with the best known sizes in the sizes until $n=16$. In \ref{table:noPermutations} we compare the sets after prune for $n=9$ of both implementations:
+	The last heuristic that we tried is pruning every network which subsumption is not discarded based in the Lemmas of section 5. Given $C_1$ and $C_2$ comparator networks, when checking if $C_1$ subsumes $C_2$ if the subsumption is not discarded applying the Lemmas of section 5, instead of trying to find a permutation $\pi$ that $\pi(outputs(C_a)) \subset outputs(C_b)$ we directly mark $C_b$ as subsumed. This way we reduce the subsume operation complexity from $O(n!)$ to $O(1)$. When applying this rule alone, the sizes of the biggest sets are reduced up to a around 0.05\% of those of the subsumption test studied before. This heuristic alone was able to find always a sorting network with the already best known sizes in the interval $2...13$ and in combination with the Remove big outputs heuristic we found networks with the best known sizes with inputs up to $n=16$. In table \ref{table:noPermutations} we compare the sets after prune for $n=9$ of both implementations. To put it into perspective, while the traditional approach took 10 hours and a half in a computer with 126 processors to deal a result for $R{_9^{25}}$, with this heuristic we get a sorting network of size 25 in one second using a laptop.  
 	
 	\begin{table}[H]
 		\begin{tabular}{|c c c c c c c c c c c c c c|}
@@ -42,6 +42,9 @@
 			\hline
 		\end{tabular}
 	\end{table}
+
+	\subsection{Heuristics results}
+	In this section we state the results of using the heuristics and combinations of them. Both remove networks with more outputs and bad positions heuristic have similar results and in combination with prune with no permutations lots of networks were found with relatively small population sizes.
 	
 	Sorting networks with reduced population sets combining big outputs and prune with no permutations heuristics:
 	\begin{center}
@@ -63,6 +66,8 @@
 			\hline
 		\end{tabular}
 	\end{center}
+	
+	More tables to come.
 	
 	Found sorting network with 19 inputs and 86 comparators. Same size than \cite{valsalam:jmlr13}. Would have been record in 2013. 
 \end{document}

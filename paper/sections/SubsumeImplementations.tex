@@ -3,7 +3,7 @@
 
 \begin{document}
 	\section{Subsume Implementations}
-	The subsumption test involves searching for a permutation of the outputs where $\pi(outputs(C_1) \subseteq outputs(C_2))$ that can involve in the worst case the check of $n!$ permutations. In the case of $n=9$ $n! = 362880$. However, in many cases it is not necessary to test any permutation to prove that a net does not subsume other. In this section we explain the techniques used in \cite{sortingnineinputs} and discuss implementation details for creating a subsume 
+	The subsumption test involves searching for a permutation of the outputs where $\pi(outputs(C_1) \subseteq outputs(C_2))$ that can involve in the worst case the check of $n!$ permutations. In the case of $n=9$ $n! = 362880$. However, in many cases it is not necessary to test any permutation to prove that a network does not subsume other. In this section we explain the techniques used in \cite{sortingnineinputs} and discuss implementation details for creating a subsume 
 
 	\begin{table}[H]
 		\begin{tabularx}{\textwidth}{ |l| *{3}{Y|} }
@@ -30,23 +30,23 @@
 		\label{table:permutationsExample}
 	\end{table}
 
-	If we take a look at table \ref{table:permutationsExample}, we can see that the number of outputs with one 1s in $C_1$ is smaller than the one in $C_2$. Given this, it is clear that $C_1$ will not subsume $C_2$ because a permutation of the outputs of $C_1$, will never be a subset of the outputs of $C_2$. More formally we can define this as the following lemma.
+	If we take a look at table \ref{table:permutationsExample}, we can see that the number of outputs in the partition 1 of $C_1$ is smaller than the one in $C_2$. Given this, it is clear that $C_1$ will not subsume $C_2$ because a permutation of the outputs of $C_1$, will never be a subset of the outputs of $C_2$. More formally, we can define this as the following lemma.
 	
 	\begin{lemma}
-		Given 2 comparator networks $C_a$ and $C_b$ with n channels and their arrays containing the number of sequences with k 1s $S1^{1}_k$ and $S2^{1}_k$. If for any $k\geq 0 \leq n$, $S1^{1}_k > S2^{1}_k$ $C_1$ does not subsume $C_2$.
+		Given 2 comparator networks $C_a$ and $C_b$ with $n$ channels and their arrays containing the number of sequences with $k$ 1s $S1^{1}_k$ and $S2^{1}_k$. If for any $k\geq 0 \leq n$, $S1^{1}_k > S2^{1}_k$ $C_1$ does not subsume $C_2$.
 	\end{lemma}
 	
 	In \cite{sortingnineinputs} they state that 70\% of the subsumption tests are discarded on application of previous lemma.
 	
-	If we look again to the outputs in the figure above, in the column that contains the outputs with $X$ number of 1s we can also notice that $C_1$ does not subsume $C_2$. That's because the digit 0 appears only in X positions in the sequences in $C_1$ while in Y positions in the sequences of $C_2$ and that will stay the same given any permutation. More formally it can be expressed in the following lemma:
+	If we look again to the outputs in the table \ref{table:permutationsExample}, in the partition 3 we can also notice that $C_1$ does not subsume $C_2$. That's because the digit 0 appears only in 2 positions in the sequences for $C_1$ while in 3 positions in the sequences of $C_2$ and that will stay the same given any permutation. More formally it can be expressed in the following lemma:
 	
 	\begin{lemma}
 		Given 2 comparator networks $C_a$ and $C_b$ with n channels with their arrays $W^x$, $x \in \{0,1\}$ and $0\geq k \geq n$ we denote $P{^x_k}$ to the number of positions that x appears in k partition of $W^x$. If $P^x(C_a, k) > W^x(C_b, k)$ then $C_a$ does not subsume $C_b$.
 	\end{lemma}
 	
-	In \cite{sortingnineinputs} they state that 15\% of the subsumption tests that are not discarded on application of Lemma 4.1 are discarded on application of Lemma 4.2.
+	In \cite{sortingnineinputs} they state that 15\% of the subsumption tests that are not discarded on application of Lemma 5.1 are discarded on application of Lemma 5.2.
 	
-	If the subsumption test is not discarded in application of previous lemmas, there is no other way than trying to find a permutation that satisfies the condition of $\pi(outputs(C_a)) \subseteq outputs(C_b)$ as we stated before the running time of this is $O(n!)$ in the case that $C_a$ does not subsume $C_b$. However, in many cases we can avoid lots of checks by using the $W^0$ and $W^1$ arrays. Which leads to the following lemma:
+	If the subsumption test is not discarded in application of previous lemmas, there is no other way than trying to find a permutation that satisfies the condition of $\pi(outputs(C_a)) \subseteq outputs(C_b)$. As we stated before the running time of this is $O(n!)$ in the case that $C_a$ does not subsume $C_b$. However, in many cases we can avoid lots of permutations checks. With the partitioned output sets stated before we can create 2 matrices, $W^0$ and $W^1$ of size $n*n$. These matrices state the positions where a 0 or a 1 respectively are found in each of the partition stated above. This way by combining the matrices of 2 different comparator networks we can create another matrix that will contain the forbidden positions for the output indices. This way we avoid testing permutations with positions that are forbidden.
 	
 	\begin{lemma}
 		Given 2 comparator networks $C_a$ and $C_b$ with n channels with their arrays $W^x$, $x \in \{0,1\}$ and $0\geq k \geq n$. If it exists a permutation $\pi(outputs(C_a)) \subseteq outputs(C_b)$ then $\pi(W^x(C_a, k) \subseteq (W^x(C_b, k))$.
@@ -56,7 +56,7 @@
 	
 	\subsection{Permutations with backtracking}
 	
-	As an example we have the next 2 Comparator networks represented by their comparators pairs $C_1 = [(2,4), (2,3), (1,3)]$ and $C_2=[(1,4), (3,4), (1,3)]$. Now we represent the outputs of these networks partitioned by their number of 1s (we discard the trivial outputs with all ones and all zeroes).
+	As an example we have the next 2 comparator networks represented by their comparator pairs $C_1 = [(2,4), (2,3), (1,3)]$ and $C_2=[(1,4), (3,4), (1,3)]$. Now we represent the outputs of these networks partitioned by their number of 1s (we discard the trivial outputs with all ones and all zeroes).
 	
 	With the partitioned sets of \ref{table:permutationsExample} we can create their $W^x$ matrices. Which allow us to know in which positions the outputs contain a zero or a one.
 	
@@ -118,12 +118,12 @@
 			\State $C_1$ comparator network
 			\State $C_2$ comparator network
 			\State $P$ positions matrix
-			\State $column \leftarrow 0$
+			\State $j \leftarrow 0$
 			\State $\pi \leftarrow \emptyset $ \Comment {permutation}
 			
-			\Procedure{TryPermutations}{$\pi,column$}
-			\For{$row \leftarrow 1..n$}
-			\If {$P[row][column] = 1$}
+			\Procedure{TryPermutations}{$\pi,j$}
+			\For{$i \leftarrow 1..n$}
+			\If {$P[i][j] = 1$}
 			\State $\pi[column] \leftarrow row $
 			\If{$\textsc{TryPermutations}(\pi, column+1)$}
 			\Return TRUE
