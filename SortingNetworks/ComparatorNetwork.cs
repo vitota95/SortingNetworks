@@ -1,5 +1,5 @@
 ﻿//#define DUAL
-#define PERMUTE
+//#define PERMUTE
 //#define PRUNE_GRAPH_MATCHING
 //#define DONT_SAVE_OUTPUTS
 
@@ -257,9 +257,6 @@ namespace SortingNetworks
 
         private bool TryPermutations(int[] positions, int[] permutation, int[] o1, int[] o2, int numComparators, bool pIsPossible = true, bool dualPIsPossible = true, int index = 0)
         {
-#if DEBUG
-            IComparatorNetwork.TryPermutationCall++;
-#endif
             if (index == IComparatorNetwork.Inputs)
             {
                 return false;
@@ -267,7 +264,7 @@ namespace SortingNetworks
 
             for (var j = 0; j < IComparatorNetwork.Inputs; j++)
             {
-                if ((positions[j] & (1 << index)) == 0) continue;
+                //if ((positions[j] & (1 << index)) == 0) continue;
 
                 if (IsAlreadyAdded(permutation, j, index - 1)) continue;
 
@@ -289,6 +286,10 @@ namespace SortingNetworks
             {
                 return false;
             }
+
+#if DEBUG
+            IComparatorNetwork.TryPermutationCall++;
+#endif
 
             if (OutputIsSubset(permutation, o1, o2))
             {
@@ -427,7 +428,7 @@ namespace SortingNetworks
         {
             var numOutputs = this.Outputs.Sum(y => PopCount((uint)y));
 
-            return 1 / ((IComparatorNetwork.Inputs + 1) * (1 << IComparatorNetwork.Inputs) - 1)
+            return 1 / ((IComparatorNetwork.Inputs + 1) * ((1 << IComparatorNetwork.Inputs) - 1))
                    * (1 << IComparatorNetwork.Inputs * this.GetBadZeroes() + numOutputs - IComparatorNetwork.Inputs - 1);
         }
 

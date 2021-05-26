@@ -1,4 +1,4 @@
-﻿#define SAVEALL
+﻿//#define SAVEALL
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -15,15 +15,18 @@ namespace SortingNetworks
     public class Program
     {
         // It's five million nets a lot to have in memory?
-        private static int MAX_GENERATE_WITHOUT_BATCHES = 5000;
+        private static int MAX_GENERATE_WITHOUT_BATCHES = 50000;
 
         private static int[] stateOfTheArtBestSizes = {0, 1, 3, 5, 9, 12, 16, 19, 25, 29, 35, 39, 45, 51, 56, 60, 71, 77, 85, 91, 100, 107, 115, 120, 132, 139, 150, 155, 165, 172, 180, 185 };
+
+        private static bool useBadZeroes = false;
 
         public static void Main(string[] args)
         {
             var copySteps = new List<int>();
             var batchSize = MAX_GENERATE_WITHOUT_BATCHES/2;
             var heuristicPopulation = 0;
+            
             IReadOnlyList<IComparatorNetwork> comparatorNets = null;
             IPruner pruner = new Pruner();
             IPruner.Threads = 1;
@@ -71,6 +74,9 @@ namespace SortingNetworks
                     case "-p":
                         heuristicPopulation = Convert.ToInt32(arg.Substring(3));
                         heuristicTest = true;
+                        break;
+                    case "-z":
+                        useBadZeroes = true;
                         break;
                     default:
                         Trace.WriteLine("Usage:");
@@ -146,8 +152,8 @@ namespace SortingNetworks
 
                     if (heuristicPopulation > 0 && comparatorNets.Count > heuristicPopulation)
                     {
-                        //comparatorNets = HeuristicRemover.RemoveNetsWithMoreBadZeroes(comparatorNets, heuristicPopulation);
-                        comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets, heuristicPopulation);
+                        comparatorNets = HeuristicRemover.RemoveNetsWithMoreBadZeroes(comparatorNets, heuristicPopulation);
+                        //comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets, heuristicPopulation);
                     }
                 }
                 else
@@ -182,20 +188,23 @@ namespace SortingNetworks
                     else
                     {
                         comparatorNets = pruner.Prune(comparatorNets);
+
                     }
 
                     if (heuristicPopulation > 0 && comparatorNets.Count > heuristicPopulation)
                     {
                         //comparatorNets = HeuristicRemover.RemoveNetsWithMoreBadZeroes(comparatorNets, heuristicPopulation);
-                        comparatorNets = HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets, heuristicPopulation);
+                        
+                        comparatorNets = useBadZeroes ? HeuristicRemover.RemoveNetsWithMoreBadZeroes(comparatorNets, heuristicPopulation) : 
+                            HeuristicRemover.RemoveNetsWithMoreOutputs(comparatorNets, heuristicPopulation);
                     }
                     Trace.WriteLine($"Length after Prune: {comparatorNets.Count}");
                     Trace.WriteLine($"Prune time  {pruneWatch.Elapsed}");
                 }
 #if DEBUG
-                Trace.WriteLine($"Is subset: {IComparatorNetwork.IsSubset}");
+                Trace.WriteLine($"Permutations tested: {IComparatorNetwork.TryPermutationCall}");
                 Trace.WriteLine($"Is subset dual: {IComparatorNetwork.IsSubsetDual}");
-                Trace.WriteLine($"Try permutations call: {IComparatorNetwork.TryPermutationCall:N}");
+                //Trace.WriteLine($"Try permutations call: {IComparatorNetwork.TryPermutationCall:N}");
                 IComparatorNetwork.IsSubset = 0;
                 IComparatorNetwork.IsSubsetDual = 0;
                 IComparatorNetwork.TryPermutationCall = 0;
@@ -303,8 +312,7 @@ namespace SortingNetworks
 
                     foreach (var c in sortingNets[0].Comparators)
                     {
-                        text += $"({c.X},{c.Y}) ";
-
+                        text += $"({c.X + 1},{c.Y + 1}) ";
                     }
 
                     text += "\n";
@@ -325,9 +333,19 @@ namespace SortingNetworks
 
         private static void PrintComparatorNet(IComparatorNetwork net)
         {
+            var set = new HashSet<int>();
             foreach (var c in net.Comparators)
             {
-                Trace.Write($"({c.X},{c.Y}) ");
+                var x = c.X + 1;
+                var y = c.Y + 1;
+
+                if (!set.Add(x) || !set.Add(y))
+                {
+                    Trace.WriteLine("");
+                    set = new HashSet<int>(new []{x,y});
+                }
+
+                Trace.Write($"({x},{y}) ");
             }
             Trace.WriteLine(string.Empty);
         }
