@@ -48,7 +48,8 @@ namespace SortingNetworks
                     case @"-l":
                         // log file
                         var traceFile = arg.Substring(3);
-                        InitiateTracer(CreateDefaultListeners(traceFile));
+                        InitiateTracer();
+                        CreateDefaultListeners(traceFile);
                         break;
                     case "-r":
                         var path = arg.Substring(3);
@@ -250,7 +251,7 @@ namespace SortingNetworks
 #endif
             Trace.WriteLine(string.Empty);
 
-            PrintSortingNetworks(comparatorNets.Where(x => x.IsSortingNetwork2N()).ToList(), IComparatorNetwork.Inputs);
+            PrintSortingNetworks(comparatorNets.Where(x => x.IsSortingNetwork2N()).ToList(), IComparatorNetwork.Inputs, heuristicPopulation.ToString());
 
             return comparatorNets.Any(x => x.IsSortingNetwork2N());
         }
@@ -268,37 +269,29 @@ namespace SortingNetworks
         }
 #endif
 
-        public static void InitiateTracer(TraceListener[] listeners)
+        public static void InitiateTracer()
         {
             Trace.Listeners.Clear();
-
-            foreach (var traceListener in listeners)
-            {
-                Trace.Listeners.Add(traceListener);
-            }
 
             Trace.AutoFlush = true;
         }
 
-        private static TraceListener[] CreateDefaultListeners(string traceFile)
+        private static void CreateDefaultListeners(string traceFile)
         {
-            var twtl = new TextWriterTraceListener(traceFile)
-            {
-                Name = "TextLogger",
-                TraceOutputOptions = TraceOptions.DateTime
-            };
             var ctl = new ConsoleTraceListener(false) { TraceOutputOptions = TraceOptions.DateTime };
-
-            return new TraceListener[] { twtl, ctl };
+            Trace.Listeners.Add(ctl);
+            AddTraceListener(traceFile);
         }
 
-        private static void PrintSortingNetworks(IReadOnlyList<IComparatorNetwork> nets, int size)
+        private static void PrintSortingNetworks(IReadOnlyList<IComparatorNetwork> nets, int size, string h)
         {
             if (nets == null)
             {
                 Trace.WriteLine("--------No Sorting networks found.");
                 return;
             }
+
+            AddTraceListener($"outputs/foundNetwork{IComparatorNetwork.Inputs}_{nets[0].Comparators.Length}_{h}.txt");
 
             var sortingNets = nets.Where(x => x.IsSortingNetwork()).ToList();
 
@@ -329,6 +322,17 @@ namespace SortingNetworks
             }
 
             Trace.WriteLine("No Sorting networks found");
+        }
+
+        private static void AddTraceListener(string traceFile)
+        {
+            var twtl = new TextWriterTraceListener(traceFile)
+            {
+                Name = "TextLogger",
+                TraceOutputOptions = TraceOptions.DateTime
+            };
+
+            Trace.Listeners.Add(twtl);
         }
 
         private static void PrintComparatorNet(IComparatorNetwork net)
