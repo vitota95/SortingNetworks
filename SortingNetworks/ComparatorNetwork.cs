@@ -264,7 +264,7 @@ namespace SortingNetworks
 
             for (var j = 0; j < IComparatorNetwork.Inputs; j++)
             {
-                //if ((positions[j] & (1 << index)) == 0) continue;
+                if ((positions[j] & (1 << index)) == 0) continue;
 
                 if (IsAlreadyAdded(permutation, j, index - 1)) continue;
 
