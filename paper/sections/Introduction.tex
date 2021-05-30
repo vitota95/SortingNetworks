@@ -4,26 +4,26 @@
 
 \section{Introduction}
 A sorting network is a formal representation of a sorting algorithm that for any inputs generates
-monotically increasing outputs. A sorting network is formed by n channels each of them carrying one input,
-which are connected pairwise by comparators. A comparator compares the inputs from it's 2 channels and 
+monotically increasing outputs. A sorting network is formed by $n$ channels each of them carrying one input,
+which are connected pairwise by comparators. A comparator compares the inputs from its 2 channels and 
 outputs them sorted to the same 2 channels. A comparator network is a sorting network if for any 
 input sequence the output is always the sorted sequence. What makes sorting networks special is their
 high parallelization capacity, we can create parallel layers of comparators as long as none of them is part of
 the same input channel at once.
 
-The creation of optimal sorting networks can be divided in 2 tasks. Finding sorting networks with less comparators,
-also called size optimization. And finding sorting networks with less parallel layers, also called depth optimization.
-In this thesis we will focus in the size optimization.
+Optimizing sorting networks can be done in two ways. Finding sorting networks with fewer comparators,
+also called size optimization. And finding sorting networks with fewer parallel layers, also called depth optimization.
+In this thesis we will focus on size optimization.
 
-The search of optimal size sorting networks involves to test all comparator networks of a giving size. 
+The only known way of finding optimal size sorting networks involves testing all comparator networks of a giving size. 
 For example to prove the optimality of the sorting network
-with 11 inputs and 35 comparators we should consider 55 = (11 x 10)/2 possibilities to place each comparator in 2 out of 11 channels. Therefore the search space is of $55^{35} \approx 9 * 10^{60}$ comparator networks. 
+with 11 inputs and 35 comparators we should consider 55 = (11 x 10)/2 possibilities to place each comparator in 2 out of 11 channels. Therefore the search space is of $55^{35} \approx 9 \times 10^{60}$ comparator networks. 
 
-This problem can only be addressed by using symmetry breaking rules to trim the search space. For this matter first I implemented the method used in \cite{sortingnineinputs} called generate and prune. This method is formed by 2 phases.
-In the generate phase, starting with a one comparator network it iteratively creates new networks with one comparator more in all possible positions. In the prune phase the redundant networks (networks equivalent to others in the set) are removed. This way the search space is reduced to $2.2 * 10^{37}$ to around $3.3 * 10^{21}$ for the 9 inputs network.
+One of the ways to address this problem is by using symmetry breaking rules to trim the search space. For this purpose, the authors of \cite{sortingnineinputs} proposed a method that they called generate-and-prune. This method is formed by two phases that alternate, starting from an empty comparator network.
+In the generate phase,it iteratively creates new networks with one comparator more in all possible positions. In the prune phase, starting with the output set of the Generate algorithm, the redundant networks (networks equivalent to others in the set) are removed. This way the search space is reduced to $2.2 \times 10^{37}$ to around $3.3 \times 10^{21}$ for the 9 inputs network.
 
-In the first part of this thesis, focused in improving the implementation using modern programming languages and reducing the memory and CPU consumption. This itself allowed to reproduce the same results than in \cite{sortingnineinputs} with only 10 hours of compute time in a 64 cores computer more modest than the one used in \cite{sortingnineinputs} which took one week of computing. However, when trying to address the next open problem, this itself is not enough. Due to the combinatory explosion it would be necessary around a year of computing time in this computer to find a solution for the 11 input problem. This led to the second part of this thesis where I apply heuristics to the generate and prune method. During the test of heuristic I discovered without prove a method that allows to discover nets with the same size than all the already best size networks until 13 inputs. For 14 inputs and above again the sets are too big to be tested in the available hardware.
+In the first part of this thesis, I focused on implementing and improving generate-and-prune using modern programming languages and reducing the memory and CPU consumption. This itself allowed to reproduce the same results as in \cite{sortingnineinputs} (demonstrate that the minimum number of comparators to sort 9 inputs is 25), with only 10 hours of compute time in a 64-core computer more modest than the one used in \cite{sortingnineinputs} which took one week of computing. However, when trying to address the next open problem, this itself is not enough. Due to the combinatory explosion it would be necessary around a year of computing time in this computer to find a solution for the 11 input problem. This led to the second part of this thesis where I apply heuristics to the generate-and-prune method. One of the heuristics tested is able to discover networks with the same size than all the already best known sizes for networks until 13 inputs. For 14 inputs and above again the intermediate sets generated during generate-and-prune are too big to manage in the available hardware.
 
-The combination of heuristic functions with generate and prune has dealt promising results, finding networks of the same size than the state of the art smallest networks in the interval 3-16. In the following chapters I will state with further details of the work performed in this master thesis.
-
+The combination of heuristic functions with generate-and-prune has dealt promising results, finding networks of the same size than the state of the art smallest networks in the interval 3-16. In the following chapters I will state with further details the work performed in this master thesis.
+\newpage
 \end{document}

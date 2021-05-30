@@ -2,21 +2,26 @@
 \graphicspath{{\subfix{images/}}}
 
 \begin{document}
-	\section{Generate and Prune}
-	As we have seen before, our objective is to generate a complete set for all the comparator networks with n channels and k comparators. To do that we will use the Generate and Prune method seen in \cite{sortingnineinputs} we start in the empty net and consecutively we add a new comparator in all possible ways. For comparator networks with $n$ inputs and $k$ comparators, we call this complete set $N^{n}_{k}$. In the naive approach adding a comparator in all possible positions deals to $n*(n-1)/2$ comparator networks, as we have to repeat this step k times we end with $(n*(n-1)/2)^k$ comparator networks, we call this Generate. However, for $n=9$, $N^{9}_{25}\approx 3*10^{38}$ making this approach infeasible to compute. To reduce the search space, the Prune method will take the set $N^{n}_{k}$ and reduce it to the set $R^{n}_{k}$ that contains the minimum complete set of filters for $k$ comparators, afterward the Generate method will receive $R^{n}_{k}$ and extend it to $N^{n}_{k+1}$ by extending each comparator network with a new comparator in all possible positions. This sequence is repeated until the set $R^{n}{k}$ contains just one network that will be a sorting network, as the size of the minimum set of filters for the size problem when it contains sorting network is 1.
+	\section{Generate-and-Prune}
+	As we have seen before, our objective is to generate a complete set for all the comparator networks with n channels and k comparators. To do that we will use the generate-and-prune method seen in \cite{sortingnineinputs}.
+	
+	 We start in the empty net and consecutively we add a new comparator in all possible ways. For comparator networks with $n$ inputs and $k$ comparators, we call this complete set $N^{n}_{k}$. In the naive approach adding a comparator in all possible positions deals to $n\times(n-1)/2$ comparator networks, as we have to repeat this step k times we end with $(n\times(n-1)/2)^k$ comparator networks, we call this Generate. However, for $n=9$, $N^{9}_{25}\approx 3\times10^{38}$ making this approach infeasible to compute. To reduce the search space, the Prune method will take the set $N^{n}_{k}$ and reduce it to the set $R^{n}_{k}$ that contains the minimum complete set of filters for $k$ comparators, afterward the Generate method will receive $R^{n}_{k}$ and extend it to $N^{n}_{k+1}$ by extending each comparator network with a new comparator in all possible positions. This sequence is repeated until the set $R^{n}{k}$ contains just one network that will be a sorting network, as the size of the minimum set of filters for the size problem when it contains sorting network is 1.
 	
 	\begin{definition}
 		Given 2 comparator networks $C_a$ and $C_b$ we say that $C_a$ subsumes $C_b$ if there exists some permutation $\pi$ such that $\pi (outputs(C_a)) \subset outputs(C_b)$.
 	\end{definition}
+
+	The following lemma from \cite{sortingnineinputs} proves the completeness of the set of filters after Prune.
 	
 	\begin{lemma}
 		Given 2 comparator networks $C_a$ and $C_b$ where $C_a$ subsumes $C_b$, if there is a sorting network of the type $C_b \cup C$ with size $k$, there is also a sorting network of the type $C_a \cup C'$ with size $k$.
 	\end{lemma}
 	
-	The previous lemma implies that we can create a complete set of comparator networks while discarding the networks that are subsumed by any other network in the naive complete set. This is the base of the Generate and Prune algorithms. Starting with the empty set $R{^n_0}$, which corresponds to the empty comparator network. The algorithms Generate and Prune work in the following way:
+	The previous lemma implies that we can create a complete set of comparator networks while discarding the networks that are subsumed by any other network in the naive complete set. This is the base of the Generate and Prune algorithms. Starting with the empty set $R{^n_0}$, which corresponds to the empty comparator network. The algorithms work in the following way:
 	
 	\begin{itemize}
 		\item Generate: Given the set $R{^n_k}$ extends it to the set $N{^n_{k+1}}$ by adding one extra comparator to each element in the previous set in any possible way.
 		\item Prune: Given the set $N{^n_k}$ creates the set $R{^n_{k+1}}$ removing any network subsumed by those networks that are not removed.
 	\end{itemize}
+	\newpage
 \end{document}

@@ -3,10 +3,14 @@
 
 \begin{document}
 	\section{Sorting networks preliminaries}
-	A comparator network with $n$ inputs is a sequence of comparators, each comparator is formed by a tuple of channels $C=(i_1,j_1);...;(i_k,j_k)$ where $(1 \leq i_l < j_l \leq n)$. We name size, to the number of comparators the network has. We call $S(n)$ to the minimum size a sorting network with $n$ inputs can have.
+	A comparator network with $n$ inputs is a sequence of comparators $C=(i_1,j_1);..;(i_k,j_k)$ where $1 \leq i_l < j_l \leq n$. We call each pair $(i_l,j_l)$ a comparator. The size of a networks is the number of comparators the network has. We denote by $S(n)$ the minimum size a sorting network with $n$ inputs can have.
 	
-	An input $\bar{x}=x_1...x_n \in \{0, 1\}^n$ travels the sorting network as follows: $\bar{x_0}=\bar{x}$ for $0<l\leq k$, $\bar{x^l}$ is a permutation of $\bar x^{l-1}$ exchanging $\bar x^{l-1}_{i_l}$ and $\bar x^{l-1}_{j_l}$ if $\bar x^{l-1}_{i_l} > \bar x^{l-1}_{j_l}$.
-	A comparator network is a sorting network if for any set of inputs the outputs are the ascending ordered sequence. The reason we take only binary sequences is because of the zero-one principle\cite{knuth1997art} which states that a comparator network orders all sequences in $\{0,1\}$ if and only if it sorts all sequences in any ordered set such as the integers set. This also allows to test if a comparator network is a sorting network without testing $n!$ combinations of sequences. If a comparator network orders all the $2^n$ binary sequences in $1..n$ it is enough to state that it is indeed a sorting network. A sorting network can be represented as seen in figure \ref{sortingNetwork1} where the transversal lines are the outputs set of inputs and the unions are comparators.
+	An input $\bar{x}=x_1...x_n \in \{0, 1\}^n$ travels the sorting network as follows: $\bar{x_0}=\bar{x}$; for $0<l\leq k$, $\bar{x^l}$ is the permutation of $\bar x^{l-1}$ obtained by exchanging $\bar x^{l-1}_{i_l}$ and $\bar x^{l-1}_{j_l}$ if $\bar x^{l-1}_{i_l} > \bar x^{l-1}_{j_l}$.The output corresponding to $\bar x is \bar x^k$.
+	A comparator network is a sorting network if the output corresponding to any input is sorted ascending. 
+	
+	The reason we take only binary sequences is because of the zero-one principle \cite{knuth1997art} which states that a comparator network orders all sequences in $\{0,1\}$ if and only if it sorts all sequences in any ordered set (such as the integers). This also allows to test if a comparator network is a sorting network without testing $n!$ combinations of sequences. If a comparator network orders all the $2^n$ binary sequences in ${0,1}^n$ then it is indeed a sorting network.
+	
+	A sorting network can be represented as seen in Figure \ref{sortingNetwork1} where the horizontal lines represent the input channels, the vertical lines joining 2 channels represent a comparator and the vertical dashed lines represent a parallel layer (operations inside a parallel layer are applied simultaneously).
 	
 	\begin{figure}[H]
 		\centering
@@ -37,25 +41,28 @@
 			\addcomparator45
 			\addcomparator23
 		\end{sortingnetwork}
-		\caption{Sorting network with 7 inputs and 16 comparator in 7 layers}
+		\caption{Sorting network with 7 inputs and 16 comparators in 7 layers}
 		\label{sortingNetwork1}
 	\end{figure}
 
-	As stated before, the creation of sorting networks with optimal size is the problem of finding networks with the smallest possible set of comparators. Until this date optimal size sorting networks exist for $n \leq 12$, in \cite{FLOYD1973163} Floyd and Knuth found optimal size sorting networks for $n \leq 8$. In \cite{sortingnineinputs} the optimal size networks for $n = 9$ and $n = 10$ are proved and \cite{harder2021answer} proves the optimal size networks for $n = 11$ and $n = 12$ using SAT encoders. The following lemma \cite{VanVoorhis1972} is used to establish lower size bounds:
+	As stated before, the optimal-size sorting network problem consists in finding networks with the smallest possible set of comparators. Until this date, optimal size sorting networks are known for $n \leq 12$, Optimal size sorting networks for $n \leq 8$ were found in \cite{FLOYD1973163} by Floyd and Knuth. $S(9)$ and $S(10)$ was proved in \cite{sortingnineinputs} and $S(11)$ and $S(12)$ in \cite{harder2021answer}. 
+	
+	The following lemma \cite{VanVoorhis1972} is used to establish lower size bounds:
 	
 	\begin{lemma}
-		$Size(n+1) \geq Size(n) + \log_2 n$ for all $n \geq 1$
+		$S(n+1) \geq S(n) + \log_2 n$ for all $n \geq 1$
 	\end{lemma}
 
-	Using the above lemma the sizes of S(10) was implied from S(9) in \cite{sortingnineinputs} and the size of S(12) was implied from S(11) in \cite{harder2021answer}.
+	Using the above lemma the value of $S(10)$ was derived from $S(9)$ in \cite{sortingnineinputs} and the value of $S(12)$ was derived from $S(11)$ in \cite{harder2021answer}.
 	
-	The method followed in this thesis, to find sorting networks with optimal size, is same than the one used in \cite{sortingnineinputs}. It makes use of the symmetries present in comparator networks to reduce the search space. These symmetries are formed by the permutation of channels. Given a comparator network $C=c_1;c_2;..;c_k$ with size $n$ where $c=(i_t;j_t)$ with $i\leq j \leq n$ and a permutation $\pi$. $\pi(C)$ is the sequence $\pi(c_1);...;\pi(c_k)$. We call $\pi(C)$ a generalized comparator network. This networks have the same properties than comparator networks with the exception that $i_t$ can be bigger than $j_t$. In \cite{knuth1997art} it is shown that any generalized sorting network can be converted to a standard sorting network with the same size and depth.
+	The method in \cite{sortingnineinputs} makes use of the symmetries present in comparator networks to reduce the search space. These symmetries are formed by the permutation of channels. Given a comparator network $C=c_1;c_2;..;c_k$ with size $n$ and a permutation $\pi$, $\pi(C)$ is the sequence $\pi(c_1);...;\pi(c_k)$ where $\pi(i,j)=(\pi(i),\pi(j))$. The network $\pi(C)$ is a generalized comparator network. Generalized comparator networks are defined as comparator networks with the exception that $i_t$ can be bigger than $j_t$. In \cite{knuth1997art} it is shown that any generalized sorting network can be converted to a standard sorting network with the same size and depth.
 	
-	In order to find the value of $S(n)$, we create what is called a complete set of filters for the optimal-size sorting network problem. In \cite{sortingnineinputs} they give the following definition. 
+	In order to find the value of $S(n)$, we create what is called a complete set of filters for the optimal-size sorting network problem. The author of \cite{sortingnineinputs} give the following definition. 
 	
 	\begin{definition}
 		A finite set $F$ of comparator networks on $n$ channels is a complete set of filters for the optimal size sorting network problem on $n$ channels if there exists an optimal-size sorting network on $n$ channels created by extension of the current set of networks for some $C \in F$.
 	\end{definition}
 	
-	In the naive approach this set is all the comparator networks with $n$ channels. In the next section, we will explain how to reduce this set exploiting the symmetries in comparator networks. Afterwards, we explore some heuristics that help restricting more the search space discarding candidates based in different evaluation functions to try to get smaller networks than the actual ones.
+	In the naive approach this set contains all the comparator networks with $n$ channels. In the next section, we will explain how to reduce this set exploiting the symmetries in comparator networks. Afterwards, we explore some heuristics that help restricting more the search space discarding candidates based in different evaluation functions to try to get smaller networks than the actual ones.
+	\newpage
 \end{document}

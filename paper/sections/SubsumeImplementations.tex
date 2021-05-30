@@ -3,7 +3,7 @@
 
 \begin{document}
 	\section{Subsume Implementations}
-	The subsumption test involves searching for a permutation of the outputs where $\pi(outputs(C_1) \subseteq outputs(C_2))$ that can involve in the worst case the check of $n!$ permutations. In the case of $n=9$ $n! = 362880$. However, in many cases it is not necessary to test any permutation to prove that a network does not subsume other. In this section we explain the techniques used in \cite{sortingnineinputs} and discuss implementation details for creating a subsume 
+	The subsumption test involves searching for a permutation of the outputs where $\pi(outputs(C_1) \subseteq outputs(C_2))$ that can involve in the worst case the check of $n!$ permutations. In the case of $n=9$, $n! = 362880$. However, in many cases it is not necessary to test any permutation to prove that a network does not subsume other. In this section we explain the techniques used in \cite{sortingnineinputs} and discuss implementation details for the subsumption test.
 
 	\begin{table}[H]
 		\begin{tabularx}{\textwidth}{ |l| *{3}{Y|} }
@@ -30,13 +30,13 @@
 		\label{table:permutationsExample}
 	\end{table}
 
-	If we take a look at table \ref{table:permutationsExample}, we can see that the number of outputs in the partition 1 of $C_1$ is smaller than the one in $C_2$. Given this, it is clear that $C_1$ will not subsume $C_2$ because a permutation of the outputs of $C_1$, will never be a subset of the outputs of $C_2$. More formally, we can define this as the following lemma.
+	If we take a look at table \ref{table:permutationsExample}, we can see that the number of outputs in the partition 1 of $C_1$ is smaller than the one in $C_2$. Given this, it is clear that $C_1$ will not subsume $C_2$ because a permutation of the outputs of $C_1$, will never be a subset of the outputs of $C_2$. More formally, we can state this as the following lemma.
 	
 	\begin{lemma}
-		Given 2 comparator networks $C_a$ and $C_b$ with $n$ channels and their arrays containing the number of sequences with $k$ 1s $S1^{1}_k$ and $S2^{1}_k$. If for any $k\geq 0 \leq n$, $S1^{1}_k > S2^{1}_k$ $C_1$ does not subsume $C_2$.
+		Given 2 comparator networks $C_a$ and $C_b$ with $n$ channels and their arrays containing the number of sequences with $k$ 1s $S1$ and $S2$. If for any $k\geq 0 \leq n$, $S1_k > S2_k$ $C_1$ does not subsume $C_2$.
 	\end{lemma}
 	
-	In \cite{sortingnineinputs} they state that 70\% of the subsumption tests are discarded on application of previous lemma.
+	The authors of \cite{sortingnineinputs} state that 70\% of the subsumption tests are discarded on application of previous lemma.
 	
 	If we look again to the outputs in the table \ref{table:permutationsExample}, in the partition 3 we can also notice that $C_1$ does not subsume $C_2$. That's because the digit 0 appears only in 2 positions in the sequences for $C_1$ while in 3 positions in the sequences of $C_2$ and that will stay the same given any permutation. More formally it can be expressed in the following lemma:
 	
@@ -44,9 +44,9 @@
 		Given 2 comparator networks $C_a$ and $C_b$ with n channels with their arrays $W^x$, $x \in \{0,1\}$ and $0\geq k \geq n$ we denote $P{^x_k}$ to the number of positions that x appears in k partition of $W^x$. If $P^x(C_a, k) > W^x(C_b, k)$ then $C_a$ does not subsume $C_b$.
 	\end{lemma}
 	
-	In \cite{sortingnineinputs} they state that 15\% of the subsumption tests that are not discarded on application of Lemma 5.1 are discarded on application of Lemma 5.2.
+	In \cite{sortingnineinputs} it is stated that 15\% of the subsumption tests that are not discarded on application of Lemma 5.1 are discarded on application of Lemma 5.2.
 	
-	If the subsumption test is not discarded in application of previous lemmas, there is no other way than trying to find a permutation that satisfies the condition of $\pi(outputs(C_a)) \subseteq outputs(C_b)$. As we stated before the running time of this is $O(n!)$ in the case that $C_a$ does not subsume $C_b$. However, in many cases we can avoid lots of permutations checks. With the partitioned output sets stated before we can create 2 matrices, $W^0$ and $W^1$ of size $n*n$. These matrices state the positions where a 0 or a 1 respectively are found in each of the partition stated above. This way by combining the matrices of 2 different comparator networks we can create another matrix that will contain the forbidden positions for the output indices. This way we avoid testing permutations with positions that are forbidden.
+	If the subsumption test is not discarded in application of previous lemmas, the authors of \cite{sortingnineinputs} then try to find a permutation that satisfies the condition of $\pi(outputs(C_a)) \subset outputs(C_b)$. As we stated before the running time of this is $O(n! \times f(n))$ where $f(n)$ is the time to check if $\pi(outputs(C_a)) \subset outputs(C_b)$ in the worst case. However, in many cases we can avoid lots of permutations. With the partitioned output sets stated before we use matrices $W^0$ and $W^1$ described before. By combining the matrices of 2 different comparator networks we can create another matrix that will contain the forbidden positions for the output indices. This way we avoid testing permutations with positions that are known to be incorrect.
 	
 	\begin{lemma}
 		Given 2 comparator networks $C_a$ and $C_b$ with n channels with their arrays $W^x$, $x \in \{0,1\}$ and $0\geq k \geq n$. If it exists a permutation $\pi(outputs(C_a)) \subseteq outputs(C_b)$ then $\pi(W^x(C_a, k) \subseteq (W^x(C_b, k))$.
@@ -139,4 +139,5 @@
 		\end{algorithmic}
 	\end{algorithm}
 	\subsection{Bigraph perfect matchings}
+	
 \end{document}

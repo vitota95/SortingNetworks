@@ -6,7 +6,11 @@
 	In this section we explain how to implement the generate and prune methods of \cite{sortingnineinputs} and some optimizations that can be applied to these algorithms and the subsumption tests. 
 	
 	\subsection{Representation of comparator networks}
-	To represent a comparator network we just need an array of comparators. However, as we explained before for the subsumption operation we need to apply permutations to the outputs. So, we choose to represent the comparator network together with its set of outputs for efficiency. This allows to speed also the generation of this outputs when adding a new comparator as we will only need to apply the new comparator to the binary sequences of the previous outputs. Finally, in order to apply some optimizations that we will explain in the next subsections we need to store 2 more matrices and 1 array of size (n x n) and n respectively (take into account that the matrices can be stored as a 1 dimension array and use bit operations to access to the matrix positions).The first 2 arrays store the positions where any output contains a 0 and a 1 and we call  these 2 matrices $W^0$ and $W^1$ they are partitioned by the number of zeroes or ones. The last array contains the number of sequences with k 1s in the outputs given $k=0,1...n$ and we call it $S^{1}_k$.
+	To represent a comparator network we just need an array of comparators. However, as we explained before for the subsumption operation we need to apply permutations to the outputs. So, we choose to represent the comparator network together with its set of outputs for efficiency. This allows to speed also the generation of this outputs when adding a new comparator as we will only need to apply the new comparator to the binary sequences of the previous outputs. Finally, in order to apply some optimizations that we will explain in the next subsections we also need to store 2 more matrices and 1 array, of sizes $n \times n$ and $n$ respectively. For efficiency, the matrices are stored as a 1 dimension array and we use bit operations to access the matrix positions. 
+	
+	The first 2 matrices store the positions where any output contains a 0 or a 1 and we call them $W^0$ and $W^1$, the row number defines partitions of outputs with a given number of 0s or 1s, if a position $(i,j)$ contains a 1 it means that the comparator network outputs contain a 0 or a 1 in that position, if it contains a 0 it means that the outputs don't contain a 0 or a 1 in that position. 
+	
+	The last array contains the number of sequences with $k$ 1s in the outputs in positions $k=0,1...n$ and we call it $S^{1}$.
 	
 	\begin{center}
 		\begin{table}[h]
@@ -43,15 +47,15 @@
 	\end{table}
 	\end{center}
 
-	To improve the memory usage as much as possible and make it more computationally efficient, the outputs array is implemented as an array of $2^n$ bits where a position is set to 1 if the output is set and 0 otherwise. This is the most efficient representation for the set of all output. It also allows to generate the outputs quickly by the use of bitwise operations that are way faster in modern programming languages.
+	To improve the memory usage as much as possible and make it more computationally efficient, the outputs array is implemented as array of $2^n$ bits where a position is set to 1 if the output is set and 0 otherwise. This is the most efficient representation for the set of all output. It also allows to generate the outputs quickly by the use of bitwise operations that are way faster in modern programming languages. This also applies to the $W^0$ and $W^1$ matrices where each row is encoded in one array position.
 	
 	\subsection{Generate and Prune implementation}
-	In this section we will explain some details in the implementation of Generate and Prune, the algorithms are same than the ones in \cite{sortingnineinputs}.The generate and prune algorithms are very simple but they run in massive datasets that make their implementation details crucial to be able to handle the problem for inputs sizes in $n \geq 8$.
+	In this section we will describe the algorithms Generate and Prune and some optimizations, the algorithms are same than the ones in \cite{sortingnineinputs}. They are very simple but run in massive datasets that make their implementation details crucial to be able to handle the problem for inputs sizes in $n \geq 8$.
 	
 	\subsubsection{Generate}
 	The generate algorithm takes the set $N{_n^k}$ containing the comparator networks with k comparators and extends it to $R{_n^{k+1}}$ by adding a comparator in every possible positions for each element on $N{_n^k}$.
 	
-	We apply the optimization seen in \cite{sortingnineinputs} to avoid adding redundant comparators (networks that order less or the same than it's parent network). These networks would be eliminated either way by the prune algorithm, but removing it in this stage is cheaper in computation time. Given the comparator network $C$ and the comparator $c:(i,j)$ we can extend this network to $C' = C \bigcup (i,j)$. We say that the comparator $(i,j)$ is redundant if for all the elements in the sequence $x_1...x_n  \in outputs(C)$ $x_i \leq x_j$.
+	 Given the comparator network $C$ and the comparator $(i,j)$ we can extend this network to $C' = C \bigcup (i,j)$. We apply the optimization seen in \cite{sortingnineinputs} to avoid adding redundant comparators which would led to networks that order the same than its parent network. These networks would be eliminated either way by the prune algorithm, but removing them in this stage is cheaper in computation time. We say that the comparator $(i,j)$ is redundant if for all the elements in the sequence $x_1...x_n  \in outputs(C)$ $x_i \leq x_j$.
 	
 	\begin{algorithm}[H]
 	\caption{Generate} 
@@ -103,7 +107,7 @@
 	To be able to reduce the running time and make use of all the processors in the test machine, we implement a parallel version of the algorithms as in \cite{sortingnineinputs}. The parallelization of Generate is straightforward as every comparator network can be extended independently. So, we simply divide the work to be performed by all the processors.
 	However, the Prune algorithm requires more work as the networks should be crosschecked through the whole array.
 	
-	To implement the parallel Prune we make use of another algorithm that is slight modification of the Prune algorithm, we call it Remove and it works in the same way than Prune but checks the subsumption just in one direction. We start by dividing the set to be pruned in as many clusters as processors, we apply prune algorithm to each of this clusters by separate and as a result, no network is subsumed by others in the same cluster. After that we need to still remove networks that are subsumed by others in the remaining clusters. So, for each cluster we apply the Remove method in parallel with the other clusters. If we have $n$ clusters this results in $n$ Prune operations and $n - 1$ Remove operations per processor, resulting in around $n^2$ operations per processing unit. The Parallel Prune and Remove algorithms can be found behind.
+	To implement the parallel Prune we make use of another algorithm that is slight modification of the Prune algorithm, we call it Remove and it works in the same way than Prune but checks the subsumption just in one direction. We start by dividing the set to be pruned in as many clusters as processors, we apply prune algorithm to each of this clusters by separate and as a result, no network is subsumed by others in the same cluster. After that we need to still remove networks that are subsumed by others in the remaining clusters. So, for each cluster we apply the Remove method in parallel with the other clusters. If we have $n$ clusters this results in $n$ Prune operations and $n - 1$ Remove operations per processor, resulting in around $n^2$ operations per processing unit. The Parallel Prune and Remove algorithms can be found below.
 	
 	\begin{algorithm}[H]
 		\caption{Parallel Prune} 
@@ -111,12 +115,13 @@
 			\State $N \leftarrow networks$
 			\State $C \leftarrow Divide(N)$ \Comment{Divide N in as many Clusters as processor}
 			\State {Each processor performs:}
-			\State Prune($C_i$)
-			\For{$c$ in $C$}
+			\Indent
+				\State Prune($C_i$)
+				\For{$c$ in $C$}
 				\State Remove($c, C \setminus c$)
-			\EndFor
-	
-			\Return $N$
+				\EndFor		
+			\State \Return $N$
+			\EndIndent
 		\end{algorithmic}
 	\end{algorithm}
 	
@@ -137,4 +142,5 @@
 			\Return $N_j$
 		\end{algorithmic}
 	\end{algorithm}
+	\newpage
 \end{document}
