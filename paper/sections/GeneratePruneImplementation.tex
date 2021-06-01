@@ -11,41 +11,6 @@
 	The first 2 matrices store the positions where any output contains a 0 or a 1 and we call them $W^0$ and $W^1$, the row number defines partitions of outputs with a given number of 0s or 1s, if a position $(i,j)$ contains a 1 it means that the comparator network outputs contain a 0 or a 1 in that position, if it contains a 0 it means that the outputs don't contain a 0 or a 1 in that position. 
 	
 	The last array contains the number of sequences with $k$ 1s in the outputs in positions $k=0,1...n$ and we call it $S^{1}$.
-	
-	\begin{center}
-		\begin{table}[h]
-		\begin{tabularx}{\textwidth}{ |l| *{4}{Y|} }
-			\hline
-			\textbf{number of 1s} & \textbf{0} & \textbf{1} & \textbf{2} & \textbf{3} \\
-			\hline
-			\makecell{$C_1$ \begin{sortingnetwork}4{0.5}
-					\addcomparator12
-					\nextlayer
-					\addcomparator13
-					\nextlayer
-					\addcomparator34
-			\end{sortingnetwork}} & 0000 & \makecell{0001 \\ 1000} & \makecell{1010 \\ 1100} & \makecell{1011 \\ 1110} \\ 
-			\hline
-			\makecell{$C_2$ \begin{sortingnetwork}4{0.5}
-					\addcomparator12
-					\nextlayer
-					\addcomparator14
-					\nextlayer
-					\addcomparator24
-			\end{sortingnetwork}} & 0000 & \makecell{1000 \\ 0010} & \makecell{1010 \\ 1100} & \makecell{1110 \\ 1101} \\ 
-			\hline
-			\makecell{$C_3$ \begin{sortingnetwork}4{0.5}
-					\addcomparator23
-					\nextlayer
-					\addcomparator34
-					\nextlayer
-					\addcomparator14
-			\end{sortingnetwork}} & 0000 & \makecell{0010 \\ 0100 \\ 1000} & \makecell{0110 \\ 1010 \\ 1100} & 1110 \\   [1ex] 
-		\end{tabularx}
-		\caption{Comparator network outputs partitioned by number of 1s}
-		\label{table:netsPartitioned}
-	\end{table}
-	\end{center}
 
 	To improve the memory usage as much as possible and make it more computationally efficient, the outputs array is implemented as array of $2^n$ bits where a position is set to 1 if the output is set and 0 otherwise. This is the most efficient representation for the set of all output. It also allows to generate the outputs quickly by the use of bitwise operations that are way faster in modern programming languages. This also applies to the $W^0$ and $W^1$ matrices where each row is encoded in one array position.
 	

@@ -21,6 +21,8 @@
 \usepackage{float}
 \usepackage{siunitx}
 \usepackage{changepage}
+\usepackage[backref=page]{hyperref}
+\def\backref#1{{\scriptsize [#1]}}
 \restylefloat{table}
 \newcolumntype{Y}{>{\centering\arraybackslash}X}
 
@@ -32,6 +34,7 @@
 \newtheorem{corollary}{Corollary}[theorem]
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{definition}[theorem]{Definition}
+\newtheorem{conjecture}[theorem]{Conjecture}
 
 \setlength{\parskip}{1em}
 
@@ -94,17 +97,17 @@
 	\begin{center}
 		\vspace*{1cm}
 		
-		\Large
-		\textbf{Exploring size bounds for Sorting Networks}
+		{\Huge \textbf{Exploring size bounds for Sorting Networks}}
 		
 		\vspace{1.5cm}
 		
+		\Large
 		\textbf{Author: Javier González García}
 		\vfill
 		
-		\textbf{Supervisors: Luis Cruz-Filipe, Jacopo Mauro}
+		\textbf{Supervisors: Luís Cruz-Filipe, Jacopo Mauro}
 		
-		A thesis presented for Msc\\
+		A thesis presented for MSc.\\
 		in Computer Science
 		
 		\vspace{0.8cm}
@@ -118,13 +121,15 @@
 	\end{center}
 \end{titlepage}
 
+\tableofcontents
+
 \subfile{sections/Introduction}
 
 \subfile{sections/Representation}
 
 \subfile{sections/GeneratePrune}
 
-\subfile{sections/GeneratePruneImplementation}
+% \subfile{sections/GeneratePruneImplementation}
 
 \subfile{sections/SubsumeImplementations}
 

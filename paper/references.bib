@@ -13,7 +13,7 @@
 	publisher={Pearson Education}
 }
 @incollection{FLOYD1973163,
-	title = {CHAPTER 15 - The Bose-Nelson Sorting Problem††The preparation of this report has been supported in part by the National Science Foundation, and in part by the Office of Naval Research.},
+	title = "CHAPTER 15 - The {B}ose-{N}elson Sorting Problem",
 	editor = {JAGDISH N. SRIVASTAVA},
 	booktitle = {A Survey of Combinatorial Theory},
 	publisher = {North-Holland},
@@ -25,27 +25,30 @@
 	author = {ROBERT W. FLOYD and DONALD E. KNUTH},
 }
 @misc{harder2021answer,
-	title={An Answer to the Bose-Nelson Sorting Problem for 11 and 12 Channels}, 
+	title="An Answer to the {B}ose-{N}elson Sorting Problem for 11 and 12 Channels", 
 	author={Jannis Harder},
 	year={2021},
 	eprint={2012.04400},
 	archivePrefix={arXiv},
 	primaryClass={cs.DS}
 }
-@Inbook{VanVoorhis1972,
-	author={Van Voorhis; David C.;
-	and Thatcher; James W.
-	and Bohlinger; Jean D.},
-	title="Toward a Lower Bound for Sorting Networks",
-	bookTitle="Complexity of Computer Computations: Proceedings of a symposium on the Complexity of Computer Computations, held March 20--22, 1972, at the IBM Thomas J. Watson Research Center, Yorktown Heights, New York, and sponsored by the Office of Naval Research, Mathematics Program, IBM World Trade Corporation, and the IBM Research Mathematical Sciences Department",
-	year="1972",
-	publisher="Springer US",
-	address="Boston, MA",
-	pages="119--129",
-	abstract="A sorting network for N items, or an N-sorter, is a circuit with inputs I = {\{}i1, i2, ..., iN{\}} and outputs {\O} = {\{}o1, o2, ..., oN{\}}, such that {\O} is a monotonically increasing permutation of I. Sorting networks can be constructed using ranks of a basic cell called a comparator, which is essentially a 2-sorter. For example, the 4-sorter depicted in Fig. 1 employs five comparators, which all emit their larger input on their higher output lead.",
-	isbn="978-1-4684-2001-2",
-	doi="10.1007/978-1-4684-2001-2_12",
-	url="https://doi.org/10.1007/978-1-4684-2001-2_12"
+@inproceedings{VanVoorhis1972,
+	author    = {David C. van Voorhis},
+	editor    = {Raymond E. Miller and
+	James W. Thatcher},
+	title     = {Toward a Lower Bound for Sorting Networks},
+	booktitle = {Proceedings of a symposium on the Complexity of Computer Computations,
+	held March 20-22, 1972, at the {IBM} Thomas J. Watson Research Center,
+	Yorktown Heights, New York, {USA}},
+	series    = {The {IBM} Research Symposia Series},
+	pages     = {119--129},
+	publisher = {Plenum Press, New York},
+	year      = {1972},
+	url       = {https://doi.org/10.1007/978-1-4684-2001-2\_12},
+	doi       = {10.1007/978-1-4684-2001-2\_12},
+	timestamp = {Fri, 20 Dec 2019 11:33:37 +0100},
+	biburl    = {https://dblp.org/rec/conf/coco/Voorhis72.bib},
+	bibsource = {dblp computer science bibliography, https://dblp.org}
 }
 @InProceedings{improvedSubsumption,
 	author="Fr{\u{a}}sinaru, Cristian
@@ -58,7 +61,7 @@
 	publisher="Springer International Publishing",
 	address="Cham",
 	pages="292--303",
-	abstract="In this paper a new method for checking the subsumption relation for the optimal-size sorting network problem is described. The new approach is based on creating a bipartite graph and modelling the subsumption test as the problem of enumerating all perfect matchings in this graph. Experiments showed significant improvements over the previous approaches when considering the number of subsumption checks and the time needed to find optimal-size sorting networks. We were able to generate all the complete sets of filters for comparator networks with 9 channels, confirming that the 25-comparators sorting network is optimal. The running time was reduced more than 10 times, compared to the state-of-the-art result described in [6].",
+	abstract="In this paper a new method for checking the subsumption relation for the optimal-size sorting network problem is described. The new approach is based on creating a bipartite graph and modelling the subsumption test as the problem of enumerating all perfect matchings in this graph. Experiments showed significant improvements over the previous approaches when considering the number of subsumption checks and the time needed to find optimal-size sorting networks. We were able to trate all the complete sets of filters for comparator networks with 9 channels, confirming that the 25-comparators sorting network is optimal. The running time was reduced more than 10 times, compared to the state-of-the-art result described in [6].",
 	isbn="978-3-030-19212-9"
 }
 @article{valsalam:jmlr13,
@@ -119,4 +122,36 @@
 	title = {Smallest and fastest sorting networks for a given number of inputs},
 	howpublished = {\url{http://users.telenet.be/bertdobbelaere/SorterHunter/sorting_networks.html}},
 	note = {Accessed: 2021-05-26}
+}
+@article{spark,
+	author = {Zaharia, Matei and Xin, Reynold S. and Wendell, Patrick and Das, Tathagata and Armbrust, Michael and Dave, Ankur and Meng, Xiangrui and Rosen, Josh and Venkataraman, Shivaram and Franklin, Michael J. and Ghodsi, Ali and Gonzalez, Joseph and Shenker, Scott and Stoica, Ion},
+	title = {Apache Spark: A Unified Engine for Big Data Processing},
+	year = {2016},
+	issue_date = {November 2016},
+	publisher = {Association for Computing Machinery},
+	address = {New York, NY, USA},
+	volume = {59},
+	number = {11},
+	issn = {0001-0782},
+	url = {https://doi.org/10.1145/2934664},
+	doi = {10.1145/2934664},
+	abstract = {This open source computing framework unifies streaming, batch, and interactive big data workloads to unlock new applications.},
+	journal = {Commun. ACM},
+	month = oct,
+	pages = {56–65},
+	numpages = {10}
+}
+@InProceedings{enumeratePerfectMatchings,
+	author="Uno, Takeaki",
+	editor="Leong, Hon Wai
+	and Imai, Hiroshi
+	and Jain, Sanjay",
+	title="Algorithms for enumerating all perfect, maximum and maximal matchings in bipartite graphs",
+	booktitle="Algorithms and Computation",
+	year="1997",
+	publisher="Springer Berlin Heidelberg",
+	address="Berlin, Heidelberg",
+	pages="92--101",
+	abstract="For a bipartite graph G = (V, E), (1) perfect, (2) maximum and (3) maximal matchings are matchings (1) such that all vertices are incident to some matching edges, (2) whose cardinalities are maximum among all matchings, (3) which are contained in no other matching. In this paper, we present three algorithms for enumerating these three types of matchings. Their time complexities are O(|V |) per a matching.",
+	isbn="978-3-540-69662-9"
 }

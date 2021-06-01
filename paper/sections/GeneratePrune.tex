@@ -3,25 +3,221 @@
 
 \begin{document}
 	\section{Generate-and-Prune}
-	As we have seen before, our objective is to generate a complete set for all the comparator networks with n channels and k comparators. To do that we will use the generate-and-prune method seen in \cite{sortingnineinputs}.
+	As we have seen before, our objective is to generate a complete set for all the comparator networks with $n$ channels and $k$ comparators. To do that we will use the generate-and-prune method seen in \cite{sortingnineinputs}.
 	
-	 We start in the empty net and consecutively we add a new comparator in all possible ways. For comparator networks with $n$ inputs and $k$ comparators, we call this complete set $N^{n}_{k}$. In the naive approach adding a comparator in all possible positions deals to $n\times(n-1)/2$ comparator networks, as we have to repeat this step k times we end with $(n\times(n-1)/2)^k$ comparator networks, we call this Generate. However, for $n=9$, $N^{9}_{25}\approx 3\times10^{38}$ making this approach infeasible to compute. To reduce the search space, the Prune method will take the set $N^{n}_{k}$ and reduce it to the set $R^{n}_{k}$ that contains the minimum complete set of filters for $k$ comparators, afterward the Generate method will receive $R^{n}_{k}$ and extend it to $N^{n}_{k+1}$ by extending each comparator network with a new comparator in all possible positions. This sequence is repeated until the set $R^{n}{k}$ contains just one network that will be a sorting network, as the size of the minimum set of filters for the size problem when it contains sorting network is 1.
+	\subsection{Algorithm definition}
+	The algorithm generate-and-prune iteratively creates minimum complete sets of filters for the optimal size problem.
+	
+	In the Generate phase, adding a comparator in all possible positions deals to $n\times(n-1)/2$ comparator networks. Repeating this step $k$ times would end with $(n\times(n-1)/2)^k$ comparator networks. Therefore, the Prune method reduces the search space ensuring a minimum set of filters for $k$ comparators.
 	
 	\begin{definition}
-		Given 2 comparator networks $C_a$ and $C_b$ we say that $C_a$ subsumes $C_b$ if there exists some permutation $\pi$ such that $\pi (outputs(C_a)) \subset outputs(C_b)$.
+		Given 2 comparator networks $C_a$ and $C_b$ we say that $C_a$ subsumes $C_b$ if there exists some permutation $\pi$ such that \newline $\pi (outputs(C_a)) \subset outputs(C_b)$.
 	\end{definition}
-
+	
 	The following lemma from \cite{sortingnineinputs} proves the completeness of the set of filters after Prune.
 	
 	\begin{lemma}
 		Given 2 comparator networks $C_a$ and $C_b$ where $C_a$ subsumes $C_b$, if there is a sorting network of the type $C_b \cup C$ with size $k$, there is also a sorting network of the type $C_a \cup C'$ with size $k$.
 	\end{lemma}
+
+	The previous lemma implies that we can create a complete set of comparator networks while discarding the networks that are subsumed by any other network in the naive complete set. This is the base of the Generate and Prune algorithms.
 	
-	The previous lemma implies that we can create a complete set of comparator networks while discarding the networks that are subsumed by any other network in the naive complete set. This is the base of the Generate and Prune algorithms. Starting with the empty set $R{^n_0}$, which corresponds to the empty comparator network. The algorithms work in the following way:
+	The algorithms use two families of complete sets of filters $R^n_k$ and $N^n_k$. It works as follows:
 	
-	\begin{itemize}
-		\item Generate: Given the set $R{^n_k}$ extends it to the set $N{^n_{k+1}}$ by adding one extra comparator to each element in the previous set in any possible way.
-		\item Prune: Given the set $N{^n_k}$ creates the set $R{^n_{k+1}}$ removing any network subsumed by those networks that are not removed.
-	\end{itemize}
+	\begin{enumerate}
+		\item We start with $R^n_0$, which contains only the empty network.
+		\item We compute $N^n_{k+1}$ from $R^n_k$ (Generate) by extending each comparator network with a new comparator in all possible positions.
+		\item We compute $R^n_{k+1}$ from $N^n_{k+1}$ (Prune) by removing the networks that are subsumed by others.
+		\item We repeat from second step until the set $R^{n}{k}$ contains just one network that will be a sorting network
+	\end{enumerate}
+
+	When a sorting network is found, the set $R^n_k$ becomes a singleton because a sorting networks with $n$ inputs and $k$ comparators trivially subsumes any comparator network with $n$ inputs and $k$ comparators.
+	
+	\subsection{Representation of comparator networks}
+	To represent a comparator network we just need an array of comparators. However, as we explained before for the subsumption operation we need to apply permutations to the outputs. So, we choose to represent the comparator network together with its set of outputs for efficiency. This allows to speed also the generation of this outputs when adding a new comparator as we will only need to apply the new comparator to the binary sequences of the previous outputs. Finally, in order to apply some optimizations that we will explain in the next subsections we also need to store two more matrices and one array, of sizes $n \times n$ and $n$ respectively. For efficiency, the matrices are stored as a 1-dimension array and we use bit operations to access the matrix positions.
+	
+	The first two matrices store the positions where any output contains a 0 or a 1 and we call them $W^0$ and $W^1$, the row number defines partitions of outputs with a given number of 0s or 1s, if a position $(i,j)$ contains a 1 it means that the comparator network outputs contain a 0 or a 1 in that position, if it contains a 0 it means that the outputs do not contain a 0 or a 1 in that position.
+	
+	The array contains the number of sequences with $k$ 1s in the outputs in positions $k=0,1...n$ and we call it $S^{1}$.
+	
+	\begin{table}[H]
+		\begin{tabularx}{\textwidth}{ |l| *{3}{Y|} }
+			\hline
+			\textbf{number of 1s} & \textbf{1} & \textbf{2} & \textbf{3} \\
+			\hline
+			\makecell{$C_1$ \begin{sortingnetwork}4{0.5}
+					\addcomparator24
+					\nextlayer
+					\addcomparator23
+					\nextlayer
+					\addcomparator13
+			\end{sortingnetwork}} & \makecell{0010 \\ 1000} & \makecell{0110 \\ 1010 \\ 1100} & \makecell{0111 \\ 1110} \\ 
+			\hline
+			\makecell{$C_2$  \begin{sortingnetwork}4{0.5}
+					\addcomparator14
+					\nextlayer
+					\addcomparator34
+					\nextlayer
+					\addcomparator13
+			\end{sortingnetwork}}& \makecell{0010 \\ 0100 \\ 1000} & \makecell{0101 \\ 0110 \\ 1010 \\ 1100} & \makecell{0111 \\ 1101 \\ 1110 } \\  [1ex] 
+		\end{tabularx}
+		\caption{Comparator network outputs partitioned by number of 1s}
+		\label{table:comparatorNetworksExample}
+	\end{table}
+
+	In Table \ref{table:comparatorNetworksExample} we can see an example of how the outputs are generated and partitioned for two 4-input comparator networks.
+
+	\begin{table}[H]
+		\begin{center}
+				\begin{tabular}{ c c }
+				\textbf{$C_1$} & \textbf{$C_2$}\\
+				\midrule\\
+				\addlinespace[-2ex]
+				$W^0 = \begin{bmatrix} 1 & 1 & 1 & 1 \\ 1 & 1 & 1 & 1 \\ 1 & 0 & 0 & 1 \\ \end{bmatrix}$
+				\quad
+				&
+				$W^1 = \begin{bmatrix}1 & 1 & 1 & 0 \\1 & 1 & 1 & 0 \\1 & 1 & 1 & 1 \\ \end{bmatrix}$
+				\quad \\
+				\addlinespace[1.5ex]
+				$W^0 = \begin{bmatrix} 1 & 1 & 1 & 1 \\ 1 & 1 & 1 & 1 \\ 1 & 0 & 1 & 1 \\ \end{bmatrix}$
+				\quad
+				& 
+				$W^1 = \begin{bmatrix} 1 & 1 & 1 & 0 \\ 1 & 1 & 1 & 1 \\ 1 & 1 & 1 & 1 \\ \end{bmatrix}$
+				\quad \\
+				\addlinespace[1.5ex]
+				\hspace*{-0.6cm}$S^1 = \begin{bmatrix} 2 & 3 & 2 \end{bmatrix}$
+				\quad
+				& 
+				\hspace*{-0.6cm}$S^1 = \begin{bmatrix} 1 & 4 & 3 \end{bmatrix}$
+				\quad \\
+			\end{tabular}
+		\end{center}	
+	\caption{$W^0$ and $W^1$ matrices and $S^1$ array for $C_1$ and $C_2$ }
+	\label{table:wMatricesExample}
+	\end{table}
+
+	In Table \ref{table:wMatricesExample} we present the $W^x$ matrices and $S^1$ array that are calculated directly from the set of outputs.
+	
+	To improve the memory usage as much as possible and make it more computationally efficient, the outputs array is implemented as array of $2^n$ bits where a position is set to 1 if the output is set and 0 otherwise. This way we represent the array in an efficient way. It also allows to generate the outputs quickly by the use of bitwise operations that are way faster in modern programming languages. This also applies to the $W^0$ and $W^1$ matrices where each row is encoded in one array position.
+	
+	\subsection{Generate and Prune implementation}
+	In this section we will describe the algorithms Generate and Prune and some optimizations, the algorithms are same than the ones in \cite{sortingnineinputs}. They are very simple but run in massive datasets that make their implementation details crucial to be able to handle the problem for inputs sizes in $n \geq 8$.
+	
+	\subsubsection{Generate}
+	The generate algorithm takes the set $N{_n^k}$ containing the comparator networks with $k$ comparators and extends it to $R{_n^{k+1}}$ by adding a comparator in every possible positions for each element on $N{_n^k}$.
+	
+	Given the comparator network $C$ and the comparator $(i,j)$ we can extend this network to $C' = C \bigcup (i,j)$. We apply the optimization seen in \cite{sortingnineinputs} to avoid adding redundant comparators which would led to networks that order the same than its parent network. These networks would be eliminated either way by the prune algorithm, but removing them in this stage is cheaper in computation time. We say that the comparator $(i,j)$ is redundant if for all the elements in the sequence $x_1...x_n  \in outputs(C)$ $x_i \leq x_j$.
+	
+	\begin{algorithm}[H]
+		\caption{Generate} 
+		\begin{algorithmic}
+			\State $N{_n^{k+1}} \leftarrow \emptyset$
+			\State $R{_n^k} \leftarrow$ complete set of filters for k comparators
+			\State $C \leftarrow$ comparators array
+			\For{$n\gets 1...N$}
+			\For{$c$ in $C$}
+			\State $n' \leftarrow n\bigcup c$
+			\If {$n'$ is not redundant}
+			\State $N{_n^{k+1}} \leftarrow N{_n^{k+1}} \bigcup n'$
+			\EndIf
+			\EndFor
+			\EndFor
+			
+			\Return $R{_n^{k+1}}$
+		\end{algorithmic}
+	\end{algorithm}
+	
+	\subsubsection{Prune}
+	The prune method takes the set of networks $N{_n^{k}}$ and reduces it to a complete set where comparator networks subsumed by any other are removed. This generates the set $R{_n^k}$. The algorithm travels the array of comparator networks and adds to the result array those that are not subsumed by any other. As subsume is not a symmetric operation it also crosschecks and removes networks in the result array that are subsumed by the actual network. The following algorithm shows the implementation of the Prune algorithm. 
+	\begin{algorithm}[H]
+		\caption{Prune} 
+		\begin{algorithmic}
+			\State $N{_n^k} \leftarrow$ output of Generate
+			\State $R{_n^k} \leftarrow \emptyset$
+			\State $subsumed \leftarrow False$
+			\For{$n$ in $N$}
+			\For{$r$ in $R$}
+			\If {$r$ subsumes $n$}
+			\State $subsumed \leftarrow True$
+			\State break
+			\EndIf
+			\If {$n$ subsumes $r$}
+			\State $R \leftarrow R \setminus r$
+			\EndIf
+			\EndFor
+			\If {not $subsumed$}
+			\State $R \leftarrow R \bigcup n$
+			\EndIf
+			\EndFor
+			
+			\Return $R$
+		\end{algorithmic}
+	\end{algorithm}
+	
+	\subsubsection{Parallel implementation}
+	To be able to reduce the running time and make use of all the processors in the test machine, we implement a parallel version of the algorithms as in \cite{sortingnineinputs}. The parallelization of Generate is straightforward as every comparator network can be extended independently. So, we simply divide the work to be performed by all the processors.
+	However, the Prune algorithm requires more work as the networks should be crosschecked through the whole array. To add mark a networks as not subsumed it should be checked against all the other not subsumed networks.
+	
+	To implement the parallel Prune we make use of another algorithm that is slight modification of the Prune algorithm, we call it Remove and it works in the same way than Prune but checks the subsumption just in one direction. We start by dividing the set to be pruned in as many clusters as processors, we apply prune algorithm to each of this clusters by separate and as a result, no network is subsumed by others in the same cluster. After that we need to still remove networks that are subsumed by others in the remaining clusters. So, for each cluster we apply the Remove method in parallel with the other clusters. If we have $n$ clusters this results in $n$ Prune operations and $n - 1$ Remove operations per processor, resulting in around $n^2$ operations per processing unit. The Parallel Prune and Remove algorithms can be found below.
+	
+	\begin{algorithm}[H]
+		\caption{Parallel Prune} 
+		\begin{algorithmic}
+			\State $N \leftarrow networks$
+			\State $C \leftarrow Divide(N)$ \Comment{Divide N in as many Clusters as processor}
+			\State {Each processor performs:}
+			\Indent
+			\State Prune($C_i$)
+			\For{$c$ in $C$}
+			\State Remove($c, C \setminus c$)
+			\EndFor		
+			\State \Return $N$
+			\EndIndent
+		\end{algorithmic}
+	\end{algorithm}
+	
+	\begin{algorithm}[H]
+		\caption{Remove} 
+		\begin{algorithmic}
+			\State $result \leftarrow \emptyset$
+			\State $N_i \leftarrow networks$
+			\State $N_j \leftarrow networks$
+			\For{$n_i$ in $N_i$}
+			\For{$n_j$ in $N_j$}
+			\If {$n_i$ subsumes $n_j$}
+			\State $N_j \leftarrow N_j \setminus n_j$
+			\EndIf
+			\EndFor
+			\EndFor		
+			\Return $N_j$
+		\end{algorithmic}
+	\end{algorithm}
+
+	\subsection{Optimizing the Subsumption Test}
+	The subsumption test involves searching for a permutation of the outputs where $\pi(outputs(C_1) \subseteq outputs(C_2))$ that can involve in the worst case the check of $n!$ permutations. In the case of $n=9$, $n! = 362880$. However, in many cases it is not necessary to test any permutation to prove that a network does not subsume other. In this section we explain the techniques used in \cite{sortingnineinputs} and discuss implementation details for the subsumption test.
+	
+	If we take a look at Table \ref{table:permutationsExample}, we can see that the number of outputs in the partition 1 of $C_1$ is smaller than the one in $C_2$. Given this, it is clear that $C_1$ will not subsume $C_2$ because a permutation of the outputs of $C_1$, will never be a subset of the outputs of $C_2$. More formally, we can state this as the following lemma.
+	
+	\begin{lemma}\label{lemmaSubsume1}
+		Given 2 comparator networks $C_a$ and $C_b$ with $n$ channels and their arrays containing the number of sequences with $k$ 1s $S1$ and $S2$. If for any $0 \geq k \leq n$, $S1_k > S2_k$ $C_1$ does not subsume $C_2$.
+	\end{lemma}
+	
+	The authors of \cite{sortingnineinputs} state that 70\% of the subsumption tests are discarded on application of previous lemma.
+	
+	If we look again to the outputs in the Table \ref{table:permutationsExample}, in the partition 3 we can also notice that $C_1$ does not subsume $C_2$. That's because the digit 0 appears only in two positions in the sequences for $C_1$ while in 3 positions in the sequences of $C_2$ and that will stay the same given any permutation. More formally it can be expressed in the following lemma:
+	
+	\begin{lemma}\label{lemmaSubsume2}
+		Given two comparator networks $C_a$ and $C_b$ with $n$ channels with their arrays $W^x$, $x \in \{0,1\}$ and $0\geq k \geq n$ we denote $P{^x_k}$ to the number of positions that x appears in k partition of $W^x$. If $P^x(C_a, k) > W^x(C_b, k)$ then $C_a$ does not subsume $C_b$.
+	\end{lemma}
+	
+	In \cite{sortingnineinputs} it is stated that 15\% of the subsumption tests that are not discarded on application of Lemma 5.1 are discarded on application of Lemma 5.2.
+	
+	If the subsumption test is not discarded in application of previous lemmas, the authors of \cite{sortingnineinputs} then try to find a permutation that satisfies the condition of $\pi(outputs(C_a)) \subset outputs(C_b)$. As we stated before the running time of this is $O(n! \times f(n))$ where $f(n)$ is the time to check if $\pi(outputs(C_a)) \subset outputs(C_b)$ in the worst case. However, in many cases we can avoid lots of permutations. With the partitioned output sets stated before we use matrices $W^0$ and $W^1$ described before. By combining the matrices of two different comparator networks we can create another matrix that will contain the forbidden positions for the output indices. This way we avoid testing permutations with positions that are known to be incorrect.
+	
+	\begin{lemma} \label{skipPermuationsLemma}
+		Given 2 comparator networks $C_a$ and $C_b$ with n channels with their arrays $W^x$, $x \in \{0,1\}$ and $0 \leq k \leq n$. If it exists a permutation $\pi(outputs(C_a)) \subseteq outputs(C_b)$ then $\pi(W^x(C_a, k) \subseteq (W^x(C_b, k))$.
+	\end{lemma}
+	
+	The above lemma allows in practice to skip thousands of permutations and is the base for the two algorithms implemented in this thesis to skip permutations.
 	\newpage
 \end{document}

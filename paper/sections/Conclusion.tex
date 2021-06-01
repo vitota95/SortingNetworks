@@ -3,4 +3,12 @@
 
 \begin{document}
 	\section{Conclusion}
+	During this thesis I have studied in depth the optimal size problem for sorting networks. The main focus has been in implementing the algorithms in \cite{sortingnineinputs} with advanced data structures to improve running times of the algorithms and the study of heuristics to try finding better size sorting networks. The results are promising and show how the generate-and-prune algorithms can address the problem of finding better sorting networks and solve bigger instances of $S(n)$ if more powerful hardware provided.
+	
+	During this months I have been able to find sorting networks that would have been size records some years ago in a modest hardware, this opens the possibility to find better sorting networks in the future. Also, if proved that the heuristic used in section \ref{noPermutationsHeuristic} is actually complete, the solution of $S(n)$ for bigger values could be addressed.
+	
+	As future work to continue this investigation, the generate-and-prune approach could be implemented using a cluster paradigm such as Spark \cite{spark}. During this thesis I did some investigation and started implementing the algorithms using Spark capabilities. However, we decided to abandon this line of work to center the thesis in the study of heuristics. 
+	
+	Also there is a lot of potential to find better sorting networks in the use of genetics and evolutionary algorithms such as the ones used in \cite{valsalam:jmlr13} and \cite{Sekanina2005}.
+	\newpage
 \end{document}
